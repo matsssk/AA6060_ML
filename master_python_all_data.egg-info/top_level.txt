@@ -1,0 +1,12 @@
+catboost_info
+figures_tafel_slopes
+filtered_raw_data_plots
+hyperparams_random_search_results
+master_thesis_new
+model_figures
+models_data
+models_saved
+raw_data
+raw_data_plots
+sketches_for_report
+src

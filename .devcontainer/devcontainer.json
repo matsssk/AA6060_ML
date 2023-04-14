@@ -1,0 +1,68 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
+{
+	"name": "Python 3",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/python:0-3.10",
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	"features": {
+		"ghcr.io/devcontainers-contrib/features/flake8:2": {}
+	},
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"remoteUser": "vscode",
+	"postCreateCommand": "pip install -r requirements.txt",
+	// Configure tool-specific properties.
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"[dockercompose]": {
+					"editor.codeLens": false
+				},
+				"editor.codeActionsOnSave": {
+					"source.organizeImports": true
+				},
+				"editor.fontFamily": "Fira Code, Consolas",
+				"editor.fontLigatures": true,
+				"editor.formatOnSave": true,
+				"editor.wordWrap": "on",
+				"files.exclude": {
+					"**/__pycache__": true,
+					"**/*.egg-info": true,
+					"**/.pytest_cache": true,
+					"**/.benchmarks": true
+				},
+				"python.analysis.diagnosticMode": "workspace",
+				"python.analysis.typeCheckingMode": "basic",
+				"python.defaultInterpreterPath": "/usr/local/bin/python",
+				"python.formatting.blackPath": "/usr/local/py-utils/bin/black",
+				"python.formatting.provider": "black",
+				"python.formatting.blackArgs": [
+					"--line-length",
+					"120"
+				],
+				"python.languageServer": "Pylance",
+				"python.linting.flake8Enabled": false,
+				"python.linting.pylintEnabled": false,
+				"python.testing.pytestEnabled": true,
+				"python.testing.pytestArgs": [
+					"-vv",
+					"--log-cli-level=WARNING"
+				],
+				"ruff.organizeImports": false,
+				"workbench.sideBar.location": "right",
+			},
+			"extensions": [
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"vscode-icons-team.vscode-icons",
+				"ms-toolsai.jupyter",
+				"njpwerner.autodocstring",
+				"charliermarsh.ruff"
+			]
+		}
+	}
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}

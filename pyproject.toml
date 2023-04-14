@@ -1,0 +1,11 @@
+[build-system]
+requires = ["setuptools"]
+
+[project]
+name = "master_python_all_data"
+description = ""
+license = {text = "BSD-3-Clause"}
+version = "1.0.0"
+
+[tool.setuptools.packages]
+find = {}

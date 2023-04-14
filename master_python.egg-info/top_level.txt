@@ -1,0 +1,12 @@
+ANN_info
+catboost_info
+filtered_raw_data_plots
+lgbm_info
+master_thesis_new
+model_figures
+models
+random_forest_info
+raw_data
+raw_data_plots
+src
+xgboost_info
