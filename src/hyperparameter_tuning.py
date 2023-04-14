@@ -76,6 +76,7 @@ def ANN_model(hp):
 
 def ANN_tuning():
     batch_size = hp.Choice("batch", values=[16, 32, 64])
+    a = 3
 
 
 if __name__ == "__main__":
