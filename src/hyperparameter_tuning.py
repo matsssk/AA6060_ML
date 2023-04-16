@@ -1,13 +1,7 @@
-from catboost import CatBoostRegressor
-from sklearn.model_selection import RandomizedSearchCV
-import numpy as np
-from src.data_preprocessing import return_training_data_X_y, normalize_data_for_ANN
-import pickle
+from src.data_preprocessing import normalize_data_for_ANN
 import keras_tuner
 import tensorflow as tf
-from tensorflow import keras
-from keras.callbacks import EarlyStopping, Callback
-from keras_tuner.tuners import RandomSearch
+from keras.callbacks import EarlyStopping
 from keras.layers import Dense
 from keras.models import Sequential
 from keras import regularizers
@@ -20,18 +14,47 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 
-PATH_HYPERPARAM_FOLDER = "hyperparams_random_search_results"
+def path_hyperparam_folder():
+    return "hyperparams_random_search_results"
+
+
+def directory_for_tuning_results():
+    return "tuning_results"
+
+
+def name_df_hyperparams_results():
+    return "df_with_results_from_tunersearch.csv"
+
+
+def name_best_ann_model():
+    return "best_model.h5"
+
+
+def epochs_for_search_and_train():
+    return 5
+
+
+def trials():
+    return 4
+
+
+def early_stopping_callback() -> list[EarlyStopping]:
+    return [EarlyStopping("val_loss", patience=3)]
 
 
 def search_spaces() -> list[list | float]:
-    neurons_space = [i for i in range(20, 160)[::10]]
-    num_layers_space = [i for i in range(1, 5)]
-    l2s_space = [1e-3, 1e-2, 1e-1]
-    optimizers_space = ["adam", "sgd", "adagrad"]
+    # neurons_space = [i for i in range(20, 160)[::10]]
+    neurons_space = [i for i in range(50, 100)[::10]]
+    num_layers_space = [i for i in range(2, 5)]
+    l2s_space = [1e-4, 1e-3, 1e-2]
+    # optimizers_space = ["adam", "sgd", "adagrad"]
+    optimizers_space = ["adam"]
     loss_funcs_space = ["mse", "mae", "msle"]
-    activation_func_space = ["relu", "tanh", "sigmoid"]
+    # activation_func_space = ["relu", "tanh", "sigmoid"]
+    activation_func_space = ["relu"]
     output_act_func_space = ["softmax", "linear"]
-    batch_size_space = [16, 32, 64, 128]
+    # batch_size_space = [16, 32, 64, 128]
+    batch_size_space = [32]
 
     combinations = (
         len(neurons_space)
@@ -71,7 +94,7 @@ def ANN_model(hp: HyperParameters):
     ) = search_spaces()
 
     neurons = hp.Choice("neurons", values=neurons_space)
-    num_layers = hp.Choice("num_layers", values=num_layers_space)
+    num_layers = hp.Choice("num_hidden_layers", values=num_layers_space)
     l2s = hp.Choice("l2", values=l2s_space)
     optimizers = hp.Choice("optimizer", values=optimizers_space)
     loss_funcs = hp.Choice("loss", values=loss_funcs_space)
@@ -80,64 +103,65 @@ def ANN_model(hp: HyperParameters):
     batch_size = hp.Choice("batch_size", values=batch_size_space)
     print(f"The number of hyperparameter combinations: {combinations}")
 
-    # Define the loss function as I want loss function and metrics to use same
-    # otherwise the randomizer will draw from loss_func twice for each variables (loss and metrics)
-    if loss_funcs == "mse":
-        loss = "mse"
-    elif loss_funcs == "mae":
-        loss = "mae"
-    else:
-        loss = "msle"
-
     model = Sequential()
-    # depending on num_layers, build
-    for n_randomly_drawn_layers in range(num_layers):
-        if n_randomly_drawn_layers == 0:
-            # first hidden layer
-            # input shape = 2 as we have two variables (potential, pH)
-            model.add(
-                Dense(
-                    neurons,
-                    input_shape=(2,),
-                    activation=activation_func,
-                    kernel_regularizer=regularizers.l2(l2=l2s),
-                )
+
+    # add the first hidden layer
+    # input shape = 2 as we have two variables (potential, pH)
+    model.add(
+        Dense(
+            neurons,
+            input_shape=(2,),
+            activation=activation_func,
+            kernel_regularizer=regularizers.l2(l2=l2s),  # type: ignore
+        )
+    )
+
+    # add additional layers if num_layers is greater than 1
+    # for loop will not trigger if num_layers = 1
+    for _ in range(1, num_layers):  # type: ignore
+        model.add(
+            Dense(
+                neurons,
+                activation=activation_func,
+                kernel_regularizer=regularizers.l2(l2=l2s),  # type: ignore
             )
-        else:
-            # additional hidden layers
-            model.add(
-                Dense(
-                    neurons,
-                    activation=activation_func,
-                    kernel_regularizer=regularizers.l2(l2=l2s),
-                )
-            )
+        )
+
     # 1 output, current density
     model.add(Dense(1, activation=output_act_func))
-    model.compile(optimizer=optimizers, loss=loss, metrics=loss)
+    model.compile(optimizer=optimizers, loss=loss_funcs, metrics=[tf.keras.metrics.RootMeanSquaredError(name="rmse")])  # type: ignore
 
     return model
 
 
 def create_tuner_and_return_results() -> list[list]:
     X_train, X_val, y_train, y_val, _, _ = normalize_data_for_ANN()
-    max_trials = 2
+
     tuner = keras_tuner.RandomSearch(
         ANN_model,
         objective="val_loss",
-        max_trials=max_trials,
+        max_trials=trials(),
         overwrite=True,
-        directory="tuning_results",
+        directory=directory_for_tuning_results(),
         project_name="ANN",
     )
 
     tuner.search(
-        X_train, y_train, validation_data=(X_val, y_val), epochs=2, callbacks=[EarlyStopping("val_loss", patience=3)]
+        X_train,
+        y_train,
+        validation_data=(X_val, y_val),
+        epochs=epochs_for_search_and_train(),
+        callbacks=early_stopping_callback(),
     )
     tuner.results_summary()
+    best_hps: list = tuner.get_best_hyperparameters(num_trials=trials())
+    best_models: list = tuner.get_best_models(num_models=trials())
 
-    best_hps: list = tuner.get_best_hyperparameters(num_trials=max_trials)
-    best_models: list = tuner.get_best_models(num_models=max_trials)
+    # save the best model
+    best_model = best_models[0]
+    best_model.save(f"{directory_for_tuning_results()}/{name_best_ann_model()}")
+    # copy it to directory with other models
+    best_model.save("models_saved/ANN_tuned.h5")
 
     return [best_hps, best_models]
 
@@ -148,14 +172,15 @@ def store_tuning_results() -> pd.DataFrame:
     <class 'keras_tuner.engine.hyperparameters.hyperparameters.HyperParameters'>
     <class 'keras.engine.sequential.Sequential'>
     """
+    # MUST GET LOSSES FROM TRAINING IN PLOT_CURVES....
+
     best_hps, best_models = create_tuner_and_return_results()
     _, X_val, _, y_val, _, _ = normalize_data_for_ANN()
     results = []
-    print(best_hps[0].values)
     for hp_element, best_model in zip(best_hps, best_models):
         results_dict = {}
-        val_loss, _ = best_model.evaluate(X_val, y_val)  # tuple of loss and metric (equal)
-        results_dict["val_loss"] = val_loss
+        _, rmse_loss = best_model.evaluate(X_val, y_val)  # tuple of loss and metric (equal)
+        results_dict["val_loss"] = rmse_loss
 
         for hp_name in hp_element.values:
             results_dict[hp_name] = hp_element.get(hp_name)
@@ -164,7 +189,7 @@ def store_tuning_results() -> pd.DataFrame:
 
     results = pd.DataFrame(results)
     results.insert(0, "best_models_sorted", [i for i in range(1, len(best_models) + 1)])
-    results.to_csv("tuning_results/df_with_results", sep=",", index=False)
+    results.to_csv(f"{directory_for_tuning_results()}/{name_df_hyperparams_results()}", sep=",", index=False)
     return results
 
 

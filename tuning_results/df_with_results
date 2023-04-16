@@ -1,3 +1,0 @@
-best_models_sorted,val_loss,neurons,num_layers,l2,optimizer,loss,activation,output_activation,batch_size
-1,0.02793804369866848,60,1,0.01,adam,msle,tanh,softmax,32
-2,0.12835168838500977,30,3,0.1,adam,mae,sigmoid,linear,32

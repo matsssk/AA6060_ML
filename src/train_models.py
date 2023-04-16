@@ -1,22 +1,23 @@
+# MUST DO
+# må fikse earlystopping for alle GBDTS
+# må fikse så df_with_results_from_tunersearch.csv er sortert på val_loss
+
+
 import time
 
 import lightgbm as lgb
 import matplotlib.pyplot as plt
 import pandas as pd
 from catboost import CatBoostRegressor
-from keras.callbacks import EarlyStopping
-from keras.layers import Dense
-from keras.models import Sequential
-from keras import regularizers
 from lightgbm import LGBMRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error as mse
 
-from src.hyperparameter_tuning import PATH_HYPERPARAM_FOLDER
+from src.hyperparameter_tuning import path_hyperparam_folder
 from xgboost import XGBRegressor
 from sklearn.metrics import mean_absolute_percentage_error as mape
 from src.compare_models_with_exp_data import return_test_data
-from src.data_preprocessing import normalize_data_for_ANN, return_training_data_X_y
+from src.data_preprocessing import return_training_data_X_y, split_into_training_and_validation
 
 import pickle
 import os
@@ -29,15 +30,15 @@ training_time = {}
 feature_imp = {}
 
 
-def extract_hyperparams_from_json(model: str) -> dict:
-    """
-    Returns a dictionairy with all the hyperparams optimized through RandomSearchCV
-    in hyperparameter_tuning.py
-    """
-    with open(f"{PATH_HYPERPARAM_FOLDER}/{model}.json", "rb") as f:
-        # Use pickle.load to load the dictionary from the file
-        best_params: dict = pickle.load(f)
-    return best_params
+# def extract_hyperparams_from_json(model: str) -> dict:
+#     """
+#     Returns a dictionairy with all the hyperparams optimized through RandomSearchCV
+#     in hyperparameter_tuning.py
+#     """
+#     with open(f"{path_hyperparam_folder()}/{model}.json", "rb") as f:
+#         # Use pickle.load to load the dictionary from the file
+#         best_params: dict = pickle.load(f)
+#     return best_params
 
 
 def catboost_model() -> None:
@@ -48,13 +49,12 @@ def catboost_model() -> None:
 
     # y needs shape (1, N_ROWS)
     X, y = return_training_data_X_y()
+    X_train, X_val, y_train, y_val = split_into_training_and_validation(X, y)
 
-    best_params = extract_hyperparams_from_json("catboost")
     # extract key-value pairs, use default values besides the ones in RS
-    cb = CatBoostRegressor(**best_params)
-    # cb = CatBoostRegressor(n_estimators=500)
+    cb = CatBoostRegressor(n_estimators=2000, loss_function="RMSE", early_stopping_rounds=50)
     t0 = time.perf_counter()
-    cb.fit(X, y, verbose=False)
+    cb.fit(X_train, y_train, eval_set=(X_val, y_val), verbose=100)
 
     runtime = time.perf_counter() - t0
     training_time["cb"] = runtime
@@ -163,41 +163,13 @@ def lightgbm_model() -> None:
     lgbm.booster_.save_model("models_saved/lgbm.txt")
 
 
-def ANN_model() -> None:
-    X_train, X_val, y_train, y_val, _, _ = normalize_data_for_ANN()
-    optimizer = "adam"
-    neurons = 70
-    batch_size = 32
-    epochs = 20
-    activation = "relu"
-    patience = 8
-    loss = "mse"
+def load_ANN_runtime() -> None:
+    # load best model's runtime
+    # ANN is already trained through tuner.search in hyperparameter_tunig.py
 
-    model = Sequential()
-    # input has two neurons since we have two features (E and pH), unknown data points
-    model.add(Dense(neurons, input_shape=(2,), activation=activation, kernel_regularizer=regularizers.l2(0.01)))
-    model.add(Dense(neurons, activation=activation, kernel_regularizer=regularizers.l2(0.01)))
-    # 1 output, current density
-    model.add(Dense(1, activation="linear"))
-    model.compile(optimizer=optimizer, loss=loss, metrics=loss)
-    early_stopping = EarlyStopping(monitor="val_loss", patience=patience)
-    t0 = time.perf_counter()
-    history = model.fit(
-        X_train,
-        y_train,
-        batch_size=batch_size,
-        epochs=epochs,
-        callbacks=[early_stopping],
-        verbose=0,
-        validation_data=(X_val, y_val),
-    )
-    runtime = time.perf_counter() - t0
-    training_time["ANN"] = runtime
-
-    df_loss = pd.DataFrame(history.history)
-    df_loss.to_csv("models_data/ANN_info/training_val_loss", sep="\t", index=False)
-
-    model.save("models_saved/ANN")
+    training_time["ANN"] = pd.read_csv("models_data/ANN_info/data_for_n_best_models.csv", sep=",", usecols=["runtime"])[
+        "runtime"
+    ][0]
 
 
 def plot_histogram_training_time() -> None:
@@ -226,9 +198,9 @@ def feature_importances_to_pd():
 
 if __name__ == "__main__":
     catboost_model()
-    # random_forest_model()
-    # xgboost_model()
-    # lightgbm_model()
-    # ANN_model()
-    # plot_histogram_training_time()
-    # feature_importances_to_pd()
+    random_forest_model()
+    xgboost_model()
+    lightgbm_model()
+    load_ANN_runtime()
+    plot_histogram_training_time()
+    feature_importances_to_pd()

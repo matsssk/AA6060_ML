@@ -65,8 +65,14 @@ def return_training_data_X_y() -> tuple[NDArray[Shape["N_ROWS, 2"], Float], NDAr
     return (X, y)
 
 
+def split_into_training_and_validation(X: np.ndarray, y: np.ndarray) -> list[np.ndarray]:
+    """
+    Takes in training data and returns X_train, X_val, y_train, y_val
+    """
+    return train_test_split(X, y, test_size=0.2, random_state=42)
+
+
 def normalize_data_for_ANN():
-    """ """
     X, y = return_training_data_X_y()
     y = y.reshape(-1, 1)
     # Normalize the data using MinMaxScaler
@@ -74,6 +80,6 @@ def normalize_data_for_ANN():
     X_scaled = x_scaler.fit_transform(X)
     y_scaler = MinMaxScaler(feature_range=(0, 1))
     y_scaled = y_scaler.fit_transform(y)
-    X_train, X_val, y_train, y_val = train_test_split(X_scaled, y_scaled, test_size=0.2, random_state=42)
+    X_train, X_val, y_train, y_val = split_into_training_and_validation(X_scaled, y_scaled)
 
     return X_train, X_val, y_train, y_val, x_scaler, y_scaler

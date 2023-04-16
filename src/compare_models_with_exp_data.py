@@ -58,7 +58,7 @@ if __name__ == "__main__":
     fig_loss_ANN = plt.figure(figsize=(10, 10))
     ax_loss_ANN = fig_loss_ANN.subplots()
     ax_loss_ANN.set_xlabel("Epochs")
-    ax_loss_ANN.set_ylabel("Error, MSE")
+    ax_loss_ANN.set_ylabel("Error, RMSE")
 
 # prediction loss of log(abs(current density)) in Mean Absolute Percentage Errror
 best_scores_mape = {}
@@ -139,7 +139,7 @@ def lgbm_comparison() -> None:
 def ANN_comparison() -> None:
     _, _, _, _, x_scaler, y_scaler = normalize_data_for_ANN()
     X_test, y_test = return_test_data()
-    model = keras.models.load_model("models_saved/ANN")
+    model = keras.models.load_model("tuning_results/best_model.h5")
 
     y_pred = y_scaler.inverse_transform(model.predict(x_scaler.fit_transform(X_test)))
     best_scores_mape["ANN"] = mape(y_pred, y_test)
@@ -149,11 +149,11 @@ def ANN_comparison() -> None:
     ax_pred.semilogx(y_pred, X_test[:, 0], label="ANN")
 
     # plot loss
-    df_loss = pd.read_csv("models_data/ANN_info/training_val_loss", sep="\t")
-    epochs = [iter for iter in range(1, len(df_loss["val_loss"]) + 1, 1)]
+    df_loss = pd.read_csv("models_data/ANN_info/training_val_loss0", sep="\t")
+    epochs = [iter for iter in range(1, len(df_loss["val_rmse"]) + 1, 1)]
     # plot epochs vs rmse (root of mse which is the loss given in df)
-    ax_loss_ANN.plot(epochs, df_loss["loss"], label="ANN training loss")
-    ax_loss_ANN.plot(epochs, df_loss["val_loss"], label="ANN validation loss")
+    ax_loss_ANN.semilogy(epochs, df_loss["rmse"], "s-", label="ANN training loss best model", color="r")
+    ax_loss_ANN.semilogy(epochs, df_loss["val_rmse"], "s--", label="ANN validation loss best model", color="r")
 
 
 def store_mape_from_models_into_csv() -> None:
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     random_forest_comparison()
     xgboost_comparison()
     lgbm_comparison()
-    # ANN_comparison()
+    ANN_comparison()
     store_mape_from_models_into_csv()
 
     # save figs
