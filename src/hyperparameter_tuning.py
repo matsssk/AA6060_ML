@@ -31,7 +31,7 @@ def name_best_ann_model():
 
 
 def epochs_for_search_and_train():
-    return 5
+    return 1
 
 
 def trials():
@@ -112,7 +112,7 @@ def ANN_model(hp: HyperParameters):
             neurons,
             input_shape=(2,),
             activation=activation_func,
-            kernel_regularizer=regularizers.l2(l2=l2s),  # type: ignore
+            # kernel_regularizer=regularizers.l2(l2=l2s),  # type: ignore
         )
     )
 
@@ -123,7 +123,7 @@ def ANN_model(hp: HyperParameters):
             Dense(
                 neurons,
                 activation=activation_func,
-                kernel_regularizer=regularizers.l2(l2=l2s),  # type: ignore
+                # kernel_regularizer=regularizers.l2(l2=l2s),  # type: ignore
             )
         )
 
@@ -176,18 +176,18 @@ def store_tuning_results() -> pd.DataFrame:
 
     best_hps, best_models = create_tuner_and_return_results()
     _, X_val, _, y_val, _, _ = normalize_data_for_ANN()
-    results = []
+    results = []  # append hyperparams for each trial to this list
     for hp_element, best_model in zip(best_hps, best_models):
         results_dict = {}
         _, rmse_loss = best_model.evaluate(X_val, y_val)  # tuple of loss and metric (equal)
-        results_dict["val_loss"] = rmse_loss
+        results_dict["val_loss_rmse"] = rmse_loss
 
         for hp_name in hp_element.values:
             results_dict[hp_name] = hp_element.get(hp_name)
 
         results.append(results_dict)
 
-    results = pd.DataFrame(results)
+    results = pd.DataFrame(results).sort_values(by="val_loss_rmse", ascending=True)  # lowest loss : index 1
     results.insert(0, "best_models_sorted", [i for i in range(1, len(best_models) + 1)])
     results.to_csv(f"{directory_for_tuning_results()}/{name_df_hyperparams_results()}", sep=",", index=False)
     return results

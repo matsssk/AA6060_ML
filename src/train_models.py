@@ -1,6 +1,5 @@
 # MUST DO
 # må fikse earlystopping for alle GBDTS
-# må fikse så df_with_results_from_tunersearch.csv er sortert på val_loss
 
 
 import time
@@ -25,10 +24,11 @@ import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 # dict with training time for models
-training_time = {}
+training_time_per_tree = {}
 # dict to plot feature importances in models
 feature_imp = {}
 
+n_iterations_GBTS = {}
 
 # def extract_hyperparams_from_json(model: str) -> dict:
 #     """
@@ -41,10 +41,58 @@ feature_imp = {}
 #     return best_params
 
 
+def _training_time_per_tree(training_time: float, trees: int) -> float:
+    """
+    returns average training time per tree in seconds for DTs
+    """
+    return training_time / trees
+
+
+def random_forest_model() -> None:
+    """
+    Train Random Forest model using RandomForestRegressor from scikit-learn
+    Model is not saved as the size of the file is too large for standard GitHub membership
+    Prediction data is stored in models_data/random_forest_output
+    """
+    n_trees = 100
+    X, y = return_training_data_X_y()
+    rf = RandomForestRegressor(n_estimators=n_trees)  # MSE default loss criterion
+    t0 = time.perf_counter()
+    rf.fit(X, y)
+    runtime = time.perf_counter() - t0
+    # get feature importances and plot in df_feature_imp
+    feature_imp["rf"] = rf.feature_importances_
+    training_time_per_tree["rf"] = _training_time_per_tree(runtime, n_trees)
+
+    X_test, y_test = return_test_data()
+
+    # predict and store results to pandas dataframe
+    pred = rf.predict(X_test)
+    df_pred = pd.DataFrame({"E [V]": X_test[:, 0], "Current density [A/cm2]": 10**pred})
+    df_pred.to_csv("models_data/random_forest_output/current_density_pred.csv", sep="\t")
+
+    # get errors from training data vs test data
+    df_errors = pd.DataFrame()
+    df_errors["(MAPE of log)"] = [mape(pred, y_test)]  # must be array-like
+    df_errors["MAPE"] = 10 ** df_errors["(MAPE of log)"]
+    df_errors["rmse"] = mse(pred, y_test, squared=False)
+    df_errors.to_csv("models_data/random_forest_output/errors.csv", sep="\t")
+
+
 def catboost_model() -> None:
     """
     Train CatBoost model and load it later in compare_models_with_exp_data.py
+    Earlystopping of 50 rounds are applied, i.e. model will stop if no new loss minima
+    are found within 50 iterations after the previous minima
+
+
+    Notes:
+        For default learning rate(adjusted) the model could do 10000 iterations without converging
+
     """
+    n_iterations = 100
+    n_iterations_GBTS["cb"] = n_iterations
+
     # load hyperparams from RandomSearchCV in hyperparameter_tuning.py
 
     # y needs shape (1, N_ROWS)
@@ -52,12 +100,12 @@ def catboost_model() -> None:
     X_train, X_val, y_train, y_val = split_into_training_and_validation(X, y)
 
     # extract key-value pairs, use default values besides the ones in RS
-    cb = CatBoostRegressor(n_estimators=2000, loss_function="RMSE", early_stopping_rounds=50)
+    cb = CatBoostRegressor(n_estimators=n_iterations, loss_function="RMSE", learning_rate=0.5)
     t0 = time.perf_counter()
-    cb.fit(X_train, y_train, eval_set=(X_val, y_val), verbose=100)
+    cb.fit(X_train, y_train, eval_set=(X_val, y_val), verbose=100, early_stopping_rounds=5)
 
     runtime = time.perf_counter() - t0
-    training_time["cb"] = runtime
+    training_time_per_tree["cb"] = _training_time_per_tree(runtime, n_iterations)
 
     # get feature importances and divide by 100 to become fractions of 1
     feature_imp["cb"] = [v / 100 for v in cb.feature_importances_]
@@ -65,73 +113,39 @@ def catboost_model() -> None:
     cb.save_model("models_saved/catboost_model.cbm", format="cbm")
 
 
-def random_forest_model() -> None:
-    """
-    Train RandomForest model and load it later in compare_models_with_exp_data.py
-    Model size is incredibly large, so the model will not be saved, but important outputs
-    will be stored txt files and loaded in compare_models...
-    """
-
-    X, y = return_training_data_X_y()
-    n_estimators = 500
-    rf = RandomForestRegressor(n_estimators=n_estimators)
-    t0 = time.perf_counter()
-    rf.fit(X, y)
-    runtime = time.perf_counter() - t0
-    # get feature importances and plot in df_feature_imp
-    feature_imp["rf"] = rf.feature_importances_
-
-    training_time["rf"] = runtime
-
-    X_test, y_test = return_test_data()
-    # apply prediction for all stages to evaluate loss as function of iterations
-    pred_each_iter = [est.predict(X_test) for est in rf.estimators_]
-
-    # store last pred to csv file
-    df_pred = pd.DataFrame()
-    df_pred["E [V]"] = X_test[:, 0]
-    df_pred["Current density [A/cm2]"] = 10 ** pred_each_iter[-1]
-    df_pred.to_csv("models_data/random_forest_output/current_density_pred.csv", sep="\t")
-
-    # rmse for each pred
-    rmse_rf = [mse(pred, y_test, squared=False) for pred in pred_each_iter]
-    # store a df with iterations and rmse as columns
-    df_rmse = pd.DataFrame()
-    df_rmse["Trees"] = [iter for iter in range(1, n_estimators + 1, 1)]
-    df_rmse["rmse of log"] = rmse_rf
-    df_rmse.to_csv("models_data/random_forest_output/rmse.csv", sep="\t")
-
-    # last pred is the used pred
-    df_mape = pd.DataFrame()
-    df_mape["(MAPE of log)"] = [mape(pred_each_iter[-1], y_test)]  # must be array-like
-    df_mape["MAPE"] = 10 ** df_mape["(MAPE of log)"]
-    df_mape.to_csv("models_data/random_forest_output/mape.csv", sep="\t")
-
-
 def xgboost_model() -> None:
-    X, y = return_training_data_X_y()
-    # assign test data to evaluate against
-    X_test, y_test = return_test_data()
-    # number of estimators/iterations
-    n_iter = 500
+    """
+    Train XGBoost model and load it later in compare_models_with_exp_data.py
+    Earlystopping of 50 rounds are applied, i.e. model will stop if no new loss minima
+    are found within 50 iterations after the previous minima
+    """
+    n_iterations = 100
+    n_iterations_GBTS["xgb"] = n_iterations
 
-    xgb = XGBRegressor(eval_metric=["rmse"], n_estimators=n_iter)
+    X, y = return_training_data_X_y()
+    X_train, X_val, y_train, y_val = split_into_training_and_validation(X, y)
+
+    xgb = XGBRegressor(eval_metric=["rmse"], n_estimators=n_iterations, early_stopping_rounds=50)
     t0 = time.perf_counter()
-    xgb.fit(X, y, eval_set=[(X, y), (X_test, y_test)], verbose=False)
+    xgb.fit(X_train, y_train, eval_set=[(X_train, y_train), (X_val, y_val)], verbose=100)
     runtime = time.perf_counter() - t0
-    training_time["xgb"] = runtime
+    training_time_per_tree["xgb"] = _training_time_per_tree(runtime, n_iterations)
 
     # get feature importances and plot in df_feature_imp
     feature_imp["xgb"] = xgb.feature_importances_
 
     # get loss for each iteration
     evals_result = xgb.evals_result()
-    # convert training loss to df
-    df = pd.DataFrame()
-    df["iterations"] = [iter for iter in range(1, n_iter + 1, 1)]
-    df["rmse"] = evals_result["validation_0"]["rmse"]
-    # store df in csv file
-    df.to_csv("models_data/xgboost_info/training_loss.csv", sep="\t", index=False)
+    train_loss, val_loss = evals_result["validation_0"]["rmse"], evals_result["validation_1"]["rmse"]
+
+    # convert training loss to df and save df
+    pd.DataFrame(
+        {
+            "iter": [iter for iter in range(1, len(train_loss) + 1, 1)],
+            "train_loss_rmse": train_loss,
+            "val_loss_rmse": val_loss,
+        }
+    ).to_csv("models_data/xgboost_info/train_val_loss.csv", sep="\t", index=False)
 
     xgb.save_model("models_saved/xgboost.txt")
 
@@ -196,11 +210,19 @@ def feature_importances_to_pd():
     df.to_csv("model_figures/feature_importances.csv", sep="\t", index=False)
 
 
+def save_iterations_GBDTs_into_df():
+    df = pd.DataFrame(columns=["model", "max_iterations"])
+    ks, vs = [k for k, v in n_iterations_GBTS.items()], [v for k, v in n_iterations_GBTS.items()]
+    df["model"], df["max_iterations"] = ks, vs
+    df.to_csv("model_figures/max_iterations_GBDTs.csv", sep="\t", index=False)
+
+
 if __name__ == "__main__":
+    # random_forest_model()
     catboost_model()
-    random_forest_model()
     xgboost_model()
-    lightgbm_model()
-    load_ANN_runtime()
-    plot_histogram_training_time()
-    feature_importances_to_pd()
+    # lightgbm_model()
+    # load_ANN_runtime()
+    # plot_histogram_training_time()
+    # feature_importances_to_pd()
+    save_iterations_GBDTs_into_df()

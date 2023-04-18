@@ -1,0 +1,3 @@
+model	max_iterations
+cb	100
+xgb	100
