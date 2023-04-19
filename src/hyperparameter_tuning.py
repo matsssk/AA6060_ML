@@ -157,7 +157,7 @@ def create_tuner_and_return_results() -> list[list]:
     for i in [0, 1]:
         model = best_models[i]
         if i == 0:
-            model.save(f"{directory_for_tuning_results()}/best_model.h5")
+            model.save(f"{directory_for_tuning_results()}/first_best_model.h5")
             # copy it to directory with other models
             model.save("models_saved/ANN_tuned_best.h5")
         else:
