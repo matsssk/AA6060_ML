@@ -51,7 +51,7 @@ def plot_and_return_dataframe_with_filtered_data(
         fig_tafel.tight_layout()
 
     # create empty dataframe and add data to it from all files
-    df_merged_filtered = pd.DataFrame()
+    df_all_filtered_data = pd.DataFrame()
     files = list_of_filenames()
     # dataframe to store selected features
     selected_features_df = pd.DataFrame()
@@ -91,7 +91,7 @@ def plot_and_return_dataframe_with_filtered_data(
         #  create a pandas DataFrame with the output from the filtering process
         #  for pH, the name format "ph2,0" etc. is necessary, otherwise the indices will
         #  be incorrect, [2:5] means e.g. the letters "2,0"
-        df_to_add_to_df_merged = pd.DataFrame(
+        df_to_add_to_df_all_filtered_data = pd.DataFrame(
             {
                 "Potential [V]": potential_filtered,
                 "pH": [pH] * len(potential_filtered),
@@ -99,10 +99,10 @@ def plot_and_return_dataframe_with_filtered_data(
             }
         )
         #  update the existing dataframe, adding the rows
-        df_merged_filtered = pd.concat(
+        df_all_filtered_data = pd.concat(
             [
-                df_merged_filtered,
-                df_to_add_to_df_merged,
+                df_all_filtered_data,
+                df_to_add_to_df_all_filtered_data,
             ]
         )
         # the coordinates of the different subplots
@@ -144,7 +144,7 @@ def plot_and_return_dataframe_with_filtered_data(
 
     # save selected featurs
     selected_features_df.to_csv("selected_features.csv", sep="\t", index=False)
-    return df_merged_filtered
+    return df_all_filtered_data
 
 
 if __name__ == "__main__":
