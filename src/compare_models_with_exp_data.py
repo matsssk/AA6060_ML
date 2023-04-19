@@ -54,7 +54,7 @@ if __name__ == "__main__":
     ax_loss_ANN.set_ylabel("Error, RMSE")
 
 # prediction loss of log(abs(current density)) in Mean Absolute Percentage Errror
-best_scores_mape = {}
+best_scores_mape_log = {}
 
 
 # func OK
@@ -98,11 +98,7 @@ def random_forest_comparison() -> None:
 
     ax_pred.semilogx(current_density_pred, X_test[:, 0], label="Random Forest")
     # load MAPE (scalar)
-    best_scores_mape["rf"] = pd.read_csv(f"{path}/mape.csv", sep="\t")["(MAPE of log)"][0]
-
-    # load rmse for all estimators (trees)
-    df_loss = pd.read_csv(f"{path}/rmse.csv", sep="\t")
-    ax_loss_trees.plot(df_loss["Trees"], df_loss["rmse of log"], label="RF")
+    best_scores_mape_log["rf"] = pd.read_csv(f"{path}/errors.csv", sep="\t")["(MAPE of log)"][0]
 
 
 def catboost_comparison() -> None:
@@ -112,7 +108,7 @@ def catboost_comparison() -> None:
     y_pred = cb.predict(X_test)
     ax_pred.semilogx(10**y_pred, X_test[:, 0], label="CatBoost")
 
-    best_scores_mape["cb"] = mape(y_pred, y_test)
+    best_scores_mape_log["cb"] = mape(y_pred, y_test)
 
     df_train_loss = pd.read_csv("catboost_info/learn_error.tsv", sep="\t")
     ax_loss_trees.plot(df_train_loss["iter"], df_train_loss["RMSE"], label="CatBoost")
@@ -130,7 +126,7 @@ def xgboost_comparison() -> None:
     X_test, y_test = return_test_data()
     # prediction of log10(abs(current density))
     y_pred = xgb.predict(X_test)
-    best_scores_mape["xgb"] = mape(y_pred, y_test)
+    best_scores_mape_log["xgb"] = mape(y_pred, y_test)
     y_pred = 10**y_pred
     ax_pred.semilogx(y_pred, X_test[:, 0], label="XGBoost")
 
@@ -144,20 +140,24 @@ def xgboost_comparison() -> None:
     )
 
 
-# begynn her!
 def lgbm_comparison() -> None:
     lgbm = lgb.Booster(model_file="models_saved/lgbm.txt")
     X_test, y_test = return_test_data()
     # prediction of log10(abs(current density))
     y_pred = lgbm.predict(X_test)
-    best_scores_mape["lgbm"] = mape(y_pred, y_test)
+    best_scores_mape_log["lgbm"] = mape(y_pred, y_test)
     y_pred = 10**y_pred
     ax_pred.semilogx(y_pred, X_test[:, 0], label="lightgbm")
 
     # plot rmse for each iter
-    df = pd.read_csv("models_data/lgbm_info/training_loss.csv", sep="\t")
+    # plot rmse for each iter
+    df = pd.read_csv("models_data/lgbm_info/train_val_loss.csv", sep="\t")
+    ax_loss_trees.plot(df["iter"], df["train_loss_rmse"], label="Training losss lightgbm")
+    ax_val_loss_trees.plot(df["iter"], df["val_loss_rmse"], label="Validation loss lightgbm")
 
-    ax_loss_trees.plot(df["iterations"], df["rmse"], label="lightgbm")
+    plot_scatter_if_early_stopping(
+        "lgbm", df["iter"].iloc[-1], df["train_loss_rmse"].iloc[-1], df["val_loss_rmse"].iloc[-1]
+    )
 
 
 def ANN_comparison() -> None:
@@ -166,7 +166,7 @@ def ANN_comparison() -> None:
     model = keras.models.load_model("tuning_results/best_model.h5")
 
     y_pred = y_scaler.inverse_transform(model.predict(x_scaler.fit_transform(X_test)))
-    best_scores_mape["ANN"] = mape(y_pred, y_test)
+    best_scores_mape_log["ANN"] = mape(y_pred, y_test)
 
     y_pred = 10**y_pred
 
@@ -181,7 +181,7 @@ def ANN_comparison() -> None:
 
 
 def store_mape_from_models_into_csv() -> None:
-    df = pd.DataFrame(list(best_scores_mape.items()), columns=["Model", "MAPE of log"]).sort_values("MAPE of log")
+    df = pd.DataFrame(list(best_scores_mape_log.items()), columns=["Model", "MAPE of log"]).sort_values("MAPE of log")
     df["MAPE of current density"] = 10 ** df["MAPE of log"]
     df.to_csv("model_figures/df_with_models_MAPE_errors", sep="\t", index=False)
 
@@ -189,11 +189,11 @@ def store_mape_from_models_into_csv() -> None:
 if __name__ == "__main__":
     plot_experimental_testing_data()
     catboost_comparison()
-    # random_forest_comparison()
+    random_forest_comparison()
     xgboost_comparison()
-    # lgbm_comparison()
-    # ANN_comparison()
-    # store_mape_from_models_into_csv()
+    lgbm_comparison()
+    ANN_comparison()
+    store_mape_from_models_into_csv()
 
     # save figs
     try:

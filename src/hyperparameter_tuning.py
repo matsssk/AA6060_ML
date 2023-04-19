@@ -26,10 +26,6 @@ def name_df_hyperparams_results():
     return "df_with_results_from_tunersearch.csv"
 
 
-def name_best_ann_model():
-    return "best_model.h5"
-
-
 def epochs_for_search_and_train():
     return 1
 
@@ -157,11 +153,17 @@ def create_tuner_and_return_results() -> list[list]:
     best_hps: list = tuner.get_best_hyperparameters(num_trials=trials())
     best_models: list = tuner.get_best_models(num_models=trials())
 
-    # save the best model
-    best_model = best_models[0]
-    best_model.save(f"{directory_for_tuning_results()}/{name_best_ann_model()}")
-    # copy it to directory with other models
-    best_model.save("models_saved/ANN_tuned.h5")
+    # save the two best models
+    for i in [0, 1]:
+        model = best_models[i]
+        if i == 0:
+            model.save(f"{directory_for_tuning_results()}/best_model.h5")
+            # copy it to directory with other models
+            model.save("models_saved/ANN_tuned_best.h5")
+        else:
+            model.save(f"{directory_for_tuning_results()}/second_best_model.h5")
+            # copy it to directory with other models
+            model.save("models_saved/ANN_tuned_second_best.h5")
 
     return [best_hps, best_models]
 
@@ -169,10 +171,9 @@ def create_tuner_and_return_results() -> list[list]:
 def store_tuning_results() -> pd.DataFrame:
     """
     best_hps and best_models are lists of keras objects
-    <class 'keras_tuner.engine.hyperparameters.hyperparameters.HyperParameters'>
-    <class 'keras.engine.sequential.Sequential'>
+    best_hps: <class 'keras_tuner.engine.hyperparameters.hyperparameters.HyperParameters'>
+    best_models: <class 'keras.engine.sequential.Sequential'>
     """
-    # MUST GET LOSSES FROM TRAINING IN PLOT_CURVES....
 
     best_hps, best_models = create_tuner_and_return_results()
     _, X_val, _, y_val, _, _ = normalize_data_for_ANN()

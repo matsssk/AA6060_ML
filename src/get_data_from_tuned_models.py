@@ -29,7 +29,7 @@ def plot_learning_curves_best_n_models():
     # create figure to plot learning curves for each trained model
     plt.figure(figsize=(10, 10))
     plt.xlabel("Epochs")
-    plt.ylabel("Error, RMSE")  # all other loss funcs are converted to MSE, e.g. msle is converted to mse
+    plt.ylabel("Error, RMSE")
 
     hyperparams_df: pd.DataFrame = pd.read_csv(
         f"{directory_for_tuning_results()}/{name_df_hyperparams_results()}", sep=","
@@ -41,6 +41,7 @@ def plot_learning_curves_best_n_models():
     runtimes = []
     epochs = []
     colors = ["r", "b", "k", "y", "o"]
+    # for each set of hyperparameters, construct and train model to obtain learning curves
     for idx, row in hyperparams_df.iterrows():
         model = Sequential()
 
@@ -83,6 +84,7 @@ def plot_learning_curves_best_n_models():
         )
         runtimes.append(time.perf_counter() - t0)
         df_loss = pd.DataFrame(history.history)
+        df_loss.insert(0, "epochs", df_loss.shape[0])
         epochs.append(df_loss.shape[0])
 
         # store training and validation loss
@@ -99,7 +101,7 @@ def plot_learning_curves_best_n_models():
 
     hyperparams_df["runtime"] = runtimes
     hyperparams_df["epochs"] = epochs
-    hyperparams_df = hyperparams_df.drop("val_loss", axis=1)  #  remove old val_loss from tuner.search
+    hyperparams_df = hyperparams_df.drop("val_loss_rmse", axis=1)  #  remove old val_loss from tuner.search
     hyperparams_df.to_csv("models_data/ANN_info/data_for_n_best_models.csv", sep=",", index=False)
 
     plt.legend()

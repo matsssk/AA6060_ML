@@ -23,8 +23,10 @@ import os
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
-# dict with training time for models
+# dict with training time for DTs
 training_time_per_tree = {}
+# dict with all training times
+training_times_all_models = {}
 # dict to plot feature importances in models
 feature_imp = {}
 
@@ -61,8 +63,9 @@ def random_forest_model() -> None:
     rf.fit(X, y)
     runtime = time.perf_counter() - t0
     # get feature importances and plot in df_feature_imp
-    feature_imp["rf"] = rf.feature_importances_
+    training_times_all_models["rf"] = runtime
     training_time_per_tree["rf"] = _training_time_per_tree(runtime, n_trees)
+    feature_imp["rf"] = rf.feature_importances_
 
     X_test, y_test = return_test_data()
 
@@ -76,7 +79,7 @@ def random_forest_model() -> None:
     df_errors["(MAPE of log)"] = [mape(pred, y_test)]  # must be array-like
     df_errors["MAPE"] = 10 ** df_errors["(MAPE of log)"]
     df_errors["rmse"] = mse(pred, y_test, squared=False)
-    df_errors.to_csv("models_data/random_forest_output/errors.csv", sep="\t")
+    df_errors.to_csv("models_data/random_forest_output/errors.csv", sep="\t", index=False)
 
 
 def catboost_model() -> None:
@@ -105,6 +108,7 @@ def catboost_model() -> None:
     cb.fit(X_train, y_train, eval_set=(X_val, y_val), verbose=100, early_stopping_rounds=5)
 
     runtime = time.perf_counter() - t0
+    training_times_all_models["cb"] = runtime
     training_time_per_tree["cb"] = _training_time_per_tree(runtime, n_iterations)
 
     # get feature importances and divide by 100 to become fractions of 1
@@ -129,6 +133,7 @@ def xgboost_model() -> None:
     t0 = time.perf_counter()
     xgb.fit(X_train, y_train, eval_set=[(X_train, y_train), (X_val, y_val)], verbose=100)
     runtime = time.perf_counter() - t0
+    training_times_all_models["xgb"] = runtime
     training_time_per_tree["xgb"] = _training_time_per_tree(runtime, n_iterations)
 
     # get feature importances and plot in df_feature_imp
@@ -151,28 +156,41 @@ def xgboost_model() -> None:
 
 
 def lightgbm_model() -> None:
-    X, y = return_training_data_X_y()
-    X_test, y_test = return_test_data()
-    n_iter = 500
-    lgbm = LGBMRegressor(n_estimators=n_iter)
-    t0 = time.perf_counter()
-    lgbm.fit(X, y, eval_set=[(X, y), (X_test, y_test)], eval_metric=["rmse"], callbacks=[lgb.log_evaluation(False)])
-    runtime = time.perf_counter() - t0
-    training_time["lgbm"] = runtime
+    n_iterations = 100
+    n_iterations_GBTS["lgbm"] = n_iterations
 
-    # get loss for each iteration
-    evals_result = lgbm.evals_result_
+    X, y = return_training_data_X_y()
+    X_train, X_val, y_train, y_val = split_into_training_and_validation(X, y)
+
+    lgbm = LGBMRegressor(n_estimators=n_iterations)
+    t0 = time.perf_counter()
+    lgbm.fit(
+        X_train,
+        y_train,
+        eval_set=[(X_train, y_train), (X_val, y_val)],
+        eval_metric=["rmse"],
+        callbacks=[lgb.log_evaluation(True)],
+        early_stopping_rounds=50,
+    )
+    runtime = time.perf_counter() - t0
+    training_times_all_models["lgbm"] = runtime
+    training_time_per_tree["lgbm"] = _training_time_per_tree(runtime, n_iterations)
 
     # get feature importances, defaults on split = how many times the feature is used in the model
     # convert the number to fraction of total splits
     feature_imp["lgbm"] = [v / sum(lgbm.feature_importances_) for v in lgbm.feature_importances_]
 
-    df = pd.DataFrame()
-    df["iterations"] = [iter for iter in range(1, n_iter + 1, 1)]
-    df["rmse"] = evals_result["training"]["rmse"]
+    evals_result = lgbm.evals_result_
+    train_loss, val_loss = evals_result["training"]["rmse"], evals_result["valid_1"]["rmse"]
 
-    # store df to csv file
-    df.to_csv("models_data/lgbm_info/training_loss.csv", sep="\t", index=False)
+    # convert training loss to df and save df
+    pd.DataFrame(
+        {
+            "iter": [iter for iter in range(1, len(train_loss) + 1, 1)],
+            "train_loss_rmse": train_loss,
+            "val_loss_rmse": val_loss,
+        }
+    ).to_csv("models_data/lgbm_info/train_val_loss.csv", sep="\t", index=False)
 
     lgbm.booster_.save_model("models_saved/lgbm.txt")
 
@@ -181,16 +199,16 @@ def load_ANN_runtime() -> None:
     # load best model's runtime
     # ANN is already trained through tuner.search in hyperparameter_tunig.py
 
-    training_time["ANN"] = pd.read_csv("models_data/ANN_info/data_for_n_best_models.csv", sep=",", usecols=["runtime"])[
-        "runtime"
-    ][0]
+    training_times_all_models["ANN"] = pd.read_csv(
+        "models_data/ANN_info/data_for_n_best_models.csv", sep=",", usecols=["runtime"]
+    )["runtime"][0]
 
 
-def plot_histogram_training_time() -> None:
+def plot_histogram_training_time_all_models() -> None:
     plt.figure(figsize=(10, 10))
-    plt.xlabel("Model")
-    plt.ylabel("Training time [s]")
-    df = pd.DataFrame(list(training_time.items()), columns=["Model", "Time"]).sort_values("Time")
+    plt.xlabel("Algorithm")
+    plt.ylabel("Training time")
+    df = pd.DataFrame(list(training_times_all_models.items()), columns=["Model", "Time"]).sort_values("Time")
 
     # ajust xticks locations
     pos = [0, 1, 2, 3, 4]
@@ -199,7 +217,23 @@ def plot_histogram_training_time() -> None:
         pos, labels=[f" {k.upper()}: {round(v,2)} s" for k, v in zip(df["Model"], df["Time"])], rotation=45, ha="center"
     )
 
-    plt.savefig("model_figures/models_training_time.png")
+    plt.savefig("model_figures/models_training_time_all_models.png")
+
+
+def plot_histogram_training_time_per_tree_DTs():
+    plt.figure(figsize=(10, 10))
+    plt.xlabel("Algorithm")
+    plt.ylabel("Training time per tree")
+    df = pd.DataFrame(list(training_time_per_tree.items()), columns=["Model", "Time"]).sort_values("Time")
+
+    # ajust xticks locations
+    pos = [0, 1, 2, 3]
+    plt.bar(df["Model"], df["Time"], width=0.25)
+    plt.xticks(
+        pos, labels=[f" {k.upper()}: {round(v,2)} s" for k, v in zip(df["Model"], df["Time"])], rotation=45, ha="center"
+    )
+
+    plt.savefig("model_figures/models_training_time_per_tree_DTs.png")
 
 
 def feature_importances_to_pd():
@@ -218,11 +252,12 @@ def save_iterations_GBDTs_into_df():
 
 
 if __name__ == "__main__":
-    # random_forest_model()
+    random_forest_model()
     catboost_model()
     xgboost_model()
-    # lightgbm_model()
-    # load_ANN_runtime()
-    # plot_histogram_training_time()
-    # feature_importances_to_pd()
+    lightgbm_model()
+    load_ANN_runtime()
+    plot_histogram_training_time_all_models()
+    plot_histogram_training_time_per_tree_DTs()
+    feature_importances_to_pd()
     save_iterations_GBDTs_into_df()
