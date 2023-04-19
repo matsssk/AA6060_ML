@@ -1,7 +1,3 @@
-# MUST DO
-# må fikse earlystopping for alle GBDTS
-
-
 import time
 
 import lightgbm as lgb
@@ -12,13 +8,11 @@ from lightgbm import LGBMRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error as mse
 
-from src.hyperparameter_tuning import path_hyperparam_folder
 from xgboost import XGBRegressor
 from sklearn.metrics import mean_absolute_percentage_error as mape
 from src.compare_models_with_exp_data import return_test_data
 from src.data_preprocessing import return_training_data_X_y, split_into_training_and_validation
 
-import pickle
 import os
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
@@ -31,16 +25,6 @@ training_times_all_models = {}
 feature_imp = {}
 
 n_iterations_GBTS = {}
-
-# def extract_hyperparams_from_json(model: str) -> dict:
-#     """
-#     Returns a dictionairy with all the hyperparams optimized through RandomSearchCV
-#     in hyperparameter_tuning.py
-#     """
-#     with open(f"{path_hyperparam_folder()}/{model}.json", "rb") as f:
-#         # Use pickle.load to load the dictionary from the file
-#         best_params: dict = pickle.load(f)
-#     return best_params
 
 
 def _training_time_per_tree(training_time: float, trees: int) -> float:

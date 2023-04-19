@@ -1,7 +1,4 @@
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import math
 from scipy import stats
 
 
@@ -19,53 +16,34 @@ def _get_ocps(E: np.ndarray, E_filtered: np.ndarray, i_filtered: np.ndarray) -> 
     return [E_ocp_t0, E_ocp_t_half, delta_ocp]
 
 
-def slope(i0, i1, E0, E1):
-    return (E1 - E0) / (np.log(abs(i1)) - np.log(abs(i0)))
+def check_ORR_dominance(ocp_t_half: float) -> bool:
+    return ocp_t_half > -1.0500
 
 
-# import warnings
+def linreg_tafel_line_ORR_or_HER(
+    ocp_t_half: float, E_filtered: np.ndarray, i_filtered: np.ndarray
+) -> list[np.ndarray | float]:
+    """
+    Apply linear regression on ORR or HER dominant region at the cathodic branch
+    ORR is dominant for higher potentials than roughly -1.05, depending on ph
+    The upper potential limit is set to - 0.15 V vs OCP (not at t= 0s)
 
-# warnings.filterwarnings("ignore", category=RuntimeWarning)
+    For high pH, HER is dominant at low potentials, seen by less steep curve
+    """
 
+    # check if we have ORR or HER
+    # create a boolean mask to filter potential and current to the desired region
+    # where kinetics are defined by the tafel equation
+    # take not that for lower potentials on ORR, we have diffusion limitations
+    if check_ORR_dominance(ocp_t_half):
+        mask = (E_filtered < (ocp_t_half - 0.15)) & (E_filtered > -1.05)
+    else:
+        mask = E_filtered < (ocp_t_half - 0.15)
 
-# def cathodic_tafel_slope(ocp_t_half: float, E: np.ndarray, i: np.ndarray) -> list[float]:
-#     # create a new array with the relevant area for a tafel region
-#     # remove all potentials that are above ocp and below a treshold defined as 0.2 lower than ocp
-#     mask = (E > (ocp_t_half - 0.02)) & (E <= ocp_t_half)
-#     E, i = E[mask], i[mask]
-#     # highest E is first in the array
-#     index_sort = np.argsort(E)[::-1]
-#     # use these indices to create new arrays, get every 100 value and use these as slope points
-#     E_sort, i_sort = E[index_sort], i[index_sort]
-#     # tafel slope is change in potental for each unit log(abs(i))
-#     tafel_slopes = []
-#     w = 50
-#     # for idx, (E, i) in enumerate(zip(E_sort, i_sort), start=1):
-#     #     if idx == len(E_sort):
-#     #         break
-#     # perform linreg on every n points
-#     # tafel_slopes.append(slope(i, i_sort[idx], E, E_sort[idx]))
+    E_applied, i_applied = np.flip(E_filtered[mask]), np.flip(i_filtered[mask])
 
-#     for n in range(0, int(len(E_sort) / w)):
-#         # perform linreg on w points
-#         try:
-#             i = np.log(abs(i_sort[(w * n) : (w + w * n)]))
-#             tafel_slope, _, _, _, _ = stats.linregress(i, E_sort[(w * n) : (w + w * n)])
-#         except IndexError:
-#             continue
-#         tafel_slopes.append(tafel_slope)
-
-#     # boolean mask that gives true for non-infinite slopes
-#     mask = [(ts != math.inf) and (ts != -math.inf) for ts in tafel_slopes]
-#     tafel_slopes = np.array(tafel_slopes)[mask]  # to use the mask
-#     avg_slope = np.mean(tafel_slopes)
-
-#     slope_diffs = np.abs(tafel_slopes - avg_slope)
-#     # get the index of the minimum difference
-#     min_idx = np.argmin(slope_diffs)
-#     # get the potentials corresponding to the two points used to make the closest tafel slope
-#     E1, E2 = E_sort[min_idx], E_sort[min_idx + 1]
-#     i1, i2 = i_sort[min_idx], i_sort[min_idx + 1]
-#     b = E1 - avg_slope * np.log(abs(i1))
-
-#     return [avg_slope, E1, E2, i1, i2, b]
+    # apply linear regression on this region
+    # remember that we want a linear region only for logarithmic x axis
+    i_applied_abs_log = np.log10(abs(i_applied))
+    slope, intercept, r_value, _, std_err = stats.linregress(i_applied_abs_log, E_applied)
+    return [E_applied, i_applied_abs_log, slope, intercept, r_value, std_err]
