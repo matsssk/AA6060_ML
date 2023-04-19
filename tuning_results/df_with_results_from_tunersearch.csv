@@ -1,0 +1,5 @@
+best_models_sorted,val_loss_rmse,neurons,num_hidden_layers,l2,optimizer,loss,activation,output_activation,batch_size
+1,0.038688983768224716,60,4,0.01,adam,mse,relu,linear,32
+2,0.045041024684906006,60,3,0.0001,adam,mae,relu,linear,32
+3,0.30046534538269043,80,2,0.01,adam,msle,relu,softmax,32
+4,0.8355394005775452,50,3,0.001,adam,msle,relu,linear,32

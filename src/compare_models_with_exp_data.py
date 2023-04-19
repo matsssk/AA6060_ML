@@ -35,6 +35,12 @@ if __name__ == "__main__":
     ax_pred.set_xlabel("|i| [A/cm$^2$]")
     ax_pred.set_ylabel("E [V]")
 
+    # figure for comparison of best and second best ann tuned model
+    fig_compare_anns = plt.figure(figsize=(10, 10))
+    ax_compare_anns = fig_compare_anns.subplots()
+    ax_compare_anns.set_xlabel("|i| [A/cm$^2$]")
+    ax_compare_anns.set_ylabel("E [V]")
+
     # training loss GBDTs
     fig_loss_trees = plt.figure(figsize=(10, 10))
     ax_loss_trees = fig_loss_trees.subplots()
@@ -87,6 +93,7 @@ def plot_experimental_testing_data() -> None:
     # slice pH column for plotting, also [:,0] reshapes the matrix to (N,) from (N,2)
     X_test = X_test[:, 0]
     ax_pred.semilogx(10**y_test, X_test, label=f"Exp data, pH = {ph_for_testing()}", color="k")
+    ax_compare_anns.semilogx(10**y_test, X_test, label=f"Exp data, pH = {ph_for_testing()}", color="k")
 
 
 def random_forest_comparison() -> None:
@@ -163,19 +170,28 @@ def lgbm_comparison() -> None:
 def ANN_comparison() -> None:
     _, _, _, _, x_scaler, y_scaler = normalize_data_for_ANN()
     X_test, y_test = return_test_data()
-    model = keras.models.load_model("tuning_results/best_model.h5")
 
-    y_pred = y_scaler.inverse_transform(model.predict(x_scaler.fit_transform(X_test)))
-    best_scores_mape_log["ANN"] = mape(y_pred, y_test)
+    # plot the two best models to compare hyperparameters
+    files: list[str] = os.listdir("tuning_results")
+    for file in files:
+        if file.endswith(".h5"):
+            model = keras.models.load_model(f"tuning_results/{file}")  # type: ignore
+            y_pred = y_scaler.inverse_transform(model.predict(x_scaler.fit_transform(X_test)))
+            y_pred = 10**y_pred
+            which_model: str = file.split("_")[0]
 
-    y_pred = 10**y_pred
+            # store error only if best model
+            if file == "first_best_model.h5":
+                ax_pred.semilogx(y_pred, X_test[:, 0], label=f"ANN {which_model}")
+                ax_compare_anns.semilogx(y_pred, X_test[:, 0], label=f"ANN {which_model}")
+                best_scores_mape_log["ANN"] = mape(y_pred, y_test)
+            else:
+                ax_compare_anns.semilogx(y_pred, X_test[:, 0], label=f"ANN {which_model}")
 
-    ax_pred.semilogx(y_pred, X_test[:, 0], label="ANN")
-
-    # plot loss
+    # plot loss for best model
     df_loss = pd.read_csv("models_data/ANN_info/training_val_loss0", sep="\t")
     epochs = [iter for iter in range(1, len(df_loss["val_rmse"]) + 1, 1)]
-    # plot epochs vs rmse (root of mse which is the loss given in df)
+    # plot epochs vs rmse (root of mse which is the loss given in df) for best model
     ax_loss_ANN.semilogy(epochs, df_loss["rmse"], "s-", label="ANN training loss best model", color="r")
     ax_loss_ANN.semilogy(epochs, df_loss["val_rmse"], "s--", label="ANN validation loss best model", color="r")
 
@@ -200,13 +216,17 @@ if __name__ == "__main__":
         fig_pred.legend(loc="upper right")
         fig_pred.savefig("model_figures/comparison_with_exp_data.png")
 
+        fig_compare_anns.legend(loc="upper right")
+        fig_compare_anns.savefig("model_figures/comparison_of_anns_with_exp.png")
+
         fig_loss_trees.legend(loc="upper right")
         fig_loss_trees.savefig("model_figures/training_loss_GBDTS.png")
 
         fig_val_loss_trees.legend(loc="upper right")
         fig_val_loss_trees.savefig("model_figures/validation_loss_GBDTS.png")
 
-        # fig_loss_ANN.legend(loc="upper right")
-        # fig_loss_ANN.savefig("model_figures/train_val_loss_ANN.png")
+        fig_loss_ANN.legend(loc="upper right")
+        fig_loss_ANN.savefig("model_figures/train_val_loss_ANN.png")
+
     except Exception as e:
         raise e

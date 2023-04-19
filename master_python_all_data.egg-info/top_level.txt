@@ -5,6 +5,7 @@ hyperparams_random_search_results
 model_figures
 models_data
 models_saved
+ocp_raw_data
 raw_data
 raw_data_plots
 sketches_for_report
