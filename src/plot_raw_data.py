@@ -1,6 +1,7 @@
 import os
 import time
 import matplotlib.pyplot as plt
+import numpy as np
 from src.load_data import list_of_filenames, load_raw_data
 
 plt.rcParams["font.family"] = "serif"
@@ -56,7 +57,8 @@ def plot_and_return_dataframe_with_filtered_data(
     selected_features_df = pd.DataFrame()
 
     for idx, file in enumerate(files):
-        file_path = os.path.join(folder, file)
+        file_path: str = os.path.join(folder, file)
+        pH: float = float(file.split("h")[1].split(",")[0] + "." + file.split(",")[1].split(".")[0])
         potential, current_density = load_raw_data(file_path)
         current_density_filtered, potential_filtered = remove_first_cath_branch(current_density, potential)
 
@@ -66,14 +68,14 @@ def plot_and_return_dataframe_with_filtered_data(
             _, i_tafel_abs_log, tafel_slope, intercept, r_value, std_err = linreg_tafel_line_ORR_or_HER(
                 ocp_t_half, potential_filtered, current_density_filtered
             )
-
+            # slope is delta E / delta abs(i), we need delta E / delta log10(|i|)
         except ValueError:
-            print(f"Something wrong with file {file}")
+            print(f"Something wrong with file: {file}")
             raise ValueError
 
         df_add_to_selected_features = pd.DataFrame(
             {
-                "pH": [float(file[2:5].replace(",", ".")) if file[4] != "," else float(file[2:6].replace(",", "."))],
+                "pH": [pH],  # pandas does not accept float, only numpy float (e.g. ocp_t0)
                 "OCP_t0": ocp_t0,
                 "OCP_t_half": ocp_t_half,
                 "delta_OCP": delta_ocp,
@@ -92,8 +94,7 @@ def plot_and_return_dataframe_with_filtered_data(
         df_to_add_to_df_merged = pd.DataFrame(
             {
                 "Potential [V]": potential_filtered,
-                "pH": [float(file[2:5].replace(",", ".")) if file[4] != "," else float(file[2:6].replace(",", "."))]
-                * len(potential_filtered),
+                "pH": [pH] * len(potential_filtered),
                 "Current density [A/cm$^2$]": current_density_filtered,
             }
         )
@@ -108,20 +109,22 @@ def plot_and_return_dataframe_with_filtered_data(
         positions = [[0, 0], [0, 1], [1, 0], [1, 1]] * int(len(files) / 4 + 1)
         if __name__ == "__main__":
             loc = positions[idx][0], positions[idx][1]
-            ax[loc].semilogx(abs(current_density), potential, color="k", label=f"pH : {file[2:6]}")
+            ax[loc].semilogx(abs(current_density), potential, color="k", label=f"pH = {pH}")
             for _ax in [ax2, ax_tafel]:
                 _ax[loc].semilogx(
                     abs(current_density_filtered),
                     potential_filtered,
                     color="k",
-                    label=f"pH : {file[2:6]}",
+                    label=f"pH = {pH}",
                 )
-
+            partial_derivative = r"$\frac{\partial E}{\partial log|i|}$"
+            rounded_r_squared = round(r_value**2, 5)  # type: ignore
             ax_tafel[loc].semilogx(
                 10**i_tafel_abs_log,
-                tafel_slope * 10**i_tafel_abs_log + intercept,
-                color="k",
-                label=f"pH : {file[2:6]}, slope = {tafel_slope}, R2 = {r_value**2}",
+                tafel_slope * i_tafel_abs_log + intercept,
+                color="r",
+                linestyle="--",
+                label=f"pH = {pH}, {partial_derivative} = {int(tafel_slope*1000)} mV/dec, R\u00b2 = {rounded_r_squared}",
             )
 
             ax[loc].legend()
@@ -132,9 +135,10 @@ def plot_and_return_dataframe_with_filtered_data(
                 fig.savefig(f"{save_figs_raw_data}/plots_of_raw_data_{idx+1}")
                 fig2.savefig(f"{save_figs_filtered_data}/plots_of_filtered_data_{idx+1}")
                 fig_tafel.savefig(f"tafel_slopes_figures/{idx+1}")
-                for subplot_ax, subplot_ax2 in zip(ax.flat, ax2.flat):
+                for subplot_ax, subplot_ax2, subplot_ax_tafel in zip(ax.flat, ax2.flat, ax_tafel.flat):
                     subplot_ax.clear()
                     subplot_ax2.clear()
+                    subplot_ax_tafel.clear()
 
     # df_merged_filtered.to_csv("df_merged_not_normalized.txt", sep="\t", index=False)
 

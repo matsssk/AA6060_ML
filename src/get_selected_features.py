@@ -44,6 +44,6 @@ def linreg_tafel_line_ORR_or_HER(
 
     # apply linear regression on this region
     # remember that we want a linear region only for logarithmic x axis
-    i_applied_abs_log = np.log10(abs(i_applied))
-    slope, intercept, r_value, _, std_err = stats.linregress(i_applied_abs_log, E_applied)
-    return [E_applied, i_applied_abs_log, slope, intercept, r_value, std_err]
+    i_applied_log_abs = np.log10(abs(i_applied))
+    slope, intercept, r_value, _, std_err = stats.linregress(i_applied_log_abs, E_applied)
+    return [E_applied, i_applied_log_abs, slope, intercept, r_value, std_err]
