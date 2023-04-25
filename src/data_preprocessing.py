@@ -5,6 +5,7 @@ from plot_raw_data import plot_and_return_dataframe_with_filtered_data
 from nptyping import NDArray, Float, Shape
 from typing import TypeVar
 from sklearn.model_selection import train_test_split
+import random
 
 # N_ROWS can be any length
 N_ROWS = TypeVar("N_ROWS")
@@ -18,18 +19,25 @@ def all_filtered_experimental_data_not_normalized(
     return df.values  # not normalized
 
 
-# func OK
 def convert_current_to_log(current: NDArray[Shape["1, N_ROWS"], Float]) -> NDArray[Shape["1, N_ROWS"], Float]:
     return np.log10(abs(current))
 
 
-# define a pH that is used for testing, i.e. models are not trained for this pH
-# func OK
-def ph_for_testing():
-    return 6.4
+def ph_for_testing() -> None:
+    """
+    Saves dataframe with randomly drawn pHs
+    PS: Uniform probabilties
+    """
+    samples = list(np.arange(2.0, 12.2, 0.2))
+    test_ph = []
+    while len(test_ph) < 4:
+        ph = round(random.choice(samples), 3)
+        if ph not in test_ph:
+            test_ph.append(ph)
+    df = pd.DataFrame(test_ph, columns=["test_pHs"])
+    df.to_csv("testing_pHs.csv", sep="\t", index=False)
 
 
-# func OK
 def split_data_into_training_and_testing(
     all_data: NDArray[Shape["N_ROWS, 3"], Float]
 ) -> tuple[NDArray[Shape["N_ROWS, 3"], Float], NDArray[Shape["N_ROWS, 3"], Float]]:
@@ -41,11 +49,13 @@ def split_data_into_training_and_testing(
     """
 
     # create boolean mask with the pH for testing
-    mask = all_data[:, 1] == ph_for_testing()
+    # pH is second column
+    ph_for_testing = pd.read_csv("testing_pHs.csv", sep="\t")
+    mask = np.isin(all_data[:, 1], ph_for_testing["test_pHs"])
+
     # Split data into training and testing arrays
     testing_data = all_data[mask]
     training_data = all_data[~mask]
-
     return (training_data, testing_data)
 
 

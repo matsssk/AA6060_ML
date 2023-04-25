@@ -51,18 +51,31 @@ def random_forest_model() -> None:
     training_time_per_tree["rf"] = _training_time_per_tree(runtime, n_trees)
     feature_imp["rf"] = rf.feature_importances_
 
+    # X_test and y_test containt all pHs
     X_test, y_test = return_test_data()
-
-    # predict and store results to pandas dataframe
-    pred = rf.predict(X_test)
-    df_pred = pd.DataFrame({"E [V]": X_test[:, 0], "Current density [A/cm2]": 10**pred})
-    df_pred.to_csv("models_data/random_forest_output/current_density_pred.csv", sep="\t")
-
-    # get errors from training data vs test data
+    testing_phs = pd.read_csv("testing_pHs.csv", sep="\t")["test_pHs"]
     df_errors = pd.DataFrame()
-    df_errors["(MAPE of log)"] = [mape(pred, y_test)]  # must be array-like
-    df_errors["MAPE"] = 10 ** df_errors["(MAPE of log)"]
-    df_errors["rmse"] = mse(pred, y_test, squared=False)
+    df_errors["pH"] = testing_phs
+    mape_log_list = []
+    mape_list = []
+    rmse_list = []
+    for ph in testing_phs:
+        # create mask to get data with only that pH
+        ph_mask = X_test[:, 1] == ph
+        X_test_ph, y_test_ph = X_test[ph_mask], y_test[ph_mask]
+        # predict and store results to pandas dataframe
+        pred_ph = rf.predict(X_test_ph)
+        df_pred = pd.DataFrame({"E [V]": X_test_ph[:, 0], "Current density [A/cm2]": 10**pred_ph})
+        df_pred.to_csv(f"models_data/random_forest_output/current_density_pred_ph_{ph}.csv", sep="\t", index=False)
+
+        # get errors from training data vs test data
+        mape_log_list.append(mape(pred_ph, y_test_ph))  # must be array-like
+        mape_list.append(10 ** mape_log_list[-1])
+        rmse_list.append(mse(pred_ph, y_test_ph, squared=False))
+
+    df_errors["(MAPE of log)"] = mape_log_list
+    df_errors["mape"] = mape_list
+    df_errors["rmse"] = rmse_list
     df_errors.to_csv("models_data/random_forest_output/errors.csv", sep="\t", index=False)
 
 
@@ -191,7 +204,7 @@ def load_ANN_runtime() -> None:
 def plot_histogram_training_time_all_models() -> None:
     plt.figure(figsize=(10, 10))
     plt.xlabel("Algorithm")
-    plt.ylabel("Training time")
+    plt.ylabel("Training time [s]")
     df = pd.DataFrame(list(training_times_all_models.items()), columns=["Model", "Time"]).sort_values("Time")
 
     # ajust xticks locations
@@ -207,7 +220,7 @@ def plot_histogram_training_time_all_models() -> None:
 def plot_histogram_training_time_per_tree_DTs():
     plt.figure(figsize=(10, 10))
     plt.xlabel("Algorithm")
-    plt.ylabel("Training time per tree")
+    plt.ylabel("Training time per tree [s]")
     df = pd.DataFrame(list(training_time_per_tree.items()), columns=["Model", "Time"]).sort_values("Time")
 
     # ajust xticks locations
