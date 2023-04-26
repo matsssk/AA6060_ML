@@ -208,6 +208,51 @@ def plot_train_val_loss_ann_best_model():
     ax_loss_ANN.semilogy(epochs, df_loss["val_rmse"], "s--", label="ANN validation loss best model", color="r")
 
 
+def plot_histogram_mape_models(best_scores_mape_log: pd.DataFrame):
+    fig, ax = plt.subplots()
+
+    bar_width = 0.07
+    colors = ["r", "g", "k", "y", "m"]
+    labels = ["RF", "CB", "XGB", "LGB", "ANN"]
+    locs = [1, 2, 3, 4]
+    # Loop over each row
+    for i, row in best_scores_mape_log.iterrows():
+        # Get the values for the current row and remove the pH value
+        values = row.drop("pH").values
+        sorting_indices = np.argsort(values)  # type: ignore
+        # all rows are sorted in ascending order, rearange all used lists
+        sorted_colors = [colors[i] for i in sorting_indices]
+        sorted_values = [values[i] for i in sorting_indices]
+        sorted_labels = [labels[i] for i in sorting_indices]
+
+        if i == 0:
+            # Plot the bars
+            for idx, val in enumerate(sorted_values):
+                ax.bar(
+                    locs[i] + idx * 2 * bar_width,
+                    val,
+                    bar_width,
+                    label=sorted_labels[idx],
+                    color=sorted_colors[idx],
+                )
+        else:
+            # Plot the bars
+            for idx, val in enumerate(sorted_values):
+                ax.bar(locs[i] + idx * 2 * bar_width, val, bar_width, color=sorted_colors[idx])
+
+    ax.set_xlim(locs[0] / 2, locs[-1] + 1)
+
+    # Add legend and axis labels
+    ax.legend()
+    ax.set_ylabel("Mean Absolute Percentage Error of log10(|i|) [%]")
+    ax.set_ylim(0, 15)
+    ax.set_xticks(
+        [(i + 2 * 2 * bar_width) for i in locs], labels=[f"pH = {ph}" for ph in best_scores_mape_log["pH"]], rotation=45
+    )
+    fig.tight_layout()
+    fig.savefig("model_figures/mape_log_%_histogram.png")
+
+
 if __name__ == "__main__":
     # prediction loss of log(abs(current density)) in Mean Absolute Percentage Errror
     best_scores_mape_log = pd.DataFrame()
@@ -240,6 +285,7 @@ if __name__ == "__main__":
     store_mape_xgboost = []
     store_mape_lgbm = []
     store_mape_ann = []
+    # do preds for each pH in the test data set
     for ph in df["test_pHs"]:
         plot_experimental_testing_data(ph)
         catboost_comparison(ph, store_mape_catboost)
@@ -269,4 +315,6 @@ if __name__ == "__main__":
     best_scores_mape_log["xgb"] = store_mape_xgboost
     best_scores_mape_log["lgb"] = store_mape_lgbm
     best_scores_mape_log["ann"] = store_mape_ann
+    best_scores_mape_log = best_scores_mape_log.sort_values(by="pH").reset_index(drop=True)
     best_scores_mape_log.to_csv("model_figures/mape_of_pred_log%.csv", sep="\t", index=False)
+    plot_histogram_mape_models(best_scores_mape_log)
