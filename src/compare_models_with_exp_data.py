@@ -56,8 +56,8 @@ def plot_scatter_if_early_stopping(model: str, iterations: int, train_loss_last_
     df = pd.read_csv("model_figures/max_iterations_GBDTs.csv", sep="\t")
     max_iterations = df.loc[df["model"] == model, "max_iterations"].values[0]
     if iterations < max_iterations:
-        ax_loss_trees.scatter(iterations, train_loss_last_iter, label="Early stopping triggered")
-        ax_val_loss_trees.scatter(iterations, val_loss_last_iter, label="Early stopping triggered")
+        ax_loss_trees.scatter(iterations, train_loss_last_iter, label="Early stopping", color="k", marker="x")
+        ax_val_loss_trees.scatter(iterations, val_loss_last_iter, label="Early stopping", color="k", marker="x")
 
 
 def linestyles_and_markers_for_model_comparisons(model_str: str) -> list[str]:
@@ -195,9 +195,9 @@ def catboost_comparison(ph, store_mape: list, loc1, loc2) -> None:
 
 def plot_train_val_loss_catboost():
     df_train_loss = pd.read_csv("catboost_info/learn_error.tsv", sep="\t")
-    ax_loss_trees.plot(df_train_loss["iter"], df_train_loss["RMSE"], label="CatBoost")
+    ax_loss_trees.plot(df_train_loss["iter"], df_train_loss["RMSE"], label="CatBoost", color="k", linestyle="-")
     df_val_loss = pd.read_csv("catboost_info/test_error.tsv", sep="\t")
-    ax_val_loss_trees.plot(df_val_loss["iter"], df_val_loss["RMSE"], label="Catboost", linestyle="--")
+    ax_val_loss_trees.plot(df_val_loss["iter"], df_val_loss["RMSE"], label="Catboost", color="k", linestyle="-")
 
     plot_scatter_if_early_stopping(
         "cb", df_train_loss["iter"].iloc[-1], df_train_loss["RMSE"].iloc[-1], df_val_loss["RMSE"].iloc[-1]
@@ -228,8 +228,8 @@ def xgboost_comparison(ph, store_mape, loc1, loc2) -> None:
 def plot_train_val_loss_xgboost():
     # plot rmse for each iter
     df = pd.read_csv("models_data/xgboost_info/train_val_loss.csv", sep="\t")
-    ax_loss_trees.plot(df["iter"], df["train_loss_rmse"], label="XGBoost")
-    ax_val_loss_trees.plot(df["iter"], df["val_loss_rmse"], label="XGBoost", linestyle="--")
+    ax_loss_trees.plot(df["iter"], df["train_loss_rmse"], label="XGBoost", color="#555555", linestyle="--")
+    ax_val_loss_trees.plot(df["iter"], df["val_loss_rmse"], label="XGBoost", color="#555555", linestyle="--")
 
     plot_scatter_if_early_stopping(
         "xgb", df["iter"].iloc[-1], df["train_loss_rmse"].iloc[-1], df["val_loss_rmse"].iloc[-1]
@@ -260,8 +260,8 @@ def plot_train_val_loss_lgbm():
     # plot rmse for each iter
     # plot rmse for each iter
     df = pd.read_csv("models_data/lgbm_info/train_val_loss.csv", sep="\t")
-    ax_loss_trees.plot(df["iter"], df["train_loss_rmse"], label="LightGBM")
-    ax_val_loss_trees.plot(df["iter"], df["val_loss_rmse"], label="LightGBM", linestyle="--")
+    ax_loss_trees.plot(df["iter"], df["train_loss_rmse"], label="LightGBM", color="#777777", linestyle=":")
+    ax_val_loss_trees.plot(df["iter"], df["val_loss_rmse"], label="LightGBM", color="#777777", linestyle=":")
 
     plot_scatter_if_early_stopping(
         "lgbm", df["iter"].iloc[-1], df["train_loss_rmse"].iloc[-1], df["val_loss_rmse"].iloc[-1]
@@ -368,18 +368,11 @@ if __name__ == "__main__":
     plot_train_val_loss_lgbm()
     plot_train_val_loss_ann_best_model()
 
-    try:
-        # plot losses
-        fig_loss_trees.legend(loc="upper right")
-        fig_loss_trees.savefig("model_figures/training_loss_GBDTS.png")
-
-        fig_val_loss_trees.legend(loc="upper right")
-        fig_val_loss_trees.savefig("model_figures/validation_loss_GBDTS.png")
-
-        fig_loss_ANN.legend(loc="upper right")
-        fig_loss_ANN.savefig("model_figures/train_val_loss_ANN.png")
-    except Exception as e:
-        raise e
+    loss_figures = [fig_loss_trees, fig_val_loss_trees, fig_loss_ANN]
+    fig_names = ["training_loss_GBDTS", "validation_loss_GBDTS", "train_val_loss_ANN"]
+    for loss_fig, fig_name in zip(loss_figures, fig_names):
+        loss_fig.legend()
+        loss_fig.savefig(f"model_figures/{fig_name}.png")
 
     df = pd.read_csv("testing_pHs.csv", sep="\t")
     # compare results for all pHs
