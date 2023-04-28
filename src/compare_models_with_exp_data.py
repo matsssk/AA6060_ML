@@ -60,6 +60,20 @@ def plot_scatter_if_early_stopping(model: str, iterations: int, train_loss_last_
         ax_val_loss_trees.scatter(iterations, val_loss_last_iter, label="Early stopping triggered")
 
 
+def linestyles_and_markers_for_model_comparisons(model_str: str) -> list[str]:
+    """
+    Function to create unique linestyle and marker for each model
+    """
+    models = ["cb", "rf", "xgb", "lgb", "ann"]
+    linestyles = ["-", "--", ":", "--", ":"]
+    colors = ["#777777", "b", "b", "orange", "orange"]
+    try:
+        idx = models.index(model_str)
+        return [linestyles[idx], colors[idx]]
+    except ValueError:
+        raise ValueError
+
+
 if __name__ == "__main__":
     # test ML algorithms on unseen data
     fig_pred = plt.figure(figsize=(10, 10))
@@ -95,8 +109,8 @@ def plot_experimental_testing_data(ph) -> None:
 
     # potential, abs(current density)
     X_test_ph, y_test_ph = filter_x_y_boolean_mask(ph)
-    ax_pred.semilogx(10**y_test_ph, X_test_ph[:, 0], label=f"Exp data, pH = {ph}", color="k")
-    ax_compare_anns.semilogx(10**y_test_ph, X_test_ph[:, 0], label=f"Exp data, pH = {ph}", color="k")
+    ax_pred.semilogx(10**y_test_ph, X_test_ph[:, 0], label=f"Exp data, pH = {ph}", color="k", linestyle="--")
+    ax_compare_anns.semilogx(10**y_test_ph, X_test_ph[:, 0], label=f"Exp data, pH = {ph}", color="k", linestyle="--")
 
 
 def random_forest_comparison(ph) -> None:
@@ -109,7 +123,14 @@ def random_forest_comparison(ph) -> None:
     # current_density_pred = np.loadtxt(f"{path}/current_density_pred.csv", skiprows=1, usecols=2)
     current_density_pred = pd.read_csv(f"{path}/current_density_pred_ph_{ph}.csv", sep="\t")["Current density [A/cm2]"]
 
-    ax_pred.semilogx(current_density_pred, X_test_ph[:, 0], label="Random Forest")
+    linestyle, color = linestyles_and_markers_for_model_comparisons("rf")
+    ax_pred.semilogx(
+        current_density_pred,
+        X_test_ph[:, 0],
+        label="Random Forest",
+        linestyle=linestyle,
+        color=color,
+    )
 
 
 def catboost_comparison(ph, store_mape: list) -> None:
@@ -117,7 +138,8 @@ def catboost_comparison(ph, store_mape: list) -> None:
     cb.load_model("models_saved/catboost_model.cbm")
     X_test_ph, y_test_ph = filter_x_y_boolean_mask(ph)
     y_pred_ph = cb.predict(X_test_ph)
-    ax_pred.semilogx(10**y_pred_ph, X_test_ph[:, 0], label="CatBoost")
+    linestyle, color = linestyles_and_markers_for_model_comparisons("cb")
+    ax_pred.semilogx(10**y_pred_ph, X_test_ph[:, 0], label="CatBoost", linestyle=linestyle, color=color)
 
     store_mape.append(mape(y_pred_ph, y_test_ph))
 
@@ -141,7 +163,8 @@ def xgboost_comparison(ph, store_mape) -> None:
     y_pred = xgb.predict(X_test)
     store_mape.append(mape(y_pred, y_test) * 100)
     y_pred = 10**y_pred
-    ax_pred.semilogx(y_pred, X_test[:, 0], label="XGBoost")
+    linestyle, color = linestyles_and_markers_for_model_comparisons("xgb")
+    ax_pred.semilogx(y_pred, X_test[:, 0], label="XGBoost", linestyle=linestyle, color=color)
 
 
 def plot_train_val_loss_xgboost():
@@ -162,7 +185,8 @@ def lgbm_comparison(ph, store_mape) -> None:
     y_pred = lgbm.predict(X_test)
     store_mape.append(mape(y_pred, y_test) * 100)
     y_pred = 10**y_pred
-    ax_pred.semilogx(y_pred, X_test[:, 0], label="lightgbm")
+    linestyle, color = linestyles_and_markers_for_model_comparisons("lgb")
+    ax_pred.semilogx(y_pred, X_test[:, 0], label="LightGBM", linestyle=linestyle, color=color)
 
 
 def plot_train_val_loss_lgbm():
@@ -192,7 +216,8 @@ def ANN_comparison(ph, store_mape) -> None:
 
             # store error only if best model
             if file == "first_best_model.h5":
-                ax_pred.semilogx(y_pred, X_test[:, 0], label=f"ANN {which_model}")
+                linestyle, color = linestyles_and_markers_for_model_comparisons("ann")
+                ax_pred.semilogx(y_pred, X_test[:, 0], label=f"ANN {which_model}", linestyle=linestyle, color=color)
                 ax_compare_anns.semilogx(y_pred, X_test[:, 0], label=f"ANN {which_model}")
                 store_mape.append(mape(y_pred_log, y_test) * 100)
             else:
@@ -212,8 +237,9 @@ def plot_histogram_mape_models(best_scores_mape_log: pd.DataFrame):
     fig, ax = plt.subplots()
 
     bar_width = 0.07
-    colors = ["r", "g", "k", "y", "m"]
     labels = ["RF", "CB", "XGB", "LGB", "ANN"]
+    colors = ["k", "#555555", "#777777", "#999999", "#CCCCCC"]  # grey scales
+    hatches = [None, "/", None, "/", None]
     locs = [1, 2, 3, 4]
     # Loop over each row
     for i, row in best_scores_mape_log.iterrows():
@@ -221,7 +247,7 @@ def plot_histogram_mape_models(best_scores_mape_log: pd.DataFrame):
         values = row.drop("pH").values
         sorting_indices = np.argsort(values)  # type: ignore
         # all rows are sorted in ascending order, rearange all used lists
-        sorted_colors = [colors[i] for i in sorting_indices]
+        # sorted_colors = [colors[i] for i in sorting_indices]
         sorted_values = [values[i] for i in sorting_indices]
         sorted_labels = [labels[i] for i in sorting_indices]
 
@@ -233,12 +259,13 @@ def plot_histogram_mape_models(best_scores_mape_log: pd.DataFrame):
                     val,
                     bar_width,
                     label=sorted_labels[idx],
-                    color=sorted_colors[idx],
+                    color=colors[idx],
+                    hatch=hatches[idx],
                 )
         else:
             # Plot the bars
             for idx, val in enumerate(sorted_values):
-                ax.bar(locs[i] + idx * 2 * bar_width, val, bar_width, color=sorted_colors[idx])
+                ax.bar(locs[i] + idx * 2 * bar_width, val, bar_width, color=colors[idx], hatch=hatches[idx])
 
     ax.set_xlim(locs[0] / 2, locs[-1] + 1)
 

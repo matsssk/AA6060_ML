@@ -209,7 +209,7 @@ def plot_histogram_training_time_all_models() -> None:
 
     # ajust xticks locations
     pos = [0, 1, 2, 3, 4]
-    plt.bar(df["Model"], df["Time"], width=0.25)
+    plt.bar(df["Model"], df["Time"], width=0.25, color="#777777")
     plt.xticks(
         pos, labels=[f" {k.upper()}: {round(v,2)} s" for k, v in zip(df["Model"], df["Time"])], rotation=45, ha="center"
     )
@@ -225,7 +225,7 @@ def plot_histogram_training_time_per_tree_DTs():
 
     # ajust xticks locations
     pos = [0, 1, 2, 3]
-    plt.bar(df["Model"], df["Time"], width=0.25)
+    plt.bar(df["Model"], df["Time"], width=0.25, color="#777777")
     plt.xticks(
         pos, labels=[f" {k.upper()}: {round(v,2)} s" for k, v in zip(df["Model"], df["Time"])], rotation=45, ha="center"
     )
