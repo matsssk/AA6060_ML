@@ -33,19 +33,19 @@ def plot_and_return_dataframe_with_filtered_data(
 
     if __name__ == "__main__":
         #  define figure to plot raw data in
-        fig, ax = plt.subplots(2, 2, figsize=(15, 15))
+        fig, ax = plt.subplots(2, 2, figsize=(10, 10))
         fig.supxlabel("|i| [A/cm$^2$]")
         fig.supylabel("E [V]")
         fig.tight_layout()
 
         # define figure to plot filtered data in
-        fig2, ax2 = plt.subplots(2, 2, figsize=(15, 15))
+        fig2, ax2 = plt.subplots(2, 2, figsize=(10, 10))
         fig2.supxlabel("|i| [A/cm$^2$]")
         fig2.supylabel("E [V]")
         fig2.tight_layout()
 
         # figure to plot tafel slopes
-        fig_tafel, ax_tafel = plt.subplots(2, 2, figsize=(15, 15))
+        fig_tafel, ax_tafel = plt.subplots(2, 2, figsize=(10, 10))
         fig_tafel.supxlabel("|i| [A/cm$^2$]")
         fig_tafel.supylabel("E [V]")
         fig_tafel.tight_layout()

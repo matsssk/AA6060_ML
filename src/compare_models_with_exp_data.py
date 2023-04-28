@@ -65,8 +65,8 @@ def linestyles_and_markers_for_model_comparisons(model_str: str) -> list[str]:
     Function to create unique linestyle and marker for each model
     """
     models = ["cb", "rf", "xgb", "lgb", "ann"]
-    linestyles = ["-", "--", ":", "--", ":"]
-    colors = ["#777777", "b", "b", "orange", "orange"]
+    linestyles = ["-", "-", "-", "-", "-"]
+    colors = ["r", "g", "b", "m", "brown"]
     try:
         idx = models.index(model_str)
         return [linestyles[idx], colors[idx]]
@@ -101,19 +101,57 @@ if __name__ == "__main__":
     ax_loss_ANN.set_xlabel("Epochs")
     ax_loss_ANN.set_ylabel("Error, RMSE")
 
+    # Appendix: evaluate each model with exp data. 2x2 plot
+    fig_rf, ax_individual_model_vs_exp_rf = plt.subplots(2, 2, figsize=(15, 15))
+    fig_rf.supxlabel("|i| [A/cm$^2$]")
+    fig_rf.supylabel("E [V]")
 
-def plot_experimental_testing_data(ph) -> None:
+    fig_cb, ax_individual_model_vs_exp_cb = plt.subplots(2, 2, figsize=(15, 15))
+    fig_cb.supxlabel("|i| [A/cm$^2$]")
+    fig_cb.supylabel("E [V]")
+
+    fig_lgb, ax_individual_model_vs_exp_lgb = plt.subplots(2, 2, figsize=(15, 15))
+    fig_lgb.supxlabel("|i| [A/cm$^2$]")
+    fig_lgb.supylabel("E [V]")
+
+    fig_ann, ax_individual_model_vs_exp_ann = plt.subplots(2, 2, figsize=(15, 15))
+    fig_ann.supxlabel("|i| [A/cm$^2$]")
+    fig_ann.supylabel("E [V]")
+
+    fig_xgb, ax_individual_model_vs_exp_xgb = plt.subplots(2, 2, figsize=(15, 15))
+    fig_xgb.supxlabel("|i| [A/cm$^2$]")
+    fig_xgb.supylabel("E [V]")
+
+
+def plot_experimental_testing_data(ph, loc1, loc2) -> None:
     """
     Plots the experimental filtered curves for all pHs in the test data set
     """
 
     # potential, abs(current density)
     X_test_ph, y_test_ph = filter_x_y_boolean_mask(ph)
-    ax_pred.semilogx(10**y_test_ph, X_test_ph[:, 0], label=f"Exp data, pH = {ph}", color="k", linestyle="--")
-    ax_compare_anns.semilogx(10**y_test_ph, X_test_ph[:, 0], label=f"Exp data, pH = {ph}", color="k", linestyle="--")
+    figures_to_plot_exp_data_in = [
+        ax_pred,
+        ax_compare_anns,
+        ax_individual_model_vs_exp_rf[loc1, loc2],
+        ax_individual_model_vs_exp_cb[loc1, loc2],
+        ax_individual_model_vs_exp_lgb[loc1, loc2],
+        ax_individual_model_vs_exp_xgb[loc1, loc2],
+        ax_individual_model_vs_exp_ann[loc1, loc2],
+    ]
+    for idx, fig in enumerate(figures_to_plot_exp_data_in):
+        fig.semilogx(
+            10**y_test_ph,
+            X_test_ph[:, 0],
+            label=f"Exp. data, pH = {ph}" if idx >= 2 else f"Exp data, pH = {ph}",
+            color="k",
+            linestyle="--",
+        )
+
+    # Appendix plots
 
 
-def random_forest_comparison(ph) -> None:
+def random_forest_comparison(ph, loc1, loc2) -> None:
     """
     The RF data is trained and stored from train_models.py
     """
@@ -124,22 +162,33 @@ def random_forest_comparison(ph) -> None:
     current_density_pred = pd.read_csv(f"{path}/current_density_pred_ph_{ph}.csv", sep="\t")["Current density [A/cm2]"]
 
     linestyle, color = linestyles_and_markers_for_model_comparisons("rf")
-    ax_pred.semilogx(
-        current_density_pred,
-        X_test_ph[:, 0],
-        label="Random Forest",
-        linestyle=linestyle,
-        color=color,
-    )
+    figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_rf[loc1, loc2]]
+    for ax in figures_to_plot_pred_in:
+        ax.semilogx(
+            current_density_pred,
+            X_test_ph[:, 0],
+            label="Random Forest" if ax == ax_pred else f"RF, pH = {ph}",
+            linestyle=linestyle,
+            color=color,
+        )
 
 
-def catboost_comparison(ph, store_mape: list) -> None:
+def catboost_comparison(ph, store_mape: list, loc1, loc2) -> None:
     cb = CatBoostRegressor()
     cb.load_model("models_saved/catboost_model.cbm")
     X_test_ph, y_test_ph = filter_x_y_boolean_mask(ph)
     y_pred_ph = cb.predict(X_test_ph)
     linestyle, color = linestyles_and_markers_for_model_comparisons("cb")
-    ax_pred.semilogx(10**y_pred_ph, X_test_ph[:, 0], label="CatBoost", linestyle=linestyle, color=color)
+
+    figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_cb[loc1, loc2]]
+    for ax in figures_to_plot_pred_in:
+        ax.semilogx(
+            10**y_pred_ph,
+            X_test_ph[:, 0],
+            label="CatBoost" if ax == ax_pred else f"CB, pH = {ph}",
+            linestyle=linestyle,
+            color=color,
+        )
 
     store_mape.append(mape(y_pred_ph, y_test_ph))
 
@@ -155,7 +204,7 @@ def plot_train_val_loss_catboost():
     )
 
 
-def xgboost_comparison(ph, store_mape) -> None:
+def xgboost_comparison(ph, store_mape, loc1, loc2) -> None:
     xgb = XGBRegressor()
     xgb.load_model("models_saved/xgboost.txt")
     X_test, y_test = filter_x_y_boolean_mask(ph)
@@ -163,8 +212,17 @@ def xgboost_comparison(ph, store_mape) -> None:
     y_pred = xgb.predict(X_test)
     store_mape.append(mape(y_pred, y_test) * 100)
     y_pred = 10**y_pred
+
     linestyle, color = linestyles_and_markers_for_model_comparisons("xgb")
-    ax_pred.semilogx(y_pred, X_test[:, 0], label="XGBoost", linestyle=linestyle, color=color)
+    figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_xgb[loc1, loc2]]
+    for ax in figures_to_plot_pred_in:
+        ax.semilogx(
+            y_pred,
+            X_test[:, 0],
+            label="XGBoost" if ax == ax_pred else f"XGB, pH = {ph}",
+            linestyle=linestyle,
+            color=color,
+        )
 
 
 def plot_train_val_loss_xgboost():
@@ -178,7 +236,7 @@ def plot_train_val_loss_xgboost():
     )
 
 
-def lgbm_comparison(ph, store_mape) -> None:
+def lgbm_comparison(ph, store_mape, loc1, loc2) -> None:
     lgbm = lgb.Booster(model_file="models_saved/lgbm.txt")
     X_test, y_test = filter_x_y_boolean_mask(ph)
     # prediction of log10(abs(current density))
@@ -186,7 +244,16 @@ def lgbm_comparison(ph, store_mape) -> None:
     store_mape.append(mape(y_pred, y_test) * 100)
     y_pred = 10**y_pred
     linestyle, color = linestyles_and_markers_for_model_comparisons("lgb")
-    ax_pred.semilogx(y_pred, X_test[:, 0], label="LightGBM", linestyle=linestyle, color=color)
+
+    figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_lgb[loc1, loc2]]
+    for ax in figures_to_plot_pred_in:
+        ax.semilogx(
+            y_pred,
+            X_test[:, 0],
+            label="LightGBM" if ax == ax_pred else f"LGBM, pH = {ph}",
+            linestyle=linestyle,
+            color=color,
+        )
 
 
 def plot_train_val_loss_lgbm():
@@ -201,7 +268,7 @@ def plot_train_val_loss_lgbm():
     )
 
 
-def ANN_comparison(ph, store_mape) -> None:
+def ANN_comparison(ph, store_mape, loc1, loc2) -> None:
     _, _, _, _, x_scaler, y_scaler = normalize_data_for_ANN()
     X_test, y_test = filter_x_y_boolean_mask(ph)
 
@@ -217,8 +284,16 @@ def ANN_comparison(ph, store_mape) -> None:
             # store error only if best model
             if file == "first_best_model.h5":
                 linestyle, color = linestyles_and_markers_for_model_comparisons("ann")
-                ax_pred.semilogx(y_pred, X_test[:, 0], label=f"ANN {which_model}", linestyle=linestyle, color=color)
-                ax_compare_anns.semilogx(y_pred, X_test[:, 0], label=f"ANN {which_model}")
+
+                figures_to_plot_pred_in = [ax_pred, ax_compare_anns, ax_individual_model_vs_exp_ann[loc1, loc2]]
+                for idx, ax in enumerate(figures_to_plot_pred_in):
+                    ax.semilogx(
+                        y_pred,
+                        X_test[:, 0],
+                        label=f"ANN {which_model}" if idx < 2 else f"ANN, pH = {ph}",
+                        linestyle=linestyle,
+                        color=color,
+                    )
                 store_mape.append(mape(y_pred_log, y_test) * 100)
             else:
                 ax_compare_anns.semilogx(y_pred, X_test[:, 0], label=f"ANN {which_model}")
@@ -312,14 +387,26 @@ if __name__ == "__main__":
     store_mape_xgboost = []
     store_mape_lgbm = []
     store_mape_ann = []
+    ax_locs_appendix = [[0, 1], [1, 1], [1, 0], [0, 0]]
     # do preds for each pH in the test data set
-    for ph in df["test_pHs"]:
-        plot_experimental_testing_data(ph)
-        catboost_comparison(ph, store_mape_catboost)
-        random_forest_comparison(ph)
-        xgboost_comparison(ph, store_mape_xgboost)
-        lgbm_comparison(ph, store_mape_lgbm)
-        ANN_comparison(ph, store_mape_ann)
+    for ax_loc, ph in zip(ax_locs_appendix, df["test_pHs"]):
+        loc1, loc2 = ax_loc[0], ax_loc[1]
+        plot_experimental_testing_data(ph, loc1, loc2)
+        catboost_comparison(ph, store_mape_catboost, loc1, loc2)
+        random_forest_comparison(ph, loc1, loc2)
+        xgboost_comparison(ph, store_mape_xgboost, loc1, loc2)
+        lgbm_comparison(ph, store_mape_lgbm, loc1, loc2)
+        ANN_comparison(ph, store_mape_ann, loc1, loc2)
+        # create legends for each subplot in appendix plot
+        ax_list_appendix_plots = [
+            ax_individual_model_vs_exp_rf,
+            ax_individual_model_vs_exp_cb,
+            ax_individual_model_vs_exp_lgb,
+            ax_individual_model_vs_exp_xgb,
+            ax_individual_model_vs_exp_ann,
+        ]
+        for ax in ax_list_appendix_plots:
+            ax[loc1, loc2].legend()
 
         # save figs
         try:
@@ -345,3 +432,8 @@ if __name__ == "__main__":
     best_scores_mape_log = best_scores_mape_log.sort_values(by="pH").reset_index(drop=True)
     best_scores_mape_log.to_csv("model_figures/mape_of_pred_log%.csv", sep="\t", index=False)
     plot_histogram_mape_models(best_scores_mape_log)
+
+    # Appendix scientific paper
+    for fig, model in zip([fig_rf, fig_cb, fig_lgb, fig_ann, fig_xgb], ["rf", "cb", "lgb", "ann", "xgb"]):
+        fig.tight_layout()
+        fig.savefig(f"model_figures/appendix/{model}.png")
