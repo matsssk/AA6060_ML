@@ -2,7 +2,7 @@ import numpy as np
 from scipy import stats
 
 
-def _get_ocps(E: np.ndarray, E_filtered: np.ndarray, i_filtered: np.ndarray) -> list[float]:
+def get_ocps(E: np.ndarray, E_filtered: np.ndarray, i_filtered: np.ndarray) -> list[float]:
     """
     Returns: ocp at t= 0, ocp at t = 2/3*t_tot (before anodic scan) and delta ocp
 

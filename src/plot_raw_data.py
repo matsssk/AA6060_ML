@@ -9,14 +9,14 @@ plt.rcParams["font.serif"] = ["Times New Roman"] + plt.rcParams["font.serif"]
 
 import pandas as pd
 from src.filter_raw_data import remove_first_cath_branch
-from src.get_selected_features import _get_ocps, linreg_tafel_line_ORR_or_HER
+from src.get_selected_features import get_ocps, linreg_tafel_line_ORR_or_HER
 
 
 def plot_and_return_dataframe_with_filtered_data(
-    folder: str = "raw_data",
+    folder_raw: str = "raw_data",
     save_figs_raw_data: str = "raw_data_plots",
     save_figs_filtered_data: str = "filtered_raw_data_plots",
-) -> pd.DataFrame:
+):
     """
     Returns pd.DataFrame with all the filtered data into a dataframe of Potential, current density and pH
     The current density array consist of negative values as well
@@ -33,36 +33,49 @@ def plot_and_return_dataframe_with_filtered_data(
 
     if __name__ == "__main__":
         #  define figure to plot raw data in
-        fig, ax = plt.subplots(2, 2, figsize=(10, 10))
-        fig.supxlabel("|i| [A/cm$^2$]")
-        fig.supylabel("E [V]")
-        fig.tight_layout()
+        fig_raw, ax_raw = plt.subplots(2, 2, figsize=(10, 10))
+        fig_raw.supxlabel("|i| [A/cm$^2$]")
+        fig_raw.supylabel("E vs SCE[V]")
 
         # define figure to plot filtered data in
-        fig2, ax2 = plt.subplots(2, 2, figsize=(10, 10))
-        fig2.supxlabel("|i| [A/cm$^2$]")
-        fig2.supylabel("E [V]")
-        fig2.tight_layout()
+        fig2_filt, ax2_filt = plt.subplots(2, 2, figsize=(10, 10))
+        fig2_filt.supxlabel("|i| [A/cm$^2$]")
+        fig2_filt.supylabel("E vs SCE [V]")
+
+        # figure to plot raw data and filtered data in
+        fig_compare_raw_filt, ax_compare = plt.subplots(2, 2, figsize=(10, 10))
+        fig_compare_raw_filt.supxlabel("|i| [A/cm$^2$]")
+        fig_compare_raw_filt.supylabel("E vs SCE [V]")
 
         # figure to plot tafel slopes
         fig_tafel, ax_tafel = plt.subplots(2, 2, figsize=(10, 10))
         fig_tafel.supxlabel("|i| [A/cm$^2$]")
-        fig_tafel.supylabel("E [V]")
-        fig_tafel.tight_layout()
+        fig_tafel.supylabel("E vs SCE [V]")
 
     # create empty dataframe and add data to it from all files
     df_all_filtered_data = pd.DataFrame()
-    files = list_of_filenames()
+    files = list_of_filenames("raw_data")
+    files_without_gamry_errors = list_of_filenames("raw_data_without_gamry_noise")
+
     # dataframe to store selected features
     selected_features_df = pd.DataFrame()
+    # loop over all files and plot necessary plots for report, while storing data to dataframe
 
-    for idx, file in enumerate(files):
-        file_path: str = os.path.join(folder, file)
-        pH: float = float(file.split("h")[1].split(",")[0] + "." + file.split(",")[1].split(".")[0])
-        potential, current_density = load_raw_data(file_path)
-        current_density_filtered, potential_filtered = remove_first_cath_branch(current_density, potential)
+    for idx, (file_raw, file_no_gamry_noise) in enumerate(zip(files, files_without_gamry_errors)):
+        file_path_raw: str = os.path.join(folder_raw, file_raw)
+        pH: float = float(file_raw.split("h")[1].split(",")[0] + "." + file_raw.split(",")[1].split(".")[0])
+        potential_raw, current_density_raw = load_raw_data(file_path_raw)
 
-        ocp_t0, ocp_t_half, delta_ocp = _get_ocps(potential, potential_filtered, current_density_filtered)
+        # filtered data without gamry noise
+        potential_no_gamry_noise, current_density_no_gamry_noise = load_raw_data(
+            os.path.join("raw_data_without_gamry_noise", file_no_gamry_noise)
+        )
+        current_density_filtered, potential_filtered = remove_first_cath_branch(
+            current_density_no_gamry_noise, potential_no_gamry_noise
+        )
+        ocp_t0, ocp_t_half, delta_ocp = get_ocps(potential_raw, potential_filtered, current_density_filtered)
+        # print(potential_filtered)
+        # print(ocp_t0)
         try:
             # ORR or HER tafel slopes
             _, i_tafel_abs_log, tafel_slope, intercept, r_value, std_err = linreg_tafel_line_ORR_or_HER(
@@ -70,7 +83,7 @@ def plot_and_return_dataframe_with_filtered_data(
             )
             # slope is delta E / delta abs(i), we need delta E / delta log10(|i|)
         except ValueError:
-            print(f"Something wrong with file: {file}")
+            print(f"Something wrong with file: {file_raw}")
             raise ValueError
 
         df_add_to_selected_features = pd.DataFrame(
@@ -106,17 +119,23 @@ def plot_and_return_dataframe_with_filtered_data(
             ]
         )
         # the coordinates of the different subplots
-        positions = [[0, 0], [0, 1], [1, 0], [1, 1]] * int(len(files) / 4 + 1)
+        positions = [[0, 0], [0, 1], [1, 0], [1, 1]] * int(len(files) / 4) * 2
         if __name__ == "__main__":
             loc = positions[idx][0], positions[idx][1]
-            ax[loc].semilogx(abs(current_density), potential, color="k", label=f"pH = {pH}")
-            for _ax in [ax2, ax_tafel]:
+
+            # plot raw data
+            ax_raw[loc].semilogx(abs(current_density_raw), potential_raw, color="k", label=f"pH = {pH}")
+
+            # plot filtered data in filtered data figure and tafel figure
+            for _ax in [ax2_filt, ax_tafel]:
                 _ax[loc].semilogx(
                     abs(current_density_filtered),
                     potential_filtered,
                     color="k",
                     label=f"pH = {pH}",
                 )
+
+            # plot Tafel lines in Tafel figure
             partial_derivative = r"$\frac{\partial E}{\partial log|i|}$"
             rounded_r_squared = round(r_value**2, 5)  # type: ignore
             ax_tafel[loc].semilogx(
@@ -127,24 +146,70 @@ def plot_and_return_dataframe_with_filtered_data(
                 label=f"pH = {pH}, {partial_derivative} = {int(tafel_slope*1000)} mV/dec, R\u00b2 = {rounded_r_squared}",
             )
 
-            ax[loc].legend()
-            ax2[loc].legend()
+            # plot both raw data and filtered data in figure for comparing raw data and filtered data
+            # raw data is first column (positions 0,0 and 1,0)
+            # filtered data is to the left
+
+            if idx % 2 == 0 and (idx + 1) != len(files):
+                ax_compare[0, 0].semilogx(abs(current_density_raw), potential_raw, color="k", label=f"pH = {pH}")
+                ax_compare[0, 1].semilogx(
+                    abs(current_density_filtered), potential_filtered, color="k", label=f"pH = {pH}, filtered"
+                )
+                ax_compare[0, 1].legend()
+                ax_compare[0, 0].legend()
+            if idx % 2 == 1 and (idx + 1) != len(files):
+                ax_compare[1, 0].semilogx(abs(current_density_raw), potential_raw, color="k", label=f"pH = {pH}")
+                ax_compare[1, 1].semilogx(
+                    abs(current_density_filtered), potential_filtered, color="k", label=f"pH = {pH}, filtered"
+                )
+                ax_compare[1, 1].legend()
+                ax_compare[1, 0].legend()
+
+                # save end clear fig
+                fig_compare_raw_filt.tight_layout()
+                fig_compare_raw_filt.savefig(f"raw_data_vs_filtered_data/{idx+1}.png")
+                for subplot_ax in ax_compare.flat:
+                    subplot_ax.clear()
+
+            if (idx + 1) == len(files):
+                # figure to plot ph 12.0 as we do not have len(files) % 4 = 0
+                fig_ph12, ax_ph12 = plt.subplots(1, 2, figsize=(10, 5))
+                fig_ph12.supxlabel("|i| [A/cm$^2$]")
+                fig_ph12.supylabel("E vs SCE [V]")
+                ax_ph12[0].semilogx(abs(current_density_raw), potential_raw, color="k", label=f"pH = {pH}")
+                ax_ph12[1].semilogx(
+                    abs(current_density_filtered), potential_filtered, color="k", label=f"pH = {pH}, filtered"
+                )
+                ax_ph12[0].legend()
+                ax_ph12[1].legend()
+                fig_ph12.savefig(f"raw_data_vs_filtered_data/{idx+1}.png")
+
+            ax_raw[loc].legend()
+            ax2_filt[loc].legend()
             ax_tafel[loc].legend()
 
-            if (idx + 1) % 4 == 0:
-                fig.savefig(f"{save_figs_raw_data}/plots_of_raw_data_{idx+1}")
-                fig2.savefig(f"{save_figs_filtered_data}/plots_of_filtered_data_{idx+1}")
-                fig_tafel.savefig(f"tafel_slopes_figures/{idx+1}")
-                for subplot_ax, subplot_ax2, subplot_ax_tafel in zip(ax.flat, ax2.flat, ax_tafel.flat):
-                    subplot_ax.clear()
-                    subplot_ax2.clear()
-                    subplot_ax_tafel.clear()
+            if (idx + 1) % 4 == 0 or (idx + 1) == len(files):
+                # delete the empty slot in the last figure
+                if idx + 1 == len(files) and (idx + 1) % 4 != 0:
+                    for axs in [ax_raw, ax2_filt, ax_tafel]:
+                        axs[1, 1].remove()
 
-    # df_merged_filtered.to_csv("df_merged_not_normalized.txt", sep="\t", index=False)
+                fig_raw.tight_layout()
+                fig_raw.savefig(f"{save_figs_raw_data}/plots_of_raw_data_{idx+1}")
+                fig2_filt.tight_layout()
+                fig2_filt.savefig(f"{save_figs_filtered_data}/plots_of_filtered_data_{idx+1}")
+                fig_tafel.tight_layout()
+                fig_tafel.savefig(f"tafel_slopes_figures/{idx+1}")
+                for subplot_ax, subplot_ax2, subplot_ax_tafel in zip(ax_raw.flat, ax2_filt.flat, ax_tafel.flat):
+                    if (idx + 1) != len(files):
+                        subplot_ax.clear()
+                        subplot_ax2.clear()
+                        subplot_ax_tafel.clear()
+
+    df_all_filtered_data.to_csv("df_training_data.csv", sep="\t", index=False)
 
     # save selected featurs
     selected_features_df.to_csv("selected_features.csv", sep="\t", index=False)
-    return df_all_filtered_data
 
 
 if __name__ == "__main__":

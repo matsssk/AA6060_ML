@@ -13,9 +13,8 @@ N_ROWS = TypeVar("N_ROWS")
 
 # define func that loads all NOT normalized data (for DT models)
 # shape is 3 columns, N_ROWS rows
-def all_filtered_experimental_data_not_normalized(
-    df: pd.DataFrame = plot_and_return_dataframe_with_filtered_data(),
-) -> NDArray[Shape["N_ROWS, 3"], Float]:
+def all_filtered_experimental_data_not_normalized() -> NDArray[Shape["N_ROWS, 3"], Float]:
+    df = pd.read_csv("df_training_data.csv", sep="\t")
     return df.values  # not normalized
 
 

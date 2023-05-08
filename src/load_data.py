@@ -4,7 +4,7 @@ from io import StringIO
 
 
 def _diameter():
-    return 1.3  # cm
+    return 1.33  # cm
 
 
 def _area_WE():
@@ -15,7 +15,7 @@ def sort_raw_data_based_on_ph(filename: str) -> float:
     return float(filename.split("h")[1].split(",")[0] + "." + filename.split(",")[1].split(".")[0])
 
 
-def list_of_filenames(folder: str = "raw_data") -> list[str]:
+def list_of_filenames(folder: str) -> list[str]:
     """
     Returns a list with all filenames (str) in directory name
 
