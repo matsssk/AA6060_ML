@@ -47,3 +47,7 @@ def linreg_tafel_line_ORR_or_HER(
     i_applied_log_abs = np.log10(abs(i_applied))
     slope, intercept, r_value, _, std_err = stats.linregress(i_applied_log_abs, E_applied)
     return [E_applied, i_applied_log_abs, slope, intercept, r_value, std_err]
+
+
+def get_ocps_machine_learning_models(E, i):
+    return E[np.argmin(abs(i))]

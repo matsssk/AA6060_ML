@@ -214,7 +214,7 @@ def plot_histogram_training_time_all_models() -> None:
         pos, labels=[f" {k.upper()}: {round(v,2)} s" for k, v in zip(df["Model"], df["Time"])], rotation=45, ha="center"
     )
 
-    plt.savefig("model_figures/models_training_time_all_models.png")
+    plt.savefig("summarized_data_figures_datafiles/models_training_time_all_models.png")
 
 
 def plot_histogram_training_time_per_tree_DTs():
@@ -230,7 +230,7 @@ def plot_histogram_training_time_per_tree_DTs():
         pos, labels=[f" {k.upper()}: {round(v,2)} s" for k, v in zip(df["Model"], df["Time"])], rotation=45, ha="center"
     )
 
-    plt.savefig("model_figures/models_training_time_per_tree_DTs.png")
+    plt.savefig("summarized_data_figures_datafiles/models_training_time_per_tree_DTs.png")
 
 
 def feature_importances_to_pd():
@@ -238,14 +238,14 @@ def feature_importances_to_pd():
     potential = [feature_imp[key][0] for key in feature_imp]
     pH = [feature_imp[key][1] for key in feature_imp]
     df = pd.DataFrame({"Model": models, "Potential": potential, "pH": pH})
-    df.to_csv("model_figures/feature_importances.csv", sep="\t", index=False)
+    df.to_csv("summarized_data_figures_datafiles/feature_importances.csv", sep="\t", index=False)
 
 
 def save_iterations_GBDTs_into_df():
     df = pd.DataFrame(columns=["model", "max_iterations"])
     ks, vs = [k for k, v in n_iterations_GBTS.items()], [v for k, v in n_iterations_GBTS.items()]
     df["model"], df["max_iterations"] = ks, vs
-    df.to_csv("model_figures/max_iterations_GBDTs.csv", sep="\t", index=False)
+    df.to_csv("summarized_data_figures_datafiles/max_iterations_GBDTs.csv", sep="\t", index=False)
 
 
 if __name__ == "__main__":

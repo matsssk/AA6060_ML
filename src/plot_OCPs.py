@@ -82,13 +82,13 @@ def plot_ocp_files():
     try:
         pH_list = list(np.arange(2.0, 12.2, 0.2))
         pd.DataFrame({"pH": pH_list, "Corrected standard dev.": std_list}).to_csv(
-            "model_figures/standard_dev_ocps.csv", index=False, sep="\t"
+            "summarized_data_figures_datafiles/standard_dev_ocps.csv", index=False, sep="\t"
         )
     except ValueError:
         print("Exception occured, missing some files")
         pH_list = [sort_files_based_on_ph(s) for s in files]
         pd.DataFrame({"pH": pH_list, "Corrected standard dev.": std_list}).to_csv(
-            "model_figures/standard_dev_ocps.csv", index=False, sep="\t"
+            "summarized_data_figures_datafiles/standard_dev_ocps.csv", index=False, sep="\t"
         )
 
 
