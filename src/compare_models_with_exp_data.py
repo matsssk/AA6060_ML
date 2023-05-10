@@ -102,7 +102,7 @@ def filter_x_y_boolean_mask(ph) -> list[np.ndarray]:
 
 
 def plot_scatter_if_early_stopping(model: str, iterations: int, train_loss_last_iter, val_loss_last_iter) -> None:
-    df = pd.read_csv("summarized_data_figures_datafiles/max_iterations_GBDTs.csv", sep="\t")
+    df = pd.read_csv("summarized_data_figures_datafiles/csv_files/max_iterations_GBDTs.csv", sep="\t")
     max_iterations = df.loc[df["model"] == model, "max_iterations"].values[0]
     if iterations < max_iterations:
         ax_loss_trees.scatter(iterations, train_loss_last_iter, label="Early stopping", color="k", marker="x")
@@ -181,7 +181,7 @@ def plot_experimental_testing_data(ph, loc1, loc2, df_features: pd.DataFrame) ->
     E, i = X_test_ph[:, 0], 10**y_test_ph
     # store polarization curve features
     i_applied_log_abs, ocp, slope, intercept, r_value, std_err, E_corr, i_corr = store_polarization_curve_features(E, i)
-    df_features["exp_data"] = [ocp, slope, r_value, std_err, E_corr, i_corr]
+    df_features["Exp. data"] = [ocp, slope, r_value**2, std_err, E_corr, i_corr]
 
     figures_to_plot_exp_data_in = [
         ax_pred,
@@ -221,7 +221,7 @@ def random_forest_comparison(ph, loc1, loc2, df_features: pd.DataFrame) -> None:
     E = X_test_ph[:, 0]
     i = current_density_pred.to_numpy()
     i_applied_log_abs, ocp, slope, intercept, r_value, std_err, E_corr, i_corr = store_polarization_curve_features(E, i)
-    df_features["rf"] = [ocp, slope, r_value, std_err, E_corr, i_corr]
+    df_features["RF"] = [ocp, slope, r_value**2, std_err, E_corr, i_corr]
 
     linestyle, color = linestyles_and_markers_for_model_comparisons("rf")
     figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_rf[loc1, loc2]]
@@ -250,7 +250,7 @@ def catboost_comparison(ph, store_mape: list, loc1, loc2, df_features: pd.DataFr
     # store features
     E, i = X_test_ph[:, 0], 10**y_pred_ph
     i_applied_log_abs, ocp, slope, intercept, r_value, std_err, E_corr, i_corr = store_polarization_curve_features(E, i)
-    df_features["cb"] = [ocp, slope, r_value, std_err, E_corr, i_corr]
+    df_features["CB"] = [ocp, slope, r_value**2, std_err, E_corr, i_corr]
 
     figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_cb[loc1, loc2]]
     for ax in figures_to_plot_pred_in:
@@ -291,7 +291,7 @@ def xgboost_comparison(ph, store_mape, loc1, loc2, df_features: pd.DataFrame) ->
     # store features
     E, i = X_test_ph[:, 0], 10**y_pred
     i_applied_log_abs, ocp, slope, intercept, r_value, std_err, E_corr, i_corr = store_polarization_curve_features(E, i)
-    df_features["xgb"] = [ocp, slope, r_value, std_err, E_corr, i_corr]
+    df_features["XGB"] = [ocp, slope, r_value**2, std_err, E_corr, i_corr]
 
     linestyle, color = linestyles_and_markers_for_model_comparisons("xgb")
     figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_xgb[loc1, loc2]]
@@ -330,7 +330,7 @@ def lgbm_comparison(ph, store_mape, loc1, loc2, df_features: pd.DataFrame) -> No
     # store features
     E, i = X_test_ph[:, 0], 10**y_pred
     i_applied_log_abs, ocp, slope, intercept, r_value, std_err, E_corr, i_corr = store_polarization_curve_features(E, i)
-    df_features["lgb"] = [ocp, slope, r_value, std_err, E_corr, i_corr]
+    df_features["LGB"] = [ocp, slope, r_value**2, std_err, E_corr, i_corr]
 
     linestyle, color = linestyles_and_markers_for_model_comparisons("lgb")
 
@@ -389,7 +389,7 @@ def ANN_comparison(ph, store_mape, loc1, loc2, df_features: pd.DataFrame) -> Non
                     E_corr,
                     i_corr,
                 ) = store_polarization_curve_features(E, i)
-                df_features["ann"] = [ocp, slope, r_value, std_err, E_corr, i_corr]
+                df_features["ANN"] = [ocp, slope, r_value**2, std_err, E_corr, i_corr]
 
                 linestyle, color = linestyles_and_markers_for_model_comparisons("ann")
 
@@ -474,7 +474,7 @@ if __name__ == "__main__":
     best_scores_mape_log["pH"] = pd.read_csv("testing_pHs.csv", sep="\t")["test_pHs"]
     # store mape_log for RF
     best_scores_mape_log["rf"] = (
-        pd.read_csv("models_data/random_forest_output/errors.csv", sep="\t")["(MAPE of log)"] * 100
+        pd.read_csv("models_data/random_forest_output/errors_trees_best_params.csv", sep="\t")["(MAPE of log)"] * 100
     )
     plot_train_val_loss_catboost()
     plot_train_val_loss_xgboost()
@@ -498,17 +498,19 @@ if __name__ == "__main__":
     # do preds for each pH in the test data set
     for ax_loc, ph in zip(ax_locs_appendix, df_features["test_pHs"]):
         loc1, loc2 = ax_loc[0], ax_loc[1]
+
+        """" Create dataframe to store calculated parameters from the curves. store to tex (latex) format """
         df_features = pd.DataFrame()
         df_features.insert(
             0,
-            "Feature",
+            "",
             value=[
                 "OCP [V]",
-                "Tafel slope [V/dec]",
-                "R value slope",
-                "Std. error slope",
-                "E\textsubscript{corr} [V]",
-                "i\textsubscript{corr} [$\mu$A cm$^{-2}$]",
+                "Tafel slope $[$mv/dec$]$",
+                "R\\textsuperscript{2} value slope",
+                "Std. error slope (1e3)",
+                "E\\textsubscript{corr} [V]",
+                "i\\textsubscript{corr} \\text{[$\mu$A cm\\textsuperscript{-2}]}",
             ],
         )
         plot_experimental_testing_data(ph, loc1, loc2, df_features)
@@ -518,24 +520,20 @@ if __name__ == "__main__":
         lgbm_comparison(ph, store_mape_lgbm, loc1, loc2, df_features)
         ANN_comparison(ph, store_mape_ann, loc1, loc2, df_features)
 
+        # create dataframe to store important parameters from the curves. Save as tex file too
         df_features.iloc[-1, 1:] *= 10**6  # convert to micro A/cm^2 for i_corr
-        df_features["average_ML"] = df_features.iloc[:, 1:].mean(axis=1)
-        df_features["mean_error"] = df_features["average_ML"] - df_features["exp_data"]
-        df_features["mean_absolute_percentage_error[\%]"] = (
-            abs(df_features["mean_error"] / df_features["exp_data"]) * 100
-        )
+        df_features.iloc[1, 1:] *= 1000  # convert to mV/dec for tafel slope
+        df_features.iloc[3, 1:] *= 1000  # multiply with 1000 for convenience
+        df_features["Mean error ML"] = df_features.iloc[:, 1:].mean(axis=1)
+        df_features["Mean error ML - Exp. data"] = df_features["Mean error ML"] - df_features["Exp. data"]
+        df_features["MAPE"] = abs(df_features["Mean error ML - Exp. data"] / df_features["Exp. data"]) * 100
+        # Select all columns except for the first column
+        cols_to_round = df_features.columns[1:]
+        # Round the selected columns to 3 decimal places
+        df_features[cols_to_round] = df_features[cols_to_round].applymap(lambda x: f"{x:.3g}")
+        df_features.to_csv(f"summarized_data_figures_datafiles/csv_files/df_features{ph}.csv", sep="\t", index=False)
 
-        df_features.to_csv(f"summarized_data_figures_datafiles/df_features{ph}.csv", sep="\t", index=False)
-        df_features.style.hide(axis="index").to_latex(
-            f"summarized_data_figures_datafiles/latex_tex_files/df_features{ph}.tex",
-            hrules=True,
-            position="H",
-            position_float="centering",
-            label=f"imp_feat_ph_{ph}",
-            caption=f"Important features obtained from the polarization curves of the experimental data, as well as from the machine learning algorithms",
-        )
-
-        # create legends for each subplot in appendix plot
+        """Plot figures"""
         ax_list_appendix_plots = [
             ax_individual_model_vs_exp_rf,
             ax_individual_model_vs_exp_cb,
@@ -570,7 +568,9 @@ if __name__ == "__main__":
     best_scores_mape_log["lgb"] = store_mape_lgbm
     best_scores_mape_log["ann"] = store_mape_ann
     best_scores_mape_log = best_scores_mape_log.sort_values(by="pH").reset_index(drop=True)
-    best_scores_mape_log.to_csv("summarized_data_figures_datafiles/mape_of_pred_log%.csv", sep="\t", index=False)
+    best_scores_mape_log.to_csv(
+        "summarized_data_figures_datafiles/csv_files/mape_of_pred_log%.csv", sep="\t", index=False
+    )
     plot_histogram_mape_models(best_scores_mape_log)
 
     # Appendix scientific paper

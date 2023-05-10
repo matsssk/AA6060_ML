@@ -8,7 +8,7 @@ import tensorflow as tf
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from src.hyperparameter_tuning import (
+from hyperparameter_tuning_ANN import (
     directory_for_tuning_results,
     name_df_hyperparams_results,
     epochs_for_search_and_train,

@@ -1,5 +1,5 @@
 import time
-
+import numpy as np
 import lightgbm as lgb
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -12,7 +12,7 @@ from xgboost import XGBRegressor
 from sklearn.metrics import mean_absolute_percentage_error as mape
 from src.compare_models_with_exp_data import return_test_data
 from src.data_preprocessing import return_training_data_X_y, split_into_training_and_validation
-
+from src.train_models_func_helpers import train_random_forest_for_some_hyperparams
 import os
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
@@ -27,56 +27,88 @@ feature_imp = {}
 n_iterations_GBTS = {}
 
 
-def _training_time_per_tree(training_time: float, trees: int) -> float:
-    """
-    returns average training time per tree in seconds for DTs
-    """
-    return training_time / trees
-
-
-def random_forest_model() -> None:
+def random_forest_model(tune: bool = True) -> None:
     """
     Train Random Forest model using RandomForestRegressor from scikit-learn
     Model is not saved as the size of the file is too large for standard GitHub membership
     Prediction data is stored in models_data/random_forest_output
+
+    This should preferably be done with a RandomSearchCV technique, however it was not considered enough time to rewrite all code
     """
-    n_trees = 100
-    X, y = return_training_data_X_y()
-    rf = RandomForestRegressor(n_estimators=n_trees)  # MSE default loss criterion
-    t0 = time.perf_counter()
-    rf.fit(X, y)
-    runtime = time.perf_counter() - t0
-    # get feature importances and plot in df_feature_imp
-    training_times_all_models["rf"] = runtime
-    training_time_per_tree["rf"] = _training_time_per_tree(runtime, n_trees)
-    feature_imp["rf"] = rf.feature_importances_
+    if tune:
+        # tune based on scikit-learn docs suggestions
+        n_trees_list = [1, 5, 10, 100, 200]
+        max_features_list = [0.3, 1.0]
 
-    # X_test and y_test containt all pHs
-    X_test, y_test = return_test_data()
-    testing_phs = pd.read_csv("testing_pHs.csv", sep="\t")["test_pHs"]
-    df_errors = pd.DataFrame()
-    df_errors["pH"] = testing_phs
-    mape_log_list = []
-    mape_list = []
-    rmse_list = []
-    for ph in testing_phs:
-        # create mask to get data with only that pH
-        ph_mask = X_test[:, 1] == ph
-        X_test_ph, y_test_ph = X_test[ph_mask], y_test[ph_mask]
-        # predict and store results to pandas dataframe
-        pred_ph = rf.predict(X_test_ph)
-        df_pred = pd.DataFrame({"E [V]": X_test_ph[:, 0], "Current density [A/cm2]": 10**pred_ph})
-        df_pred.to_csv(f"models_data/random_forest_output/current_density_pred_ph_{ph}.csv", sep="\t", index=False)
+        feat_imp_list = []
+        # train model based on given hyperparams
+        for n_trees in n_trees_list:
+            for max_features in max_features_list:
+                dir = f"models_data/random_forest_output/results_from_tuning/errors_trees_{n_trees}_max_feat{max_features}.csv"
+                # tune
+                train_random_forest_for_some_hyperparams(
+                    n_trees,
+                    max_features,
+                    dir,
+                    False,
+                    feat_imp_list,
+                    training_times_all_models,
+                    training_time_per_tree,
+                    feature_imp,
+                )
+        # store feature importances to csv
+        df = pd.DataFrame(feat_imp_list, columns=["n_estimators", "max_features", "potential (E)", "pH"])
+        df.to_csv("models_data/random_forest_output/results_from_tuning/feature_importances.csv", sep="\t", index=False)
+        df.style.hide(axis="index").to_latex(
+            "models_data/random_forest_output/results_from_tuning/feature_importances.tex",
+            hrules=True,
+            position="H",
+            position_float="centering",
+            label="feature_imp_RF_tuning",
+            caption="Feature importances for the trials for tuning RF",
+        )
 
-        # get errors from training data vs test data
-        mape_log_list.append(mape(pred_ph, y_test_ph))  # must be array-like
-        mape_list.append(10 ** mape_log_list[-1])
-        rmse_list.append(mse(pred_ph, y_test_ph, squared=False))
+    elif not tune:
+        # default values in RandomForestRegressor
+        # n_trees_list = [100]
+        # max_features_list = [1.0]
 
-    df_errors["(MAPE of log)"] = mape_log_list
-    df_errors["mape"] = mape_list
-    df_errors["rmse"] = rmse_list
-    df_errors.to_csv("models_data/random_forest_output/errors.csv", sep="\t", index=False)
+        # collect best hyperparams
+        # need to find the combination with lowest error (any column)
+        # the best combo has lowest average error (or sum, equivalent)
+        lowest_sum = np.inf
+        lowest_df = None
+        n_trees_best, max_feat_best = 0, 0
+        # Loop through all files in the folder and find the file with best hyperparams
+        for file_name in os.listdir("models_data/random_forest_output/results_from_tuning"):
+            if file_name.endswith(".csv") and not file_name.startswith("feature"):
+                file_path = os.path.join("models_data/random_forest_output/results_from_tuning/", file_name)
+                df = pd.read_csv(file_path, sep="\t")
+                ph_sum = df["rmse"].sum()
+                # Check if this sum is the lowest so far
+                if ph_sum < lowest_sum:
+                    lowest_sum = ph_sum
+                    lowest_df = df
+                    try:
+                        n_trees_best, max_feat_best = int(file_name.split("errors_trees_")[1].split("_")[0]), float(
+                            file_name.split(".csv")[0][-3:]
+                        )
+                    except FileNotFoundError:
+                        raise FileNotFoundError
+        # print(n_trees_best, max_feat_best)
+        # train the model with the optimized hyperparameters
+        train_random_forest_for_some_hyperparams(
+            n_trees_best,
+            max_feat_best,
+            "models_data/random_forest_output/errors_trees_best_params.csv",
+            True,
+            None,
+            training_times_all_models,
+            training_time_per_tree,
+            feature_imp,
+        )
+    else:
+        raise ValueError
 
 
 def catboost_model() -> None:
@@ -238,23 +270,24 @@ def feature_importances_to_pd():
     potential = [feature_imp[key][0] for key in feature_imp]
     pH = [feature_imp[key][1] for key in feature_imp]
     df = pd.DataFrame({"Model": models, "Potential": potential, "pH": pH})
-    df.to_csv("summarized_data_figures_datafiles/feature_importances.csv", sep="\t", index=False)
+    df.to_csv("summarized_data_figures_datafiles/csv_files/feature_importances.csv", sep="\t", index=False)
 
 
 def save_iterations_GBDTs_into_df():
     df = pd.DataFrame(columns=["model", "max_iterations"])
     ks, vs = [k for k, v in n_iterations_GBTS.items()], [v for k, v in n_iterations_GBTS.items()]
     df["model"], df["max_iterations"] = ks, vs
-    df.to_csv("summarized_data_figures_datafiles/max_iterations_GBDTs.csv", sep="\t", index=False)
+    df.to_csv("summarized_data_figures_datafiles/csv_files/max_iterations_GBDTs.csv", sep="\t", index=False)
 
 
 if __name__ == "__main__":
-    random_forest_model()
-    catboost_model()
-    xgboost_model()
-    lightgbm_model()
-    load_ANN_runtime()
-    plot_histogram_training_time_all_models()
-    plot_histogram_training_time_per_tree_DTs()
-    feature_importances_to_pd()
-    save_iterations_GBDTs_into_df()
+    # random_forest_model(tune=False)
+    print(feature_imp)
+    # catboost_model()
+    # xgboost_model()
+    # lightgbm_model()
+    # load_ANN_runtime()
+    # plot_histogram_training_time_all_models()
+    # plot_histogram_training_time_per_tree_DTs()
+    # feature_importances_to_pd()
+    # save_iterations_GBDTs_into_df()

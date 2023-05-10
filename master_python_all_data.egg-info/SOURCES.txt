@@ -1,3 +1,4 @@
+README.md
 pyproject.toml
 master_python_all_data.egg-info/PKG-INFO
 master_python_all_data.egg-info/SOURCES.txt
@@ -8,12 +9,12 @@ src/data_preprocessing.py
 src/filter_raw_data.py
 src/get_data_from_tuned_models.py
 src/get_selected_features.py
-src/hyperparameter_tuning.py
+src/hyperparameter_tuning_ANN.py
 src/load_data.py
 src/plot_OCPs.py
 src/plot_raw_data.py
 src/plot_sketch_figures_report.py
-src/test_stuff.py
+src/remove_gamry_noise.py
 src/train_models.py
-src/tests/conftest.py
-src/tests/test_unit.py
+src/train_models_func_helpers.py
+src/tuning_GBDTS.py
