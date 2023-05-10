@@ -12,7 +12,7 @@ from xgboost import XGBRegressor
 from sklearn.metrics import mean_absolute_percentage_error as mape
 from src.compare_models_with_exp_data import return_test_data
 from src.data_preprocessing import return_training_data_X_y, split_into_training_and_validation
-from src.train_models_func_helpers import train_random_forest_for_some_hyperparams
+from src.train_models_func_helpers import train_random_forest_for_some_hyperparams, create_df_average_error_for_each_trial_across_phs
 import os
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
@@ -67,6 +67,7 @@ def random_forest_model(tune: bool = True) -> None:
             label="feature_imp_RF_tuning",
             caption="Feature importances for the trials for tuning RF",
         )
+        create_df_average_error_for_each_trial_across_phs(tuning_files_dir="models_data/random_forest_output/results_from_tuning/")
 
     elif not tune:
         # default values in RandomForestRegressor
@@ -81,7 +82,7 @@ def random_forest_model(tune: bool = True) -> None:
         n_trees_best, max_feat_best = 0, 0
         # Loop through all files in the folder and find the file with best hyperparams
         for file_name in os.listdir("models_data/random_forest_output/results_from_tuning"):
-            if file_name.endswith(".csv") and not file_name.startswith("feature"):
+            if file_name.endswith(".csv") and file_name.startswith("errors"):
                 file_path = os.path.join("models_data/random_forest_output/results_from_tuning/", file_name)
                 df = pd.read_csv(file_path, sep="\t")
                 ph_sum = df["rmse"].sum()
@@ -107,6 +108,9 @@ def random_forest_model(tune: bool = True) -> None:
             training_time_per_tree,
             feature_imp,
         )
+        # create
+        create_df_average_error_for_each_trial_across_phs(tuning_files_dir="models_data/random_forest_output/results_from_tuning/")
+
     else:
         raise ValueError
 
@@ -281,9 +285,8 @@ def save_iterations_GBDTs_into_df():
 
 
 if __name__ == "__main__":
-    # random_forest_model(tune=False)
-    print(feature_imp)
-    # catboost_model()
+    #random_forest_model(tune=False)
+    #catboost_model()
     # xgboost_model()
     # lightgbm_model()
     # load_ANN_runtime()
