@@ -160,14 +160,21 @@ def plot_tafel_lines_E_corr_i_corr(
     )
 
 
-def store_polarization_curve_features(E: np.ndarray, i: np.ndarray) -> list[Any]:
+def store_polarization_curve_features(E: np.ndarray, i: np.ndarray, model: str) -> list[Any]:
     ocp = get_ocps_machine_learning_models(E, i)
-    E_applied, i_applied_log_abs, slope, intercept, r_value, std_err = linreg_tafel_line_ORR_or_HER(ocp, E, i)
+    (
+        E_applied,
+        i_applied_log_abs,
+        slope,
+        intercept,
+        r_value,
+        std_err_slope,
+    ) = linreg_tafel_line_ORR_or_HER(ocp, E, i)
     # first value in the tafel line should be where E = ocp, solve for current
     i_applied_log_abs = np.insert(i_applied_log_abs, 0, (ocp - intercept) / slope)
     E_corr, i_corr = corrosion_potential_and_current_density(slope, i_applied_log_abs[0], intercept)
 
-    return [i_applied_log_abs, ocp, slope, intercept, r_value, std_err, E_corr, i_corr]
+    return [i_applied_log_abs, ocp, slope, intercept, r_value, std_err_slope, E_corr, i_corr]
 
 
 def plot_experimental_testing_data(ph, loc1, loc2, df_features: pd.DataFrame) -> None:
@@ -180,8 +187,17 @@ def plot_experimental_testing_data(ph, loc1, loc2, df_features: pd.DataFrame) ->
 
     E, i = X_test_ph[:, 0], 10**y_test_ph
     # store polarization curve features
-    i_applied_log_abs, ocp, slope, intercept, r_value, std_err, E_corr, i_corr = store_polarization_curve_features(E, i)
-    df_features["Exp. data"] = [ocp, slope, r_value**2, std_err, E_corr, i_corr]
+    (
+        i_applied_log_abs,
+        ocp,
+        slope,
+        intercept,
+        r_value,
+        std_err_slope,
+        E_corr,
+        i_corr,
+    ) = store_polarization_curve_features(E, i, "exp")
+    df_features["Exp. data"] = [ocp, slope, r_value**2, std_err_slope, E_corr, i_corr]
 
     figures_to_plot_exp_data_in = [
         ax_pred,
@@ -220,8 +236,17 @@ def random_forest_comparison(ph, loc1, loc2, df_features: pd.DataFrame) -> None:
     # store features
     E = X_test_ph[:, 0]
     i = current_density_pred.to_numpy()
-    i_applied_log_abs, ocp, slope, intercept, r_value, std_err, E_corr, i_corr = store_polarization_curve_features(E, i)
-    df_features["RF"] = [ocp, slope, r_value**2, std_err, E_corr, i_corr]
+    (
+        i_applied_log_abs,
+        ocp,
+        slope,
+        intercept,
+        r_value,
+        std_err_slope,
+        E_corr,
+        i_corr,
+    ) = store_polarization_curve_features(E, i, "RF")
+    df_features["RF"] = [ocp, slope, r_value**2, std_err_slope, E_corr, i_corr]
 
     linestyle, color = linestyles_and_markers_for_model_comparisons("rf")
     figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_rf[loc1, loc2]]
@@ -249,8 +274,17 @@ def catboost_comparison(ph, store_mape: list, loc1, loc2, df_features: pd.DataFr
 
     # store features
     E, i = X_test_ph[:, 0], 10**y_pred_ph
-    i_applied_log_abs, ocp, slope, intercept, r_value, std_err, E_corr, i_corr = store_polarization_curve_features(E, i)
-    df_features["CB"] = [ocp, slope, r_value**2, std_err, E_corr, i_corr]
+    (
+        i_applied_log_abs,
+        ocp,
+        slope,
+        intercept,
+        r_value,
+        std_err_slope,
+        E_corr,
+        i_corr,
+    ) = store_polarization_curve_features(E, i, "CB")
+    df_features["CB"] = [ocp, slope, r_value**2, std_err_slope, E_corr, i_corr]
 
     figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_cb[loc1, loc2]]
     for ax in figures_to_plot_pred_in:
@@ -290,8 +324,17 @@ def xgboost_comparison(ph, store_mape, loc1, loc2, df_features: pd.DataFrame) ->
     store_mape.append(mape(y_pred, y_test_ph) * 100)
     # store features
     E, i = X_test_ph[:, 0], 10**y_pred
-    i_applied_log_abs, ocp, slope, intercept, r_value, std_err, E_corr, i_corr = store_polarization_curve_features(E, i)
-    df_features["XGB"] = [ocp, slope, r_value**2, std_err, E_corr, i_corr]
+    (
+        i_applied_log_abs,
+        ocp,
+        slope,
+        intercept,
+        r_value,
+        std_err_slope,
+        E_corr,
+        i_corr,
+    ) = store_polarization_curve_features(E, i, "XGB")
+    df_features["XGB"] = [ocp, slope, r_value**2, std_err_slope, E_corr, i_corr]
 
     linestyle, color = linestyles_and_markers_for_model_comparisons("xgb")
     figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_xgb[loc1, loc2]]
@@ -329,8 +372,17 @@ def lgbm_comparison(ph, store_mape, loc1, loc2, df_features: pd.DataFrame) -> No
     store_mape.append(mape(y_pred, y_test_ph) * 100)
     # store features
     E, i = X_test_ph[:, 0], 10**y_pred
-    i_applied_log_abs, ocp, slope, intercept, r_value, std_err, E_corr, i_corr = store_polarization_curve_features(E, i)
-    df_features["LGB"] = [ocp, slope, r_value**2, std_err, E_corr, i_corr]
+    (
+        i_applied_log_abs,
+        ocp,
+        slope,
+        intercept,
+        r_value,
+        std_err_slope,
+        E_corr,
+        i_corr,
+    ) = store_polarization_curve_features(E, i, "LGBM")
+    df_features["LGB"] = [ocp, slope, r_value**2, std_err_slope, E_corr, i_corr]
 
     linestyle, color = linestyles_and_markers_for_model_comparisons("lgb")
 
@@ -379,17 +431,30 @@ def ANN_comparison(ph, store_mape, loc1, loc2, df_features: pd.DataFrame) -> Non
             if file == "first_best_model.h5":
                 # store features
                 E, i = X_test_ph[:, 0], y_pred.reshape(-1)
-                (
-                    i_applied_log_abs,
-                    ocp,
-                    slope,
-                    intercept,
-                    r_value,
-                    std_err,
-                    E_corr,
-                    i_corr,
-                ) = store_polarization_curve_features(E, i)
-                df_features["ANN"] = [ocp, slope, r_value**2, std_err, E_corr, i_corr]
+                try:
+                    (
+                        i_applied_log_abs,
+                        ocp,
+                        slope,
+                        intercept,
+                        r_value,
+                        std_err_slope,
+                        E_corr,
+                        i_corr,
+                    ) = store_polarization_curve_features(E, i, "ANN")
+                except ValueError:
+                    (
+                        i_applied_log_abs,
+                        ocp,
+                        slope,
+                        intercept,
+                        r_value,
+                        std_err_slope,
+                        E_corr,
+                        i_corr,
+                    ) = store_polarization_curve_features(E, 10**y_test_ph, "ANN")
+
+                df_features["ANN"] = [ocp, slope, r_value**2, std_err_slope, E_corr, i_corr]
 
                 linestyle, color = linestyles_and_markers_for_model_comparisons("ann")
 

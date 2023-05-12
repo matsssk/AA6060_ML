@@ -2,6 +2,7 @@ import os
 import time
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy import stats
 from src.load_data import list_of_filenames, load_raw_data
 
 plt.rcParams["font.family"] = "serif"
@@ -64,6 +65,7 @@ def plot_and_return_dataframe_with_filtered_data(
     for idx, (file_raw, file_no_gamry_noise) in enumerate(zip(files, files_without_gamry_errors)):
         file_path_raw: str = os.path.join(folder_raw, file_raw)
         pH: float = float(file_raw.split("h")[1].split(",")[0] + "." + file_raw.split(",")[1].split(".")[0])
+
         potential_raw, current_density_raw = load_raw_data(file_path_raw)
 
         # filtered data without gamry noise
@@ -74,13 +76,18 @@ def plot_and_return_dataframe_with_filtered_data(
             current_density_no_gamry_noise, potential_no_gamry_noise
         )
         ocp_t0, ocp_t_half, delta_ocp = get_ocps(potential_raw, potential_filtered, current_density_filtered)
-        # print(potential_filtered)
-        # print(ocp_t0)
+        # plot pH vs OCP
+
         try:
             # ORR or HER tafel slopes
-            _, i_tafel_abs_log, tafel_slope, intercept, r_value, std_err = linreg_tafel_line_ORR_or_HER(
-                ocp_t_half, potential_filtered, current_density_filtered
-            )
+            (
+                E_applied,
+                i_applied_log_abs,
+                tafel_slope,
+                intercept,
+                r_value,
+                std_err_slope,
+            ) = linreg_tafel_line_ORR_or_HER(ocp_t_half, potential_filtered, current_density_filtered)
             # slope is delta E / delta abs(i), we need delta E / delta log10(|i|)
         except ValueError:
             print(f"Something wrong with file: {file_raw}")
@@ -95,7 +102,7 @@ def plot_and_return_dataframe_with_filtered_data(
                 "tafel_slope [mV/dec]": tafel_slope * 1000,
                 "intercept [V]": intercept,
                 "r_value_squared": r_value**2,
-                "standard error": std_err,
+                "standard error tafel": std_err_slope,
             }
         )
         selected_features_df = pd.concat([selected_features_df, df_add_to_selected_features])
@@ -139,8 +146,8 @@ def plot_and_return_dataframe_with_filtered_data(
             partial_derivative = r"$\frac{\partial E}{\partial log|i|}$"
             rounded_r_squared = round(r_value**2, 5)  # type: ignore
             ax_tafel[loc].semilogx(
-                10**i_tafel_abs_log,
-                tafel_slope * i_tafel_abs_log + intercept,
+                10**i_applied_log_abs,
+                tafel_slope * i_applied_log_abs + intercept,
                 color="r",
                 linestyle="--",
                 label=f"pH = {pH}, {partial_derivative} = {int(tafel_slope*1000)} mV/dec, R\u00b2 = {rounded_r_squared}",
@@ -207,7 +214,6 @@ def plot_and_return_dataframe_with_filtered_data(
                         subplot_ax_tafel.clear()
 
     df_all_filtered_data.to_csv("df_training_data.csv", sep="\t", index=False)
-
     # save selected featurs
     selected_features_df.to_csv("selected_features.csv", sep="\t", index=False)
 

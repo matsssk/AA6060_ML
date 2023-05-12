@@ -35,18 +35,17 @@ def linreg_tafel_line_ORR_or_HER(
     # create a boolean mask to filter potential and current to the desired region
     # where kinetics are defined by the tafel equation
     # take not that for lower potentials on ORR, we have diffusion limitations
+
     if check_ORR_dominance(ocp_t_half):
         mask = (E_filtered < (ocp_t_half - 0.15)) & (E_filtered > -1.05)
     else:
         mask = E_filtered < (ocp_t_half - 0.15)
-
     E_applied, i_applied = np.flip(E_filtered[mask]), np.flip(i_filtered[mask])
-
     # apply linear regression on this region
     # remember that we want a linear region only for logarithmic x axis
     i_applied_log_abs = np.log10(abs(i_applied))
-    slope, intercept, r_value, _, std_err = stats.linregress(i_applied_log_abs, E_applied)
-    return [E_applied, i_applied_log_abs, slope, intercept, r_value, std_err]
+    slope, intercept, r_value, _, std_err_slope = stats.linregress(i_applied_log_abs, E_applied)
+    return [E_applied, i_applied_log_abs, slope, intercept, r_value, std_err_slope]
 
 
 def get_ocps_machine_learning_models(E, i):

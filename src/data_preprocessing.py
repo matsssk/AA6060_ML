@@ -27,13 +27,21 @@ def ph_for_testing() -> None:
     Saves dataframe with randomly drawn pHs
     PS: Uniform probabilties
     """
-    samples = list(np.arange(2.0, 12.2, 0.2))
-    test_ph = []
-    while len(test_ph) < 4:
-        ph = round(random.choice(samples), 3)
-        if ph not in test_ph:
-            test_ph.append(ph)
-    df = pd.DataFrame(test_ph, columns=["test_pHs"])
+    samples = np.array_split(np.arange(2.0, 12.2, 0.2), 4)
+    test_phs = []
+    for sample in samples:
+        test_phs.append(round((random.choice(sample)), 3))
+
+    # sample1, sample2, sample3, sample4 = np.array_split(samples, 4)
+    # print(sample1, sample2, sample3, sample4)
+    # test_ph = []
+    # for
+    # while len(test_ph) < 4:
+    #     ph = round(random.choice(samples), 3)
+    #     if ph not in test_ph:
+    #         test_ph.append(ph)
+    df = pd.DataFrame(test_phs, columns=["test_pHs"])
+    print(df)
     df.to_csv("testing_pHs.csv", sep="\t", index=False)
 
 
@@ -92,3 +100,8 @@ def normalize_data_for_ANN():
     X_train, X_val, y_train, y_val = split_into_training_and_validation(X_scaled, y_scaled)
 
     return X_train, X_val, y_train, y_val, x_scaler, y_scaler
+
+
+if __name__ == "__main__":
+    # ph_for_testing()
+    pass

@@ -33,6 +33,10 @@ def sort_files_based_on_ph(filename: str) -> float:
     return float(filename.split("h")[1].split(",")[0] + "." + filename.split(",")[1].split(".")[0])
 
 
+def one_third_of_ocp_data(X):
+    return X[(int(len(X) / 3 * 2)) :]
+
+
 def standard_deviation(X: np.ndarray) -> float:
     """
     Calculates the sample standard deviation for last 1/3 * N data points using Bessel's correction
@@ -42,9 +46,7 @@ def standard_deviation(X: np.ndarray) -> float:
 
     : param X: 1 dim array with potential as a function of time, E(t)
     """
-    n = int(len(X) / 3 * 2)
-    X_frac = X[n:]
-    return tstd(X_frac, limits=None)
+    return tstd(X, limits=None)
 
 
 if __name__ == "__main__":
@@ -54,17 +56,26 @@ if __name__ == "__main__":
     fig.supylabel("E vs SCE [V]")
     fig.tight_layout()
 
+    # fig to plot ocp vs pH
+    fig_ph_ocp, ax_ph_ocp = plt.subplots(figsize=(5, 5))
+    ax_ph_ocp.set_xlabel("pH")
+    ax_ph_ocp.set_ylabel("Open Circuit Potential (OCP) vs SCE [V]")
+
 
 def plot_ocp_files():
     files: list[str] = sorted(list_of_filenames(folder=folder_with_ocps()), key=sort_files_based_on_ph)
 
     # the coordinates of the different subplots
     positions = [[0, 0], [0, 1], [1, 0], [1, 1]] * int(len(files) / 4 + 1)
-    std_list = []
+    std_list, mean_ocps_for_phs, phs = [], [], []
+
     for idx, file in enumerate(files):
         file_path = os.path.join(folder_with_ocps(), file)
         time, potential = load_ocp_data(file_path)
-        std_list.append(standard_deviation(potential))
+
+        mean_ocps_for_phs.append(np.mean(one_third_of_ocp_data(potential)))
+        std_list.append(standard_deviation(one_third_of_ocp_data(potential)))  # the last 1/3 of data
+        phs.append(float(file.split("h")[1].split(",")[0] + "." + file.split(",")[1].split(".")[0]))
 
         loc = positions[idx][0], positions[idx][1]
         ax[loc].plot(time, potential, label=f"pH: {sort_files_based_on_ph(file)}", color="black")
@@ -79,17 +90,24 @@ def plot_ocp_files():
             for subplot_ax in ax.flat:
                 if (idx + 1) != len(files):
                     subplot_ax.clear()
-    try:
-        pH_list = list(np.arange(2.0, 12.2, 0.2))
-        pd.DataFrame({"pH": pH_list, "Corrected standard dev.": std_list}).to_csv(
-            "summarized_data_figures_datafiles/csv_files/standard_dev_ocps.csv", index=False, sep="\t"
+
+    pd.DataFrame({"pH": phs, "Corrected standard dev.": std_list}).to_csv(
+        "summarized_data_figures_datafiles/csv_files/standard_dev_ocps.csv", index=False, sep="\t"
+    )
+    masks = ([ph < 10.2 for ph in phs], [ph >= 10.2 for ph in phs])
+    for mask in masks:
+        ax_ph_ocp.scatter(np.array(phs)[mask], np.array(mean_ocps_for_phs)[mask], color="black")
+        ax_ph_ocp.errorbar(
+            np.array(phs)[mask],
+            np.array(mean_ocps_for_phs)[mask],
+            yerr=np.array(std_list)[mask],
+            fmt="none",
+            capsize=4,
+            color="black",
         )
-    except ValueError:
-        print("Exception occured, missing some files")
-        pH_list = [sort_files_based_on_ph(s) for s in files]
-        pd.DataFrame({"pH": pH_list, "Corrected standard dev.": std_list}).to_csv(
-            "summarized_data_figures_datafiles/csv_files/standard_dev_ocps.csv", index=False, sep="\t"
-        )
+        fig_ph_ocp.tight_layout()
+        fig_ph_ocp.savefig(f"summarized_data_figures_datafiles/ocp_vs_ph{np.array(phs)[mask][-1]}.png")
+        ax_ph_ocp.clear()
 
 
 if __name__ == "__main__":

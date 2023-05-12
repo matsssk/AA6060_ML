@@ -1,0 +1,7 @@
+	Exp. data	CB	RF	XGB	LGB	ANN	Mean error ML	Mean error ML - Exp. data	MAPE
+OCP [V]	-0.726	-0.869	-0.866	-0.868	-0.822	-0.544	-0.782	-0.0565	7.78
+Tafel slope $[$mv/dec$]$	-520	-109	-248	-176	-260	-84.9	-233	287	55.2
+R\textsuperscript{2} value slope	0.998	0.369	0.967	0.78	0.881	0.803	0.8	-0.198	19.9
+Std. error slope (1e3)	0.402	5.67	1.76	3.68	2.42	0.498	2.4	2	498
+E\textsubscript{corr} [V]	-0.726	-0.869	-0.866	-0.868	-0.822	-0.544	-0.782	-0.0564	7.78
+i\textsubscript{corr} \text{[$\mu$A cm\textsuperscript{-2}]}	0.645	0.0335	0.286	0.161	0.347	0.638	0.352	-0.293	45.5

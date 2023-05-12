@@ -1,5 +1,5 @@
 best_models_sorted,neurons,num_hidden_layers,l2,optimizer,loss,activation,output_activation,batch_size,runtime,epochs
-1,50,4,0.0001,adam,msle,relu,linear,32,17.665830284997355,1
-2,90,3,0.0001,adam,msle,relu,softmax,32,18.064376287002233,1
-3,70,4,0.0001,adam,mse,relu,softmax,32,19.590420973996515,1
-4,60,3,0.001,adam,msle,relu,linear,32,17.480056773005344,1
+1,90,2,0.001,adam,mae,relu,linear,32,17.049957076989813,1
+2,60,2,0.001,adam,msle,relu,linear,32,16.944610817998182,1
+3,70,2,0.0001,adam,msle,relu,linear,32,18.33368846900703,1
+4,50,2,0.0001,adam,mae,relu,linear,32,19.132414286010317,1

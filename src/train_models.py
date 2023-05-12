@@ -12,7 +12,11 @@ from xgboost import XGBRegressor
 from sklearn.metrics import mean_absolute_percentage_error as mape
 from src.compare_models_with_exp_data import return_test_data
 from src.data_preprocessing import return_training_data_X_y, split_into_training_and_validation
-from src.train_models_func_helpers import train_random_forest_for_some_hyperparams, create_df_average_error_for_each_trial_across_phs
+from src.train_models_func_helpers import (
+    train_random_forest_for_some_hyperparams,
+    create_df_average_error_for_each_trial_across_phs,
+    _training_time_per_tree,
+)
 import os
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
@@ -67,7 +71,9 @@ def random_forest_model(tune: bool = True) -> None:
             label="feature_imp_RF_tuning",
             caption="Feature importances for the trials for tuning RF",
         )
-        create_df_average_error_for_each_trial_across_phs(tuning_files_dir="models_data/random_forest_output/results_from_tuning/")
+        create_df_average_error_for_each_trial_across_phs(
+            tuning_files_dir="models_data/random_forest_output/results_from_tuning/"
+        )
 
     elif not tune:
         # default values in RandomForestRegressor
@@ -109,7 +115,9 @@ def random_forest_model(tune: bool = True) -> None:
             feature_imp,
         )
         # create
-        create_df_average_error_for_each_trial_across_phs(tuning_files_dir="models_data/random_forest_output/results_from_tuning/")
+        create_df_average_error_for_each_trial_across_phs(
+            tuning_files_dir="models_data/random_forest_output/results_from_tuning/"
+        )
 
     else:
         raise ValueError
@@ -285,12 +293,12 @@ def save_iterations_GBDTs_into_df():
 
 
 if __name__ == "__main__":
-    #random_forest_model(tune=False)
-    #catboost_model()
-    # xgboost_model()
-    # lightgbm_model()
-    # load_ANN_runtime()
-    # plot_histogram_training_time_all_models()
-    # plot_histogram_training_time_per_tree_DTs()
-    # feature_importances_to_pd()
-    # save_iterations_GBDTs_into_df()
+    random_forest_model(tune=False)
+    catboost_model()
+    xgboost_model()
+    lightgbm_model()
+    load_ANN_runtime()
+    plot_histogram_training_time_all_models()
+    plot_histogram_training_time_per_tree_DTs()
+    feature_importances_to_pd()
+    save_iterations_GBDTs_into_df()

@@ -51,7 +51,6 @@ def train_random_forest_for_some_hyperparams(
         training_times_all_models["rf"] = runtime
         training_time_per_tree["rf"] = _training_time_per_tree(runtime, n_trees)
         feature_imp["rf"] = rf.feature_importances_
-        print("executed")
 
     # evaluate the feature importances against each other to compare
     elif not best_model and feat_imp_list is not None:
@@ -118,4 +117,5 @@ def create_df_average_error_for_each_trial_across_phs(tuning_files_dir: str) -> 
 
 
 if __name__ == "__main__":
-    #average_error_for_each_trial(tuning_files_dir="models_data/random_forest_output/results_from_tuning/")
+    pass
+    # average_error_for_each_trial(tuning_files_dir="models_data/random_forest_output/results_from_tuning/")
