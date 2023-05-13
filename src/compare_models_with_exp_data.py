@@ -22,6 +22,7 @@ from src.data_preprocessing import (
     split_data_into_training_and_testing,
     convert_current_to_log,
 )
+from src.get_selected_features import plot_confidence_interval
 from typing import Any
 from src.get_selected_features import linreg_tafel_line_ORR_or_HER, get_ocps_machine_learning_models
 from tensorflow import keras
@@ -136,21 +137,81 @@ def corrosion_potential_and_current_density(slope, i0, intercept) -> list[float]
     return [E_corr, i_corr]
 
 
+from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset
+
+
 def plot_tafel_lines_E_corr_i_corr(
-    fig, i_applied_log_abs, slope, intercept, ocp, r_value, E_corr, i_corr, color, model: str
+    ax,
+    i_applied_log_abs,
+    E_applied,
+    slope,
+    intercept,
+    ocp,
+    r_value,
+    E_corr,
+    i_corr,
+    color,
+    model: str,
+    slope_std_error: float,
+    intercept_std_error: float,
 ) -> None:
     # plot tafel line
-    fig.semilogx(
-        10**i_applied_log_abs,
-        slope * i_applied_log_abs + intercept,
+    x, y = 10**i_applied_log_abs, slope * i_applied_log_abs + intercept
+    ax.semilogx(
+        x,
+        y,
         label=f"{tafel_math_expression()} = {int(slope*1000)} mV/dec, R\u00b2 = {round_r_value(r_value)}",
         color=color,
         linestyle="--",
     )
+    # add a zoomed plot of the linreg
+    zoom_xlim = [1e-6, 1e-5]
+    zoom_ylim = [y.min(), y.max()]
+
+    # Create the zoomed-in plot
+    ax_zoom = zoomed_inset_axes(
+        ax,
+        zoom=10,
+        bbox_to_anchor=(0.5, 0.7),
+        loc="upper left",
+        axes_kwargs={"facecolor": "lightgray"},
+    )
+    # Set the limits and ticks for the zoomed-in plot
+    ax_zoom.set_xlim(zoom_xlim)
+    ax_zoom.set_ylim(zoom_ylim)
+    ax_zoom.set_xticks([1e-6, 1e-5])
+    ax_zoom.set_yticks([round(y.min(), 1), round(y.max(), 1)])
+
+    ax_zoom.semilogx(x, y, color=color)
+    plot_confidence_interval(
+        confidence_level=0.95,
+        i_applied_log_abs=i_applied_log_abs,
+        slope=slope,
+        slope_std_error=slope_std_error,
+        intercept=intercept,
+        intercept_std_error=intercept_std_error,
+        ax=ax,
+        color=color,
+        model=model,
+    )
+    # Set the limits and ticks for the zoomed-in plot
+    ax_zoom.set_xlim(zoom_xlim)
+    ax_zoom.set_ylim(zoom_ylim)
+    ax_zoom.set_xticks([1e-6, 1e-5])
+    ax_zoom.set_yticks([round(y.min(), 1), round(y.max(), 1)])
+
+    # Draw a box around the zoomed-in plot in the main plot
+    mark_inset(ax, ax_zoom, loc1=3, loc2=4, fc="none", ec="0.5")
+
+    # Hide the ticks and labels for the zoomed-in plot in the main plot
+    plt.setp(ax_zoom.get_xticklabels(), visible=False)
+    plt.setp(ax_zoom.get_yticklabels(), visible=False)
+    plt.setp(ax_zoom.get_xticklines(), visible=False)
+    plt.setp(ax_zoom.get_yticklines(), visible=False)
 
     # plot horizontal line at ocp to calculate i_corr
-    fig.axhline(ocp, color="grey", linestyle="--")
-    fig.scatter(
+    ax.axhline(ocp, color="grey", linestyle="--")
+    ax.scatter(
         i_corr,
         E_corr,
         color=color,
@@ -167,14 +228,27 @@ def store_polarization_curve_features(E: np.ndarray, i: np.ndarray, model: str) 
         i_applied_log_abs,
         slope,
         intercept,
-        r_value,
-        std_err_slope,
+        rvalue,
+        std_error_slope,
+        intercept_stderr,
     ) = linreg_tafel_line_ORR_or_HER(ocp, E, i)
     # first value in the tafel line should be where E = ocp, solve for current
     i_applied_log_abs = np.insert(i_applied_log_abs, 0, (ocp - intercept) / slope)
+    E_applied = np.insert(E_applied, 0, ocp)
     E_corr, i_corr = corrosion_potential_and_current_density(slope, i_applied_log_abs[0], intercept)
 
-    return [i_applied_log_abs, ocp, slope, intercept, r_value, std_err_slope, E_corr, i_corr]
+    return [
+        E_applied,
+        i_applied_log_abs,
+        ocp,
+        slope,
+        intercept,
+        rvalue,
+        std_error_slope,
+        intercept_stderr,
+        E_corr,
+        i_corr,
+    ]
 
 
 def plot_experimental_testing_data(ph, loc1, loc2, df_features: pd.DataFrame) -> None:
@@ -188,16 +262,9 @@ def plot_experimental_testing_data(ph, loc1, loc2, df_features: pd.DataFrame) ->
     E, i = X_test_ph[:, 0], 10**y_test_ph
     # store polarization curve features
     (
-        i_applied_log_abs,
-        ocp,
-        slope,
-        intercept,
-        r_value,
-        std_err_slope,
-        E_corr,
-        i_corr,
+        [E_applied, i_applied_log_abs, ocp, slope, intercept, rvalue, std_error_slope, intercept_stderr, E_corr, i_corr]
     ) = store_polarization_curve_features(E, i, "exp")
-    df_features["Exp. data"] = [ocp, slope, r_value**2, std_err_slope, E_corr, i_corr]
+    df_features["Exp. data"] = [ocp, slope, rvalue**2, std_error_slope, intercept_stderr, E_corr, i_corr]
 
     figures_to_plot_exp_data_in = [
         ax_pred,
@@ -219,7 +286,19 @@ def plot_experimental_testing_data(ph, loc1, loc2, df_features: pd.DataFrame) ->
 
         if fig not in [ax_pred, ax_compare_anns]:
             plot_tafel_lines_E_corr_i_corr(
-                fig, i_applied_log_abs, slope, intercept, ocp, r_value, E_corr, i_corr, color="k", model="Exp_data"
+                fig,
+                i_applied_log_abs,
+                E_applied,
+                slope,
+                intercept,
+                ocp,
+                rvalue,
+                E_corr,
+                i_corr,
+                "blue",
+                "Exp_data",
+                std_error_slope,
+                intercept_stderr,
             )
 
 
@@ -237,16 +316,9 @@ def random_forest_comparison(ph, loc1, loc2, df_features: pd.DataFrame) -> None:
     E = X_test_ph[:, 0]
     i = current_density_pred.to_numpy()
     (
-        i_applied_log_abs,
-        ocp,
-        slope,
-        intercept,
-        r_value,
-        std_err_slope,
-        E_corr,
-        i_corr,
+        [E_applied, i_applied_log_abs, ocp, slope, intercept, rvalue, std_error_slope, intercept_stderr, E_corr, i_corr]
     ) = store_polarization_curve_features(E, i, "RF")
-    df_features["RF"] = [ocp, slope, r_value**2, std_err_slope, E_corr, i_corr]
+    df_features["RF"] = [ocp, slope, rvalue**2, std_error_slope, intercept_stderr, E_corr, i_corr]
 
     linestyle, color = linestyles_and_markers_for_model_comparisons("rf")
     figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_rf[loc1, loc2]]
@@ -261,7 +333,19 @@ def random_forest_comparison(ph, loc1, loc2, df_features: pd.DataFrame) -> None:
         # plot tafel lines for each pH and have it in appendix
         if ax == ax_individual_model_vs_exp_rf[loc1, loc2]:
             plot_tafel_lines_E_corr_i_corr(
-                ax, i_applied_log_abs, slope, intercept, ocp, r_value, E_corr, i_corr, color=color, model="RF"
+                ax,
+                i_applied_log_abs,
+                E_applied,
+                slope,
+                intercept,
+                ocp,
+                rvalue,
+                E_corr,
+                i_corr,
+                color,
+                "RF",
+                std_error_slope,
+                intercept_stderr,
             )
 
 
@@ -275,16 +359,9 @@ def catboost_comparison(ph, store_mape: list, loc1, loc2, df_features: pd.DataFr
     # store features
     E, i = X_test_ph[:, 0], 10**y_pred_ph
     (
-        i_applied_log_abs,
-        ocp,
-        slope,
-        intercept,
-        r_value,
-        std_err_slope,
-        E_corr,
-        i_corr,
+        [E_applied, i_applied_log_abs, ocp, slope, intercept, rvalue, std_error_slope, intercept_stderr, E_corr, i_corr]
     ) = store_polarization_curve_features(E, i, "CB")
-    df_features["CB"] = [ocp, slope, r_value**2, std_err_slope, E_corr, i_corr]
+    df_features["CB"] = [ocp, slope, rvalue**2, std_error_slope, intercept_stderr, E_corr, i_corr]
 
     figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_cb[loc1, loc2]]
     for ax in figures_to_plot_pred_in:
@@ -298,7 +375,19 @@ def catboost_comparison(ph, store_mape: list, loc1, loc2, df_features: pd.DataFr
         # plot tafel lines for each pH and have it in appendix
         if ax == figures_to_plot_pred_in[-1]:
             plot_tafel_lines_E_corr_i_corr(
-                ax, i_applied_log_abs, slope, intercept, ocp, r_value, E_corr, i_corr, color=color, model="CB"
+                ax,
+                i_applied_log_abs,
+                E_applied,
+                slope,
+                intercept,
+                ocp,
+                rvalue,
+                E_corr,
+                i_corr,
+                color,
+                "CB",
+                std_error_slope,
+                intercept_stderr,
             )
 
     store_mape.append(mape(y_pred_ph, y_test_ph))
@@ -325,16 +414,9 @@ def xgboost_comparison(ph, store_mape, loc1, loc2, df_features: pd.DataFrame) ->
     # store features
     E, i = X_test_ph[:, 0], 10**y_pred
     (
-        i_applied_log_abs,
-        ocp,
-        slope,
-        intercept,
-        r_value,
-        std_err_slope,
-        E_corr,
-        i_corr,
+        [E_applied, i_applied_log_abs, ocp, slope, intercept, rvalue, std_error_slope, intercept_stderr, E_corr, i_corr]
     ) = store_polarization_curve_features(E, i, "XGB")
-    df_features["XGB"] = [ocp, slope, r_value**2, std_err_slope, E_corr, i_corr]
+    df_features["XGB"] = [ocp, slope, rvalue**2, std_error_slope, intercept_stderr, E_corr, i_corr]
 
     linestyle, color = linestyles_and_markers_for_model_comparisons("xgb")
     figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_xgb[loc1, loc2]]
@@ -349,7 +431,19 @@ def xgboost_comparison(ph, store_mape, loc1, loc2, df_features: pd.DataFrame) ->
         # plot tafel lines for each pH and have it in appendix
         if ax == figures_to_plot_pred_in[-1]:
             plot_tafel_lines_E_corr_i_corr(
-                ax, i_applied_log_abs, slope, intercept, ocp, r_value, E_corr, i_corr, color=color, model="XGB"
+                ax,
+                i_applied_log_abs,
+                E_applied,
+                slope,
+                intercept,
+                ocp,
+                rvalue,
+                E_corr,
+                i_corr,
+                color,
+                "XGB",
+                std_error_slope,
+                intercept_stderr,
             )
 
 
@@ -373,16 +467,9 @@ def lgbm_comparison(ph, store_mape, loc1, loc2, df_features: pd.DataFrame) -> No
     # store features
     E, i = X_test_ph[:, 0], 10**y_pred
     (
-        i_applied_log_abs,
-        ocp,
-        slope,
-        intercept,
-        r_value,
-        std_err_slope,
-        E_corr,
-        i_corr,
+        [E_applied, i_applied_log_abs, ocp, slope, intercept, rvalue, std_error_slope, intercept_stderr, E_corr, i_corr]
     ) = store_polarization_curve_features(E, i, "LGBM")
-    df_features["LGB"] = [ocp, slope, r_value**2, std_err_slope, E_corr, i_corr]
+    df_features["LGB"] = [ocp, slope, rvalue**2, std_error_slope, intercept_stderr, E_corr, i_corr]
 
     linestyle, color = linestyles_and_markers_for_model_comparisons("lgb")
 
@@ -398,7 +485,19 @@ def lgbm_comparison(ph, store_mape, loc1, loc2, df_features: pd.DataFrame) -> No
         # plot tafel lines for each pH and have it in appendix
         if ax == figures_to_plot_pred_in[-1]:
             plot_tafel_lines_E_corr_i_corr(
-                ax, i_applied_log_abs, slope, intercept, ocp, r_value, E_corr, i_corr, color=color, model="LGB"
+                ax,
+                i_applied_log_abs,
+                E_applied,
+                slope,
+                intercept,
+                ocp,
+                rvalue,
+                E_corr,
+                i_corr,
+                color,
+                "LGB",
+                std_error_slope,
+                intercept_stderr,
             )
 
 
@@ -433,28 +532,36 @@ def ANN_comparison(ph, store_mape, loc1, loc2, df_features: pd.DataFrame) -> Non
                 E, i = X_test_ph[:, 0], y_pred.reshape(-1)
                 try:
                     (
-                        i_applied_log_abs,
-                        ocp,
-                        slope,
-                        intercept,
-                        r_value,
-                        std_err_slope,
-                        E_corr,
-                        i_corr,
+                        [
+                            E_applied,
+                            i_applied_log_abs,
+                            ocp,
+                            slope,
+                            intercept,
+                            rvalue,
+                            std_error_slope,
+                            intercept_stderr,
+                            E_corr,
+                            i_corr,
+                        ]
                     ) = store_polarization_curve_features(E, i, "ANN")
                 except ValueError:
                     (
-                        i_applied_log_abs,
-                        ocp,
-                        slope,
-                        intercept,
-                        r_value,
-                        std_err_slope,
-                        E_corr,
-                        i_corr,
+                        [
+                            E_applied,
+                            i_applied_log_abs,
+                            ocp,
+                            slope,
+                            intercept,
+                            rvalue,
+                            std_error_slope,
+                            intercept_stderr,
+                            E_corr,
+                            i_corr,
+                        ]
                     ) = store_polarization_curve_features(E, 10**y_test_ph, "ANN")
 
-                df_features["ANN"] = [ocp, slope, r_value**2, std_err_slope, E_corr, i_corr]
+                df_features["ANN"] = [ocp, slope, rvalue**2, std_error_slope, intercept_stderr, E_corr, i_corr]
 
                 linestyle, color = linestyles_and_markers_for_model_comparisons("ann")
 
@@ -472,14 +579,17 @@ def ANN_comparison(ph, store_mape, loc1, loc2, df_features: pd.DataFrame) -> Non
                         plot_tafel_lines_E_corr_i_corr(
                             ax,
                             i_applied_log_abs,
+                            E_applied,
                             slope,
                             intercept,
                             ocp,
-                            r_value,
+                            rvalue,
                             E_corr,
                             i_corr,
-                            color=color,
-                            model="ANN",
+                            color,
+                            "ANN",
+                            std_error_slope,
+                            intercept_stderr,
                         )
                 store_mape.append(mape(y_pred_log, y_test_ph) * 100)
             else:
@@ -549,7 +659,7 @@ if __name__ == "__main__":
     loss_figures = [fig_loss_trees, fig_val_loss_trees, fig_loss_ANN]
     fig_names = ["training_loss_GBDTS", "validation_loss_GBDTS", "train_val_loss_ANN"]
     for loss_fig, fig_name in zip(loss_figures, fig_names):
-        loss_fig.legend()
+        loss_fig.legend(loc="upper right")
         loss_fig.savefig(f"summarized_data_figures_datafiles/{fig_name}.png")
 
     df_features = pd.read_csv("testing_pHs.csv", sep="\t")
@@ -574,10 +684,12 @@ if __name__ == "__main__":
                 "Tafel slope $[$mv/dec$]$",
                 "R\\textsuperscript{2} value slope",
                 "Std. error slope (1e3)",
+                "Std. error intercept (1e3)",
                 "E\\textsubscript{corr} [V]",
                 "i\\textsubscript{corr} \\text{[$\mu$A cm\\textsuperscript{-2}]}",
             ],
         )
+
         plot_experimental_testing_data(ph, loc1, loc2, df_features)
         catboost_comparison(ph, store_mape_catboost, loc1, loc2, df_features)
         random_forest_comparison(ph, loc1, loc2, df_features)
@@ -588,7 +700,7 @@ if __name__ == "__main__":
         # create dataframe to store important parameters from the curves. Save as tex file too
         df_features.iloc[-1, 1:] *= 10**6  # convert to micro A/cm^2 for i_corr
         df_features.iloc[1, 1:] *= 1000  # convert to mV/dec for tafel slope
-        df_features.iloc[3, 1:] *= 1000  # multiply with 1000 for convenience
+        df_features.iloc[3:5, 1:] *= 1000  # multiply with 1000 for convenience
         df_features["Mean error ML"] = df_features.iloc[:, 1:].mean(axis=1)
         df_features["Mean error ML - Exp. data"] = df_features["Mean error ML"] - df_features["Exp. data"]
         df_features["MAPE"] = abs(df_features["Mean error ML - Exp. data"] / df_features["Exp. data"]) * 100
@@ -607,13 +719,13 @@ if __name__ == "__main__":
             ax_individual_model_vs_exp_ann,
         ]
         for ax in ax_list_appendix_plots:
-            ax[loc1, loc2].legend()
+            ax[loc1, loc2].legend(loc="upper left")
 
         # save figs
         try:
             ax_pred.set_xlabel("|i| [A/cm$^2$]")
             ax_pred.set_ylabel("E [V]")
-            ax_pred.legend(loc="upper right")
+            ax_pred.legend(loc="upper left")
             fig_pred.savefig(
                 f"summarized_data_figures_datafiles/comparison_with_exp_results/comparison_with_exp_data_ph_{ph}.png"
             )
@@ -621,7 +733,7 @@ if __name__ == "__main__":
 
             ax_compare_anns.set_xlabel("|i| [A/cm$^2$]")
             ax_compare_anns.set_ylabel("E [V]")
-            ax_compare_anns.legend(loc="upper right")
+            ax_compare_anns.legend(loc="upper left")
             fig_compare_anns.savefig(f"summarized_data_figures_datafiles/comparison_of_anns_with_exp_ph_{ph}.png")
             ax_compare_anns.clear()
 

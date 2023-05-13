@@ -56,11 +56,6 @@ if __name__ == "__main__":
     fig.supylabel("E vs SCE [V]")
     fig.tight_layout()
 
-    # fig to plot ocp vs pH
-    fig_ph_ocp, ax_ph_ocp = plt.subplots(figsize=(5, 5))
-    ax_ph_ocp.set_xlabel("pH")
-    ax_ph_ocp.set_ylabel("Open Circuit Potential (OCP) vs SCE [V]")
-
 
 def plot_ocp_files():
     files: list[str] = sorted(list_of_filenames(folder=folder_with_ocps()), key=sort_files_based_on_ph)
@@ -94,9 +89,14 @@ def plot_ocp_files():
     pd.DataFrame({"pH": phs, "Corrected standard dev.": std_list}).to_csv(
         "summarized_data_figures_datafiles/csv_files/standard_dev_ocps.csv", index=False, sep="\t"
     )
-    masks = ([ph < 10.2 for ph in phs], [ph >= 10.2 for ph in phs])
+    masks = ([ph <= 10.2 for ph in phs], [ph > 10.2 for ph in phs])
     for mask in masks:
-        ax_ph_ocp.scatter(np.array(phs)[mask], np.array(mean_ocps_for_phs)[mask], color="black")
+        # fig to plot ocp vs pH
+        fig_ph_ocp, ax_ph_ocp = plt.subplots(figsize=(5, 5))
+        ax_ph_ocp.set_xlabel("pH")
+        ax_ph_ocp.set_ylabel("Open Circuit Potential (OCP) vs SCE [V]")
+
+        ax_ph_ocp.scatter(np.array(phs)[mask], np.array(mean_ocps_for_phs)[mask], color="black", s=24)
         ax_ph_ocp.errorbar(
             np.array(phs)[mask],
             np.array(mean_ocps_for_phs)[mask],
@@ -107,7 +107,7 @@ def plot_ocp_files():
         )
         fig_ph_ocp.tight_layout()
         fig_ph_ocp.savefig(f"summarized_data_figures_datafiles/ocp_vs_ph{np.array(phs)[mask][-1]}.png")
-        ax_ph_ocp.clear()
+        fig_ph_ocp.clf()
 
 
 if __name__ == "__main__":

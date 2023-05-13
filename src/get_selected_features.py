@@ -1,5 +1,7 @@
 import numpy as np
 from scipy import stats
+from scipy.stats import norm
+from scipy import stats
 
 
 def get_ocps(E: np.ndarray, E_filtered: np.ndarray, i_filtered: np.ndarray) -> list[float]:
@@ -44,8 +46,46 @@ def linreg_tafel_line_ORR_or_HER(
     # apply linear regression on this region
     # remember that we want a linear region only for logarithmic x axis
     i_applied_log_abs = np.log10(abs(i_applied))
-    slope, intercept, r_value, _, std_err_slope = stats.linregress(i_applied_log_abs, E_applied)
-    return [E_applied, i_applied_log_abs, slope, intercept, r_value, std_err_slope]
+    result = stats.linregress(i_applied_log_abs, E_applied)
+    slope, intercept, rvalue, pvalue, std_error_slope, intercept_stderr = (
+        result.slope,
+        result.intercept,
+        result.rvalue,
+        result.pvalue,
+        result.stderr,
+        result.intercept_stderr,
+    )
+    return [E_applied, i_applied_log_abs, slope, intercept, rvalue, std_error_slope, intercept_stderr]
+
+
+def plot_confidence_interval(
+    confidence_level: float,
+    i_applied_log_abs,
+    slope,
+    slope_std_error: float,
+    intercept,
+    intercept_std_error: float,
+    ax,
+    color: str,
+    model: str,
+):
+    """
+    Returns the plot for a 95% confidence interval
+
+    Args:
+        confidence level should be given as frac of 1
+    """
+    pred = slope * i_applied_log_abs + intercept
+    z = norm.ppf((1 + confidence_level) / 2)  # ~1.96
+    # Calculate the confidence interval for the slope and intercept
+    slope_ci = z * slope_std_error
+    intercept_ci = z * intercept_std_error
+
+    lower_ci, upper_ci = pred - slope_ci - intercept_ci, pred + slope_ci + intercept_ci
+
+    ax.fill_between(
+        10**i_applied_log_abs, upper_ci, lower_ci, alpha=0.2, color=color, label=f"95% confidence interval {model}"
+    )
 
 
 def get_ocps_machine_learning_models(E, i):
