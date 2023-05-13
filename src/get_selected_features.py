@@ -2,6 +2,7 @@ import numpy as np
 from scipy import stats
 from scipy.stats import norm
 from scipy import stats
+from typing import Optional
 
 
 def get_ocps(E: np.ndarray, E_filtered: np.ndarray, i_filtered: np.ndarray) -> list[float]:
@@ -58,8 +59,28 @@ def linreg_tafel_line_ORR_or_HER(
     return [E_applied, i_applied_log_abs, slope, intercept, rvalue, std_error_slope, intercept_stderr]
 
 
+def lower_upper_confidence_interval_slope(
+    i_applied_log_abs,
+    slope,
+    slope_std_error: float,
+    intercept,
+    intercept_std_error: float,
+    confidence_level: Optional[float] = 0.99,
+) -> list[float]:
+    pred = slope * i_applied_log_abs + intercept
+    z = norm.ppf((1 + confidence_level) / 2)  # ~1.96
+    # Calculate the confidence interval for the slope and intercept
+    slope_ci = z * slope_std_error
+    lower_slope = slope - z * slope_std_error
+    upper_slope = slope + z * slope_std_error
+
+    intercept_ci = z * intercept_std_error
+    lower_ci, upper_ci = pred - slope_ci - intercept_ci, pred + slope_ci + intercept_ci
+
+    return [lower_ci, upper_ci, lower_slope, upper_slope]
+
+
 def plot_confidence_interval(
-    confidence_level: float,
     i_applied_log_abs,
     slope,
     slope_std_error: float,
@@ -68,6 +89,7 @@ def plot_confidence_interval(
     ax,
     color: str,
     model: str,
+    confidence_level: Optional[float] = 0.99,
 ):
     """
     Returns the plot for a 95% confidence interval
@@ -75,16 +97,17 @@ def plot_confidence_interval(
     Args:
         confidence level should be given as frac of 1
     """
-    pred = slope * i_applied_log_abs + intercept
-    z = norm.ppf((1 + confidence_level) / 2)  # ~1.96
-    # Calculate the confidence interval for the slope and intercept
-    slope_ci = z * slope_std_error
-    intercept_ci = z * intercept_std_error
-
-    lower_ci, upper_ci = pred - slope_ci - intercept_ci, pred + slope_ci + intercept_ci
+    lower_ci, upper_ci, _, _ = lower_upper_confidence_interval_slope(
+        i_applied_log_abs, slope, slope_std_error, intercept, intercept_std_error
+    )
 
     ax.fill_between(
-        10**i_applied_log_abs, upper_ci, lower_ci, alpha=0.2, color=color, label=f"95% confidence interval {model}"
+        10**i_applied_log_abs,
+        upper_ci,
+        lower_ci,
+        alpha=0.2,
+        color=color,
+        label=f"{int(confidence_level*100)}% confidence interval {model}",
     )
 
 
