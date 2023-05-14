@@ -4,16 +4,15 @@ import matplotlib
 # plt.rcParams["font.family"] = "serif"
 # plt.rcParams["font.serif"] = ["Times New Roman"] + plt.rcParams["font.serif"]
 import os
-import functools
-import subprocess
 import matplotlib
 import matplotlib.pyplot as plt
 
 import os
-import subprocess
 import matplotlib
 import matplotlib.pyplot as plt
 
+# change matplotlib to store pgf files. this to make matplotlib more compatible
+# with latex
 pdflatex_path = "/usr/bin/pdflatex"
 matplotlib.use("pgf")
 matplotlib.rcParams.update(
@@ -24,16 +23,6 @@ matplotlib.rcParams.update(
         "pgf.rcfonts": False,
     }
 )
-
-# Create a simple plot
-# fig, ax = plt.subplots()
-# ax.plot([0, 1], [0, 1], label=r"$\frac{1}{x}$")
-# ax.set_xlabel("X axis")
-# ax.set_ylabel("Y axis")
-# ax.legend()
-
-# # Save the plot as a PDF file
-# plt.savefig("test_plot.pgf")
 
 
 import pandas as pd
@@ -49,7 +38,7 @@ import lightgbm as lgb
 # remove this warning by os.environ
 
 
-from src.data_preprocessing import normalize_data_for_ANN, N_ROWS
+from src.data_preprocessing import normalize_data_for_ANN
 from sklearn.metrics import mean_absolute_percentage_error as mape
 from src.data_preprocessing import (
     all_filtered_experimental_data_not_normalized,
@@ -71,15 +60,15 @@ plt.rcParams["legend.fontsize"] = 22  # Font size for legend
 
 if __name__ == "__main__":
     # test ML algorithms on unseen data
-    fig_pred = plt.figure(figsize=(10, 10))
+    fig_pred = plt.figure()
     ax_pred = fig_pred.subplots()
 
     # figure for comparison of best and second best ann tuned model
-    fig_compare_anns = plt.figure(figsize=(10, 10))
+    fig_compare_anns = plt.figure()
     ax_compare_anns = fig_compare_anns.subplots()
 
     # training loss GBDTs
-    fig_loss_trees = plt.figure(figsize=(10, 10))
+    fig_loss_trees = plt.figure()
     ax_loss_trees = fig_loss_trees.subplots()
     ax_loss_trees.set_xlabel("Iterations")
     ax_loss_trees.set_ylabel("Loss, RMSE [log|i|]")
@@ -107,29 +96,28 @@ if __name__ == "__main__":
     # ax_loss_trees2.set_ylabel("Loss Gradient")
 
     # ANN losses
-    fig_loss_ANN = plt.figure(figsize=(10, 10))
+    fig_loss_ANN = plt.figure()
     ax_loss_ANN = fig_loss_ANN.subplots()
     ax_loss_ANN.set_xlabel("Epochs")
     ax_loss_ANN.set_ylabel("Error, RMSE")
 
-    # Appendix: evaluate each model with exp data. 2x2 plot
-    fig_rf, ax_individual_model_vs_exp_rf = plt.subplots(2, 2, figsize=(15, 15))
+    fig_rf, ax_individual_model_vs_exp_rf = plt.subplots(2, 2)
     fig_rf.supxlabel("|i| [A/cm$^2$]")
     fig_rf.supylabel("E [V]")
 
-    fig_cb, ax_individual_model_vs_exp_cb = plt.subplots(2, 2, figsize=(15, 15))
+    fig_cb, ax_individual_model_vs_exp_cb = plt.subplots(2, 2)
     fig_cb.supxlabel("|i| [A/cm$^2$]")
     fig_cb.supylabel("E [V]")
 
-    fig_lgb, ax_individual_model_vs_exp_lgb = plt.subplots(2, 2, figsize=(15, 15))
+    fig_lgb, ax_individual_model_vs_exp_lgb = plt.subplots(2, 2)
     fig_lgb.supxlabel("|i| [A/cm$^2$]")
     fig_lgb.supylabel("E [V]")
 
-    fig_ann, ax_individual_model_vs_exp_ann = plt.subplots(2, 2, figsize=(15, 15))
+    fig_ann, ax_individual_model_vs_exp_ann = plt.subplots(2, 2)
     fig_ann.supxlabel("|i| [A/cm$^2$]")
     fig_ann.supylabel("E [V]")
 
-    fig_xgb, ax_individual_model_vs_exp_xgb = plt.subplots(2, 2, figsize=(15, 15))
+    fig_xgb, ax_individual_model_vs_exp_xgb = plt.subplots(2, 2)
     fig_xgb.supxlabel("|i| [A/cm$^2$]")
     fig_xgb.supylabel("E [V]")
 
@@ -837,7 +825,7 @@ from matplotlib.lines import Line2D
 
 
 def plot_mape_rmse_pointers(best_scores_mape_log: pd.DataFrame, best_scores_rmse_log: pd.DataFrame):
-    fig, ax = plt.subplots(figsize=(10, 10))
+    fig, ax = plt.subplots()
     ax2 = ax.twinx()  # Create a second y-axis
     bar_width = 0.35
     labels = ["RF", "CB", "XGB", "LGB", "ANN"]
@@ -897,7 +885,8 @@ def plot_mape_rmse_pointers(best_scores_mape_log: pd.DataFrame, best_scores_rmse
     ax.legend(handles=legend_elements, loc="upper left")
 
     fig.tight_layout()
-    fig.savefig("summarized_data_figures_datafiles/mape_rmse_pointers.pgf")
+    for ftype in ["pgf", "pdf"]:
+        fig.savefig(f"summarized_data_figures_datafiles/{ftype}_plots/mape_rmse_pointers.{ftype}")
 
 
 def plot_losses():
@@ -916,8 +905,8 @@ def plot_losses():
     fig_loss_ANN.legend()
     fig_loss_ANN.tight_layout()
     for ftype in ["pgf", "pdf"]:
-        fig_loss_trees.savefig(f"summarized_data_figures_datafiles/learning_curves_GBDTS.{ftype}")
-        fig_loss_ANN.savefig(f"summarized_data_figures_datafiles/train_val_loss_ANN.{ftype}")
+        fig_loss_trees.savefig(f"summarized_data_figures_datafiles/{ftype}_plots/learning_curves_GBDTS.{ftype}")
+        fig_loss_ANN.savefig(f"summarized_data_figures_datafiles/{ftype}_plots/train_val_loss_ANN.{ftype}")
 
 
 if __name__ == "__main__":
@@ -987,18 +976,20 @@ if __name__ == "__main__":
 
         # save figs
         try:
-            ax_pred.set_xlabel("|i| [A/cm$^2$]")
-            ax_pred.set_ylabel("E [V]")
-            ax_pred.legend(loc="upper left")
-            fig_pred.savefig(
-                f"summarized_data_figures_datafiles/comparison_with_exp_results/comparison_with_exp_data_ph_{ph}.pgf"
-            )
-            ax_pred.clear()
+            for _ax in [ax_pred, ax_compare_anns]:
+                _ax.set_xlabel("|i| [A/cm$^2$]")
+                _ax.set_ylabel("E [V]")
+                _ax.legend(loc="upper left")
 
-            ax_compare_anns.set_xlabel("|i| [A/cm$^2$]")
-            ax_compare_anns.set_ylabel("E [V]")
-            ax_compare_anns.legend(loc="upper left")
-            fig_compare_anns.savefig(f"summarized_data_figures_datafiles/comparison_of_anns_with_exp_ph_{ph}.pgf")
+            for ftype in ["pgf", "pdf"]:
+                fig_pred.savefig(
+                    f"summarized_data_figures_datafiles/comparison_with_exp_results/comparison_with_exp_data_ph_{ph}.{ftype}"
+                )
+                fig_compare_anns.savefig(
+                    f"summarized_data_figures_datafiles/{ftype}_plots/comparison_of_anns_with_exp_ph_{ph}.{ftype}"
+                )
+
+            ax_pred.clear()
             ax_compare_anns.clear()
 
         except Exception as e:
@@ -1027,4 +1018,5 @@ if __name__ == "__main__":
     # Appendix scientific paper
     for fig, model in zip([fig_rf, fig_cb, fig_lgb, fig_ann, fig_xgb], ["rf", "cb", "lgb", "ann", "xgb"]):
         fig.tight_layout()
-        fig.savefig(f"summarized_data_figures_datafiles/appendix/{model}.pgf")
+        for ftype in ["pgf"]:
+            fig.savefig(f"summarized_data_figures_datafiles/appendix/{model}.{ftype}")

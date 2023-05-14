@@ -2,9 +2,21 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib
 from scipy.stats import tstd
 from io import StringIO
 from src.load_data import list_of_filenames
+
+pdflatex_path = "/usr/bin/pdflatex"
+matplotlib.use("pgf")
+matplotlib.rcParams.update(
+    {
+        "pgf.texsystem": "pdflatex",
+        "font.family": "serif",
+        "text.usetex": True,
+        "pgf.rcfonts": False,
+    }
+)
 
 
 def folder_with_ocps() -> str:
@@ -81,7 +93,8 @@ def plot_ocp_files():
                 ax[1, 1].remove()
 
             fig.tight_layout()
-            fig.savefig(f"ocp_plots/ocp_plots_{idx+1}")
+            for ftype in ["pgf", "pdf"]:
+                fig.savefig(f"ocp_plots/ocp_plots_{idx+1}.{ftype}")
             for subplot_ax in ax.flat:
                 if (idx + 1) != len(files):
                     subplot_ax.clear()
@@ -106,7 +119,8 @@ def plot_ocp_files():
             color="black",
         )
         fig_ph_ocp.tight_layout()
-        fig_ph_ocp.savefig(f"summarized_data_figures_datafiles/ocp_vs_ph{np.array(phs)[mask][-1]}.pgf")
+        for ftype in ["pgf", "pdf"]:
+            fig_ph_ocp.savefig(f"summarized_data_figures_datafiles/ocp_vs_ph{np.array(phs)[mask][-1]}.{ftype}")
         fig_ph_ocp.clf()
 
 

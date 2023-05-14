@@ -1,12 +1,21 @@
 import os
 import time
 import matplotlib.pyplot as plt
-import numpy as np
-from scipy import stats
 from src.load_data import list_of_filenames, load_raw_data
+import matplotlib
 
-plt.rcParams["font.family"] = "serif"
-plt.rcParams["font.serif"] = ["Times New Roman"] + plt.rcParams["font.serif"]
+# plt.rcParams["font.family"] = "serif"
+# plt.rcParams["font.serif"] = ["Times New Roman"] + plt.rcParams["font.serif"]
+pdflatex_path = "/usr/bin/pdflatex"
+matplotlib.use("pgf")
+matplotlib.rcParams.update(
+    {
+        "pgf.texsystem": "pdflatex",
+        "font.family": "serif",
+        "text.usetex": True,
+        "pgf.rcfonts": False,
+    }
+)
 
 import pandas as pd
 from src.filter_raw_data import remove_first_cath_branch
@@ -87,6 +96,7 @@ def plot_and_return_dataframe_with_filtered_data(
                 intercept,
                 r_value,
                 std_err_slope,
+                intercept_stderr,
             ) = linreg_tafel_line_ORR_or_HER(ocp_t_half, potential_filtered, current_density_filtered)
             # slope is delta E / delta abs(i), we need delta E / delta log10(|i|)
         except ValueError:
@@ -174,7 +184,8 @@ def plot_and_return_dataframe_with_filtered_data(
 
                 # save end clear fig
                 fig_compare_raw_filt.tight_layout()
-                fig_compare_raw_filt.savefig(f"raw_data_vs_filtered_data/{idx+1}.pgf")
+                for ftype in ["pgf", "pdf"]:
+                    fig_compare_raw_filt.savefig(f"raw_data_vs_filtered_data/{idx+1}.{ftype}")
                 for subplot_ax in ax_compare.flat:
                     subplot_ax.clear()
 
@@ -189,7 +200,8 @@ def plot_and_return_dataframe_with_filtered_data(
                 )
                 ax_ph12[0].legend()
                 ax_ph12[1].legend()
-                fig_ph12.savefig(f"raw_data_vs_filtered_data/{idx+1}.pgf")
+                for ftype in ["pgf", "pdf"]:
+                    fig_ph12.savefig(f"raw_data_vs_filtered_data/{idx+1}.{ftype}")
 
             ax_raw[loc].legend()
             ax2_filt[loc].legend()
@@ -202,11 +214,14 @@ def plot_and_return_dataframe_with_filtered_data(
                         axs[1, 1].remove()
 
                 fig_raw.tight_layout()
-                fig_raw.savefig(f"{save_figs_raw_data}/plots_of_raw_data_{idx+1}")
                 fig2_filt.tight_layout()
-                fig2_filt.savefig(f"{save_figs_filtered_data}/plots_of_filtered_data_{idx+1}")
                 fig_tafel.tight_layout()
-                fig_tafel.savefig(f"tafel_slopes_figures/{idx+1}")
+
+                for ftype in ["pgf", "pdf"]:
+                    fig_raw.savefig(f"{save_figs_raw_data}/plots_of_raw_data_{idx+1}.{ftype}")
+                    fig2_filt.savefig(f"{save_figs_filtered_data}/plots_of_filtered_data_{idx+1}.{ftype}")
+                    fig_tafel.savefig(f"tafel_slopes_figures/{idx+1}.{ftype}")
+
                 for subplot_ax, subplot_ax2, subplot_ax_tafel in zip(ax_raw.flat, ax2_filt.flat, ax_tafel.flat):
                     if (idx + 1) != len(files):
                         subplot_ax.clear()
