@@ -22,6 +22,12 @@ from src.filter_raw_data import remove_first_cath_branch
 from src.get_selected_features import get_ocps, linreg_tafel_line_ORR_or_HER
 
 
+def get_grid_for_axs(ax):
+    for i in range(2):
+        for j in range(2):
+            ax[i, j].grid()
+
+
 def plot_and_return_dataframe_with_filtered_data(
     folder_raw: str = "raw_data",
     save_figs_raw_data: str = "raw_data_plots",
@@ -43,24 +49,28 @@ def plot_and_return_dataframe_with_filtered_data(
 
     if __name__ == "__main__":
         #  define figure to plot raw data in
-        fig_raw, ax_raw = plt.subplots(2, 2, figsize=(10, 10))
-        fig_raw.supxlabel("|i| [A/cm$^2$]")
-        fig_raw.supylabel("E vs SCE[V]")
+        fig_raw, ax_raw = plt.subplots(2, 2)
+        fig_raw.supxlabel("Current density ($i$) [A/cm$^2$]")
+        fig_raw.supylabel("Potential ($E$) vs SCE[V]")
+        get_grid_for_axs(ax_raw)
 
         # define figure to plot filtered data in
-        fig2_filt, ax2_filt = plt.subplots(2, 2, figsize=(10, 10))
-        fig2_filt.supxlabel("|i| [A/cm$^2$]")
-        fig2_filt.supylabel("E vs SCE [V]")
+        fig2_filt, ax2_filt = plt.subplots(2, 2)
+        fig2_filt.supxlabel("Current density ($i$) [A/cm$^2$]")
+        fig2_filt.supylabel("Potential ($E$) vs SCE[V]")
+        get_grid_for_axs(ax2_filt)
 
         # figure to plot raw data and filtered data in
-        fig_compare_raw_filt, ax_compare = plt.subplots(2, 2, figsize=(10, 10))
-        fig_compare_raw_filt.supxlabel("|i| [A/cm$^2$]")
-        fig_compare_raw_filt.supylabel("E vs SCE [V]")
+        fig_compare_raw_filt, ax_compare = plt.subplots(2, 2)
+        fig_compare_raw_filt.supxlabel("Current density ($i$) [A/cm$^2$]")
+        fig_compare_raw_filt.supylabel("Potential ($E$) vs SCE[V]")
+        get_grid_for_axs(ax_compare)
 
         # figure to plot tafel slopes
-        fig_tafel, ax_tafel = plt.subplots(2, 2, figsize=(10, 10))
-        fig_tafel.supxlabel("|i| [A/cm$^2$]")
-        fig_tafel.supylabel("E vs SCE [V]")
+        fig_tafel, ax_tafel = plt.subplots(2, 2)
+        fig_tafel.supxlabel("Current density ($i$) [A/cm$^2$]")
+        fig_tafel.supylabel("Potential ($E$) vs SCE[V]")
+        get_grid_for_axs(ax_tafel)
 
     # create empty dataframe and add data to it from all files
     df_all_filtered_data = pd.DataFrame()
@@ -98,7 +108,7 @@ def plot_and_return_dataframe_with_filtered_data(
                 std_err_slope,
                 intercept_stderr,
             ) = linreg_tafel_line_ORR_or_HER(ocp_t_half, potential_filtered, current_density_filtered)
-            # slope is delta E / delta abs(i), we need delta E / delta log10(|i|)
+            # slope is delta E / delta abs(i), we need delta E / delta log10(r"$\lvert i \rvert$")
         except ValueError:
             print(f"Something wrong with file: {file_raw}")
             raise ValueError
@@ -153,15 +163,15 @@ def plot_and_return_dataframe_with_filtered_data(
                 )
 
             # plot Tafel lines in Tafel figure
-            partial_derivative = r"$\frac{\partial E}{\partial log|i|}$"
-            rounded_r_squared = round(r_value**2, 5)  # type: ignore
-            ax_tafel[loc].semilogx(
-                10**i_applied_log_abs,
-                tafel_slope * i_applied_log_abs + intercept,
-                color="r",
-                linestyle="--",
-                label=f"pH = {pH}, {partial_derivative} = {int(tafel_slope*1000)} mV/dec, R\u00b2 = {rounded_r_squared}",
-            )
+            # partial_derivative = r"$\frac{\partial E}{\partial \log r}$|$i|$ [A/cm$^2$]"
+            # rounded_r_squared = round(r_value**2, 5)  # type: ignore
+            # ax_tafel[loc].semilogx(
+            #     10**i_applied_log_abs,
+            #     tafel_slope * i_applied_log_abs + intercept,
+            #     color="r",
+            #     linestyle="--",
+            #     label=f"pH = {pH}, {partial_derivative} = {int(tafel_slope*1000)} mV/dec, R\u00b2 = {rounded_r_squared}",
+            # )
 
             # plot both raw data and filtered data in figure for comparing raw data and filtered data
             # raw data is first column (positions 0,0 and 1,0)
@@ -183,17 +193,21 @@ def plot_and_return_dataframe_with_filtered_data(
                 ax_compare[1, 0].legend()
 
                 # save end clear fig
+
                 fig_compare_raw_filt.tight_layout()
                 for ftype in ["pgf", "pdf"]:
                     fig_compare_raw_filt.savefig(f"raw_data_vs_filtered_data/{idx+1}.{ftype}")
                 for subplot_ax in ax_compare.flat:
                     subplot_ax.clear()
+                get_grid_for_axs(ax_compare)
 
             if (idx + 1) == len(files):
                 # figure to plot ph 12.0 as we do not have len(files) % 4 = 0
-                fig_ph12, ax_ph12 = plt.subplots(1, 2, figsize=(10, 5))
-                fig_ph12.supxlabel("|i| [A/cm$^2$]")
-                fig_ph12.supylabel("E vs SCE [V]")
+                fig_ph12, ax_ph12 = plt.subplots(1, 2)
+                ax_ph12[0].grid()
+                ax_ph12[1].grid()
+                fig_ph12.supxlabel("Current density ($i$) [A/cm$^2$]")
+                fig_ph12.supylabel("Potential ($E$) vs SCE [V]")
                 ax_ph12[0].semilogx(abs(current_density_raw), potential_raw, color="k", label=f"pH = {pH}")
                 ax_ph12[1].semilogx(
                     abs(current_density_filtered), potential_filtered, color="k", label=f"pH = {pH}, filtered"
@@ -201,11 +215,11 @@ def plot_and_return_dataframe_with_filtered_data(
                 ax_ph12[0].legend()
                 ax_ph12[1].legend()
                 for ftype in ["pgf", "pdf"]:
-                    fig_ph12.savefig(f"raw_data_vs_filtered_data/{idx+1}.{ftype}")
+                    fig_ph12.savefig(f"raw_data_vs_filtered_data/{idx+2}.{ftype}")
 
             ax_raw[loc].legend()
             ax2_filt[loc].legend()
-            ax_tafel[loc].legend()
+            # ax_tafel[loc].legend()
 
             if (idx + 1) % 4 == 0 or (idx + 1) == len(files):
                 # delete the empty slot in the last figure
@@ -215,12 +229,12 @@ def plot_and_return_dataframe_with_filtered_data(
 
                 fig_raw.tight_layout()
                 fig2_filt.tight_layout()
-                fig_tafel.tight_layout()
+                # fig_tafel.tight_layout()
 
                 for ftype in ["pgf", "pdf"]:
                     fig_raw.savefig(f"{save_figs_raw_data}/plots_of_raw_data_{idx+1}.{ftype}")
                     fig2_filt.savefig(f"{save_figs_filtered_data}/plots_of_filtered_data_{idx+1}.{ftype}")
-                    fig_tafel.savefig(f"tafel_slopes_figures/{idx+1}.{ftype}")
+                    # fig_tafel.savefig(f"tafel_slopes_figures/{idx+1}.{ftype}")
 
                 for subplot_ax, subplot_ax2, subplot_ax_tafel in zip(ax_raw.flat, ax2_filt.flat, ax_tafel.flat):
                     if (idx + 1) != len(files):

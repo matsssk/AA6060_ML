@@ -105,7 +105,7 @@ def plot_ocp_files():
     masks = ([ph <= 10.2 for ph in phs], [ph > 10.2 for ph in phs])
     for mask in masks:
         # fig to plot ocp vs pH
-        fig_ph_ocp, ax_ph_ocp = plt.subplots(figsize=(5, 5))
+        fig_ph_ocp, ax_ph_ocp = plt.subplots()
         ax_ph_ocp.set_xlabel("pH")
         ax_ph_ocp.set_ylabel("Open Circuit Potential (OCP) vs SCE [V]")
 
