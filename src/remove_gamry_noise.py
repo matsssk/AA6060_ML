@@ -1,4 +1,4 @@
-from src.plot_raw_data import list_of_filenames, load_raw_data
+"""from src.plot_raw_data import list_of_filenames, load_raw_data
 from src.filter_raw_data import remove_first_cath_branch
 from src.get_selected_features import get_ocps
 import matplotlib.pyplot as plt
@@ -22,3 +22,4 @@ for i in [0, 1, 2, 3, 4, 5, 6]:
     plt.semilogx(abs(current_density), potential, color="k", label=f"pH = {files[i]}")
     plt.legend()
     plt.show()
+"""

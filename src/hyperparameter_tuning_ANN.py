@@ -19,7 +19,7 @@ def path_hyperparam_folder():
 
 
 def directory_for_tuning_results():
-    return "tuning_results"
+    return "tuning_results_ANN"
 
 
 def name_df_hyperparams_results():
@@ -27,36 +27,42 @@ def name_df_hyperparams_results():
 
 
 def epochs_for_search_and_train():
-    return 1
+    return 80
 
 
 def trials():
-    return 4
+    return 25
 
 
 def early_stopping_callback() -> list[EarlyStopping]:
-    return [EarlyStopping("val_loss", patience=3)]
+    return [EarlyStopping("val_loss", patience=5)]
 
 
 def search_spaces() -> list[list | float]:
     # neurons_space = [i for i in range(20, 160)[::10]]
-    neurons_space = [i for i in range(50, 100)[::10]]
+    neurons_space = [i for i in range(30, 170)[::20]]
     num_layers_space = [i for i in range(2, 5)]
     l2s_space = [1e-4, 1e-3, 1e-2]
     # optimizers_space = ["adam", "sgd", "adagrad"]
-    optimizers_space = ["adam"]
-    loss_funcs_space = ["mse", "mae", "msle"]
-    # activation_func_space = ["relu", "tanh", "sigmoid"]
-    activation_func_space = ["relu"]
+    # optimizers_space = [
+    #     tf.keras.optimizers.Adam(learning_rate=1e-3),
+    #     tf.keras.optimizers.Adam(learning_rate=1e-2),
+    #     tf.keras.optimizers.Adam(learning_rate=1e-1),
+    # ]
+    learning_rate_space = [1e-3, 1e-2, 1e-1]
+    # loss_funcs_space = ["mse", "mae", "msle"]
+    loss_funcs_space = ["mse", "mae"]
+    activation_func_space = ["relu", "tanh", "sigmoid"]
+    # activation_func_space = ["relu"]
     output_act_func_space = ["softmax", "linear"]
-    # batch_size_space = [16, 32, 64, 128]
-    batch_size_space = [32]
+    batch_size_space = [16, 32, 64, 128]
+    # batch_size_space = [32]
 
     combinations = (
         len(neurons_space)
         * len(num_layers_space)
         * len(l2s_space)
-        * len(optimizers_space)
+        * len(learning_rate_space)
         * len(loss_funcs_space)
         * len(activation_func_space)
         * len(output_act_func_space)
@@ -66,7 +72,7 @@ def search_spaces() -> list[list | float]:
         neurons_space,
         num_layers_space,
         l2s_space,
-        optimizers_space,
+        learning_rate_space,
         loss_funcs_space,
         activation_func_space,
         output_act_func_space,
@@ -81,7 +87,7 @@ def ANN_model(hp: HyperParameters):
         neurons_space,
         num_layers_space,
         l2s_space,
-        optimizers_space,
+        learning_rates_space,
         loss_funcs_space,
         activation_func_space,
         output_act_func_space,
@@ -92,7 +98,7 @@ def ANN_model(hp: HyperParameters):
     neurons = hp.Choice("neurons", values=neurons_space)
     num_layers = hp.Choice("num_hidden_layers", values=num_layers_space)
     l2s = hp.Choice("l2", values=l2s_space)
-    optimizers = hp.Choice("optimizer", values=optimizers_space)
+    learning_rate = hp.Choice("learning_rate", values=learning_rates_space)
     loss_funcs = hp.Choice("loss", values=loss_funcs_space)
     activation_func = hp.Choice("activation", values=activation_func_space)
     output_act_func = hp.Choice("output_activation", values=output_act_func_space)
@@ -108,7 +114,7 @@ def ANN_model(hp: HyperParameters):
             neurons,
             input_shape=(2,),
             activation=activation_func,
-            # kernel_regularizer=regularizers.l2(l2=l2s),  # type: ignore
+            kernel_regularizer=regularizers.l2(l2=l2s),  # type: ignore
         )
     )
 
@@ -119,13 +125,13 @@ def ANN_model(hp: HyperParameters):
             Dense(
                 neurons,
                 activation=activation_func,
-                # kernel_regularizer=regularizers.l2(l2=l2s),  # type: ignore
+                kernel_regularizer=regularizers.l2(l2=l2s),  # type: ignore
             )
         )
 
     # 1 output, current density
     model.add(Dense(1, activation=output_act_func))
-    model.compile(optimizer=optimizers, loss=loss_funcs, metrics=[tf.keras.metrics.RootMeanSquaredError(name="rmse")])  # type: ignore
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate), loss=loss_funcs, metrics=[tf.keras.metrics.RootMeanSquaredError(name="rmse")])  # type: ignore
 
     return model
 

@@ -19,7 +19,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 
-def plot_learning_curves_best_n_models():
+def plot_learning_curves_best_n_models(best_n):
     """
     It would be benefitial to access the learning curves directly
     from the tuner.search. This is however not possible yet with
@@ -31,8 +31,8 @@ def plot_learning_curves_best_n_models():
     plt.xlabel("Epochs")
     plt.ylabel("Error, RMSE")
 
-    hyperparams_df: pd.DataFrame = pd.read_csv(
-        f"{directory_for_tuning_results()}/{name_df_hyperparams_results()}", sep=","
+    hyperparams_df_best_n = (
+        pd.read_csv(f"{directory_for_tuning_results()}/{name_df_hyperparams_results()}", sep=",").head(best_n).copy()
     )
     # create model and train it, as well as plot the learning curve for each model
     X_train, X_val, y_train, y_val, _, _ = normalize_data_for_ANN()
@@ -40,9 +40,10 @@ def plot_learning_curves_best_n_models():
     # store training time
     runtimes = []
     epochs = []
-    colors = ["r", "b", "k", "y", "o"]
+    colors = ["darkgray", "dimgray", "lightgray"]
+    markers = ["s", "o", "^"]
     # for each set of hyperparameters, construct and train model to obtain learning curves
-    for idx, row in hyperparams_df.iterrows():
+    for idx, row in hyperparams_df_best_n.iterrows():
         model = Sequential()
 
         # first hidden layer
@@ -84,29 +85,31 @@ def plot_learning_curves_best_n_models():
         )
         runtimes.append(time.perf_counter() - t0)
         df_loss = pd.DataFrame(history.history)
-        df_loss.insert(0, "epochs", df_loss.shape[0])
+        epochs_list = [iter for iter in range(1, df_loss.shape[0] + 1, 1)]
+        df_loss.insert(0, "epochs", epochs_list)
         epochs.append(df_loss.shape[0])
 
         # store training and validation loss
         df_loss.to_csv(f"models_data/ANN_info/training_val_loss{idx}", sep="\t", index=False)
 
         # plot learning curves for each model
-        epochs_list = [iter for iter in range(1, df_loss.shape[0] + 1, 1)]
 
         model_index = idx + 1  # type: ignore
-        plt.semilogy(epochs_list, df_loss["rmse"], "s-", label=f"Training loss, model {model_index}", color=colors[idx])  # type: ignore
+        plt.semilogy(epochs_list, df_loss["rmse"], f"{markers[idx]}-", label=f"Training loss, model {model_index}", color=colors[idx])  # type: ignore
         plt.semilogy(
-            epochs_list, df_loss["val_rmse"], "s--", label=f"Validation loss, model {model_index}", color=colors[idx]  # type: ignore
+            epochs_list, df_loss["val_rmse"], f"{markers[idx]}--", label=f"Validation loss, model {model_index}", color=colors[idx]  # type: ignore
         )
 
-    hyperparams_df["runtime"] = runtimes
-    hyperparams_df["epochs"] = epochs
-    hyperparams_df = hyperparams_df.drop("val_loss_rmse", axis=1)  #  remove old val_loss from tuner.search
-    hyperparams_df.to_csv("models_data/ANN_info/data_for_n_best_models.csv", sep=",", index=False)
+    hyperparams_df_best_n["runtime"] = runtimes
+    hyperparams_df_best_n["epochs"] = epochs
+    hyperparams_df_best_n = hyperparams_df_best_n.drop(
+        "val_loss_rmse", axis=1
+    )  #  remove old val_loss from tuner.search
+    hyperparams_df_best_n.to_csv("models_data/ANN_info/data_for_n_best_models.csv", sep=",", index=False)
 
     plt.legend()
     plt.savefig("summarized_data_figures_datafiles/learning_curves_best_models_tuned_ann.png")
 
 
 if __name__ == "__main__":
-    plot_learning_curves_best_n_models()
+    plot_learning_curves_best_n_models(best_n=3)

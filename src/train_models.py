@@ -5,12 +5,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from catboost import CatBoostRegressor
 from lightgbm import LGBMRegressor
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error as mse
 
 from xgboost import XGBRegressor
-from sklearn.metrics import mean_absolute_percentage_error as mape
-from src.compare_models_with_exp_data import return_test_data
 from src.data_preprocessing import return_training_data_X_y, split_into_training_and_validation
 from src.train_models_func_helpers import (
     train_random_forest_for_some_hyperparams,
@@ -102,7 +98,7 @@ def random_forest_model(tune: bool = True) -> None:
                         )
                     except FileNotFoundError:
                         raise FileNotFoundError
-        # print(n_trees_best, max_feat_best)
+
         # train the model with the optimized hyperparameters
         train_random_forest_for_some_hyperparams(
             n_trees_best,
@@ -114,7 +110,7 @@ def random_forest_model(tune: bool = True) -> None:
             training_time_per_tree,
             feature_imp,
         )
-        # create
+
         create_df_average_error_for_each_trial_across_phs(
             tuning_files_dir="models_data/random_forest_output/results_from_tuning/"
         )
@@ -134,7 +130,7 @@ def catboost_model() -> None:
         For default learning rate(adjusted) the model could do 10000 iterations without converging
 
     """
-    n_iterations = 100
+    n_iterations = 100000
     n_iterations_GBTS["cb"] = n_iterations
 
     # load hyperparams from RandomSearchCV in hyperparameter_tuning.py
@@ -144,9 +140,9 @@ def catboost_model() -> None:
     X_train, X_val, y_train, y_val = split_into_training_and_validation(X, y)
 
     # extract key-value pairs, use default values besides the ones in RS
-    cb = CatBoostRegressor(n_estimators=n_iterations, loss_function="RMSE", learning_rate=0.5)
+    cb = CatBoostRegressor(n_estimators=n_iterations, loss_function="RMSE", learning_rate=0.35)
     t0 = time.perf_counter()
-    cb.fit(X_train, y_train, eval_set=(X_val, y_val), verbose=100, early_stopping_rounds=5)
+    cb.fit(X_train, y_train, eval_set=(X_val, y_val), verbose=100, early_stopping_rounds=50)
 
     runtime = time.perf_counter() - t0
     training_times_all_models["cb"] = runtime
@@ -155,7 +151,7 @@ def catboost_model() -> None:
     # get feature importances and divide by 100 to become fractions of 1
     feature_imp["cb"] = [v / 100 for v in cb.feature_importances_]
 
-    cb.save_model("models_saved/catboost_model.cbm", format="cbm")
+    cb.save_model(f"models_saved/catboost_model.cbm", format="cbm")
 
 
 def xgboost_model() -> None:
@@ -164,7 +160,7 @@ def xgboost_model() -> None:
     Earlystopping of 50 rounds are applied, i.e. model will stop if no new loss minima
     are found within 50 iterations after the previous minima
     """
-    n_iterations = 100
+    n_iterations = 100000
     n_iterations_GBTS["xgb"] = n_iterations
 
     X, y = return_training_data_X_y()
@@ -197,7 +193,7 @@ def xgboost_model() -> None:
 
 
 def lightgbm_model() -> None:
-    n_iterations = 100
+    n_iterations = 10**5
     n_iterations_GBTS["lgbm"] = n_iterations
 
     X, y = return_training_data_X_y()
@@ -253,7 +249,7 @@ def plot_histogram_training_time_all_models() -> None:
 
     # ajust xticks locations
     pos = [0, 1, 2, 3, 4]
-    plt.bar(df["Model"], df["Time"], width=0.25, color="#777777")
+    plt.bar(df["Model"], df["Time"], width=0.25, color="dimgray")
     plt.xticks(
         pos, labels=[f" {k.upper()}: {round(v,2)} s" for k, v in zip(df["Model"], df["Time"])], rotation=45, ha="center"
     )
@@ -269,7 +265,7 @@ def plot_histogram_training_time_per_tree_DTs():
 
     # ajust xticks locations
     pos = [0, 1, 2, 3]
-    plt.bar(df["Model"], df["Time"], width=0.25, color="#777777")
+    plt.bar(df["Model"], df["Time"], width=0.25, color="dimgray")
     plt.xticks(
         pos, labels=[f" {k.upper()}: {round(v,2)} s" for k, v in zip(df["Model"], df["Time"])], rotation=45, ha="center"
     )
@@ -294,11 +290,11 @@ def save_iterations_GBDTs_into_df():
 
 if __name__ == "__main__":
     random_forest_model(tune=False)
-    catboost_model()
-    xgboost_model()
-    lightgbm_model()
-    load_ANN_runtime()
-    plot_histogram_training_time_all_models()
-    plot_histogram_training_time_per_tree_DTs()
-    feature_importances_to_pd()
-    save_iterations_GBDTs_into_df()
+    # catboost_model()
+    # xgboost_model()
+    # lightgbm_model()
+    # load_ANN_runtime()
+    # plot_histogram_training_time_all_models()
+    # plot_histogram_training_time_per_tree_DTs()
+    # feature_importances_to_pd()
+    # save_iterations_GBDTs_into_df()
