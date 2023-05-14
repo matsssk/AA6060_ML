@@ -174,7 +174,7 @@ def plot_and_return_dataframe_with_filtered_data(
 
                 # save end clear fig
                 fig_compare_raw_filt.tight_layout()
-                fig_compare_raw_filt.savefig(f"raw_data_vs_filtered_data/{idx+1}.png")
+                fig_compare_raw_filt.savefig(f"raw_data_vs_filtered_data/{idx+1}.pgf")
                 for subplot_ax in ax_compare.flat:
                     subplot_ax.clear()
 
@@ -189,7 +189,7 @@ def plot_and_return_dataframe_with_filtered_data(
                 )
                 ax_ph12[0].legend()
                 ax_ph12[1].legend()
-                fig_ph12.savefig(f"raw_data_vs_filtered_data/{idx+1}.png")
+                fig_ph12.savefig(f"raw_data_vs_filtered_data/{idx+1}.pgf")
 
             ax_raw[loc].legend()
             ax2_filt[loc].legend()

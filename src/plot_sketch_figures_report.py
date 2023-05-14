@@ -24,7 +24,7 @@ def plot_E_pit_ph10_2(folder: str = "raw_data"):
     plt.text(2e-7, -0.63, "$E_{{\mathrm{{pit}}}}$", size=s + 7)
     plt.xticks(fontsize=s)
     plt.yticks(fontsize=s)
-    plt.savefig("sketches_for_report/E_pit.png")
+    plt.savefig("sketches_for_report/E_pit.pgf")
 
 
 plot_E_pit_ph10_2()

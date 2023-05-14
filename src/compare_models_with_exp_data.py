@@ -9,21 +9,31 @@ import subprocess
 import matplotlib
 import matplotlib.pyplot as plt
 
-# Set the path to pdflatex.exe
-pdflatex_path = "C:\\Users\\matsku\\AppData\\Local\\Programs\\MiKTeX\\miktex\\bin\\x64\\pdflatex.exe"
-os.environ["PATH"] = pdflatex_path + os.pathsep + os.environ["PATH"]
-# print(os.environ["PATH"])
-subprocess.Popen = functools.partial(subprocess.Popen, env=os.environ)
+import os
+import subprocess
+import matplotlib
+import matplotlib.pyplot as plt
 
-# Configure the PGF backend
+pdflatex_path = "/usr/bin/pdflatex"
 matplotlib.use("pgf")
 matplotlib.rcParams.update(
     {
         "pgf.texsystem": "pdflatex",
+        "font.family": "serif",
         "text.usetex": True,
-        "pgf.preamble": r"\usepackage{fontspec}\setmainfont{Times New Roman}",
+        "pgf.rcfonts": False,
     }
 )
+
+# Create a simple plot
+# fig, ax = plt.subplots()
+# ax.plot([0, 1], [0, 1], label=r"$\frac{1}{x}$")
+# ax.set_xlabel("X axis")
+# ax.set_ylabel("Y axis")
+# ax.legend()
+
+# # Save the plot as a PDF file
+# plt.savefig("test_plot.pgf")
 
 
 import pandas as pd
@@ -54,6 +64,10 @@ import os
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
+plt.rcParams["axes.labelsize"] = 22  # Font size for x and y axis labels
+plt.rcParams["xtick.labelsize"] = 22  # Font size for x-axis tick labels
+plt.rcParams["ytick.labelsize"] = 22  # Font size for y-axis tick labels
+plt.rcParams["legend.fontsize"] = 22  # Font size for legend
 
 if __name__ == "__main__":
     # test ML algorithms on unseen data
@@ -83,7 +97,7 @@ if __name__ == "__main__":
     # sub_axes.set_ylim([1 - zoom_height, 1 + zoom_height])
 
     # # validation loss GBDTs
-    # fig_val_loss_trees = plt.figure(figsize=(10, 10))
+    # fig_val_loss_trees = plt.figure(figsize=(5,5))
     # ax_val_loss_trees = fig_val_loss_trees.subplots()
     # ax_val_loss_trees.set_yscale("log")
     # ax_val_loss_trees.set_xlabel("Iterations")
@@ -761,7 +775,7 @@ def plot_train_val_loss_ann_best_model():
 
 
 # def plot_histogram_mape_rmse_models(best_scores_mape_log: pd.DataFrame, best_scores_rmse_log: pd.DataFrame):
-#     fig, ax = plt.subplots(figsize=(10, 10))
+#     fig, ax = plt.subplots(figsize=(5,5))
 #     ax2 = ax.twinx()  # Create a second y-axis
 
 #     bar_width = 0.035  # Reduced bar width to fit both MAPE and RMSE values
@@ -812,7 +826,7 @@ def plot_train_val_loss_ann_best_model():
 #         [(i + 2 * 2 * bar_width) for i in locs], labels=[f"pH = {ph}" for ph in best_scores_mape_log["pH"]], rotation=45
 #     )
 #     fig.tight_layout()
-#     fig.savefig("summarized_data_figures_datafiles/mape_rmse_log_%_histogram.png")
+#     fig.savefig("summarized_data_figures_datafiles/mape_rmse_log_%_histogram.pgf")
 
 from matplotlib.lines import Line2D
 
@@ -883,7 +897,7 @@ def plot_mape_rmse_pointers(best_scores_mape_log: pd.DataFrame, best_scores_rmse
     ax.legend(handles=legend_elements, loc="upper left")
 
     fig.tight_layout()
-    fig.savefig("summarized_data_figures_datafiles/mape_rmse_pointers.png")
+    fig.savefig("summarized_data_figures_datafiles/mape_rmse_pointers.pgf")
 
 
 def plot_losses():
@@ -899,11 +913,11 @@ def plot_losses():
     # Add the merged legend to the first subplot to obtain merged legends
     ax_loss_trees.legend(handles, labels)
     fig_loss_trees.tight_layout()
-    fig_loss_trees.savefig(f"summarized_data_figures_datafiles/learning_curves_GBDTS.png")
-
     fig_loss_ANN.legend()
     fig_loss_ANN.tight_layout()
-    fig_loss_ANN.savefig("summarized_data_figures_datafiles/train_val_loss_ANN.png")
+    for ftype in ["pgf", "pdf"]:
+        fig_loss_trees.savefig(f"summarized_data_figures_datafiles/learning_curves_GBDTS.{ftype}")
+        fig_loss_ANN.savefig(f"summarized_data_figures_datafiles/train_val_loss_ANN.{ftype}")
 
 
 if __name__ == "__main__":
@@ -923,7 +937,7 @@ if __name__ == "__main__":
     for ax_loc, ph in zip(ax_locs_appendix, df_features["test_pHs"]):
         loc1, loc2 = ax_loc[0], ax_loc[1]
 
-        """" Create dataframe to store calculated parameters from the curves. store to tex (latex) format """
+        # Create dataframe to store calculated parameters from the curves. store to tex (latex) format
         df_features = pd.DataFrame()
         df_features.insert(
             0,
@@ -977,14 +991,14 @@ if __name__ == "__main__":
             ax_pred.set_ylabel("E [V]")
             ax_pred.legend(loc="upper left")
             fig_pred.savefig(
-                f"summarized_data_figures_datafiles/comparison_with_exp_results/comparison_with_exp_data_ph_{ph}.png"
+                f"summarized_data_figures_datafiles/comparison_with_exp_results/comparison_with_exp_data_ph_{ph}.pgf"
             )
             ax_pred.clear()
 
             ax_compare_anns.set_xlabel("|i| [A/cm$^2$]")
             ax_compare_anns.set_ylabel("E [V]")
             ax_compare_anns.legend(loc="upper left")
-            fig_compare_anns.savefig(f"summarized_data_figures_datafiles/comparison_of_anns_with_exp_ph_{ph}.png")
+            fig_compare_anns.savefig(f"summarized_data_figures_datafiles/comparison_of_anns_with_exp_ph_{ph}.pgf")
             ax_compare_anns.clear()
 
         except Exception as e:
@@ -1013,4 +1027,4 @@ if __name__ == "__main__":
     # Appendix scientific paper
     for fig, model in zip([fig_rf, fig_cb, fig_lgb, fig_ann, fig_xgb], ["rf", "cb", "lgb", "ann", "xgb"]):
         fig.tight_layout()
-        fig.savefig(f"summarized_data_figures_datafiles/appendix/{model}.png")
+        fig.savefig(f"summarized_data_figures_datafiles/appendix/{model}.pgf")

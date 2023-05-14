@@ -106,7 +106,7 @@ def plot_ocp_files():
             color="black",
         )
         fig_ph_ocp.tight_layout()
-        fig_ph_ocp.savefig(f"summarized_data_figures_datafiles/ocp_vs_ph{np.array(phs)[mask][-1]}.png")
+        fig_ph_ocp.savefig(f"summarized_data_figures_datafiles/ocp_vs_ph{np.array(phs)[mask][-1]}.pgf")
         fig_ph_ocp.clf()
 
 

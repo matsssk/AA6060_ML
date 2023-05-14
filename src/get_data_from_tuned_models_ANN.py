@@ -108,7 +108,7 @@ def plot_learning_curves_best_n_models(best_n):
     hyperparams_df_best_n.to_csv("models_data/ANN_info/data_for_n_best_models.csv", sep=",", index=False)
 
     plt.legend()
-    plt.savefig("summarized_data_figures_datafiles/learning_curves_best_models_tuned_ann.png")
+    plt.savefig("summarized_data_figures_datafiles/learning_curves_best_models_tuned_ann.pgf")
 
 
 if __name__ == "__main__":

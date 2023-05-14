@@ -254,7 +254,7 @@ def plot_histogram_training_time_all_models() -> None:
         pos, labels=[f" {k.upper()}: {round(v,2)} s" for k, v in zip(df["Model"], df["Time"])], rotation=45, ha="center"
     )
 
-    plt.savefig("summarized_data_figures_datafiles/models_training_time_all_models.png")
+    plt.savefig("summarized_data_figures_datafiles/models_training_time_all_models.pgf")
 
 
 def plot_histogram_training_time_per_tree_DTs():
@@ -270,7 +270,7 @@ def plot_histogram_training_time_per_tree_DTs():
         pos, labels=[f" {k.upper()}: {round(v,2)} s" for k, v in zip(df["Model"], df["Time"])], rotation=45, ha="center"
     )
 
-    plt.savefig("summarized_data_figures_datafiles/models_training_time_per_tree_DTs.png")
+    plt.savefig("summarized_data_figures_datafiles/models_training_time_per_tree_DTs.pgf")
 
 
 def feature_importances_to_pd():
