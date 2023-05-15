@@ -31,7 +31,7 @@ def epochs_for_search_and_train():
 
 
 def trials():
-    return 100
+    return 90
 
 
 def early_stopping_callback() -> list[EarlyStopping]:

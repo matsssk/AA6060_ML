@@ -242,7 +242,7 @@ def load_ANN_runtime() -> None:
 
 
 def plot_histogram_training_time_all_models() -> None:
-    plt.figure(figsize=(10, 10))
+    plt.figure()
     plt.xlabel("Algorithm")
     plt.ylabel("Training time [s]")
     df = pd.DataFrame(list(training_times_all_models.items()), columns=["Model", "Time"]).sort_values("Time")
@@ -258,7 +258,7 @@ def plot_histogram_training_time_all_models() -> None:
 
 
 def plot_histogram_training_time_per_tree_DTs():
-    plt.figure(figsize=(10, 10))
+    plt.figure()
     plt.xlabel("Algorithm")
     plt.ylabel("Training time per tree [s]")
     df = pd.DataFrame(list(training_time_per_tree.items()), columns=["Model", "Time"]).sort_values("Time")

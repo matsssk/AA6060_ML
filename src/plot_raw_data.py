@@ -203,7 +203,7 @@ def plot_and_return_dataframe_with_filtered_data(
 
             if (idx + 1) == len(files):
                 # figure to plot ph 12.0 as we do not have len(files) % 4 = 0
-                fig_ph12, ax_ph12 = plt.subplots(1, 2)
+                fig_ph12, ax_ph12 = plt.subplots(1, 2, figsize=(5 * 1.11317 / 0.85, 2.306 / 0.85))  # fitted to latex
                 ax_ph12[0].grid()
                 ax_ph12[1].grid()
                 fig_ph12.supxlabel("Current density ($i$) [A/cm$^2$]")
@@ -214,6 +214,7 @@ def plot_and_return_dataframe_with_filtered_data(
                 )
                 ax_ph12[0].legend()
                 ax_ph12[1].legend()
+                fig_ph12.tight_layout()
                 for ftype in ["pgf", "pdf"]:
                     fig_ph12.savefig(f"raw_data_vs_filtered_data/{idx+2}.{ftype}")
 

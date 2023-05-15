@@ -27,7 +27,7 @@ def plot_learning_curves_best_n_models(best_n):
     will be trained again with the same hyperparams to obtain learning curves
     """
     # create figure to plot learning curves for each trained model
-    plt.figure(figsize=(10, 10))
+    plt.figure()
     plt.xlabel("Epochs")
     plt.ylabel("Error, RMSE")
 
@@ -70,7 +70,9 @@ def plot_learning_curves_best_n_models(best_n):
         # add output layer. 1 output: current density
         model.add(Dense(1, activation=row["output_activation"]))
         model.compile(
-            optimizer=row["optimizer"], loss=row["loss"], metrics=[tf.keras.metrics.RootMeanSquaredError(name="rmse")]
+            optimizer=tf.keras.optimizers.Adam(learning_rate=row["learning_rate"]),
+            loss=row["loss"],
+            metrics=[tf.keras.metrics.RootMeanSquaredError(name="rmse")],
         )
 
         t0 = time.perf_counter()
@@ -108,7 +110,8 @@ def plot_learning_curves_best_n_models(best_n):
     hyperparams_df_best_n.to_csv("models_data/ANN_info/data_for_n_best_models.csv", sep=",", index=False)
 
     plt.legend()
-    plt.savefig("summarized_data_figures_datafiles/learning_curves_best_models_tuned_ann.pgf")
+    plt.savefig("summarized_data_figures_datafiles/pgf_plots/learning_curves_best_models_tuned_ann.pgf")
+    plt.savefig("summarized_data_figures_datafiles/pdf_plots/learning_curves_best_models_tuned_ann.pdf")
 
 
 if __name__ == "__main__":

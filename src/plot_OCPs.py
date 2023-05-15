@@ -6,6 +6,7 @@ import matplotlib
 from scipy.stats import tstd
 from io import StringIO
 from src.load_data import list_of_filenames
+from src.plot_raw_data import get_grid_for_axs
 
 pdflatex_path = "/usr/bin/pdflatex"
 matplotlib.use("pgf")
@@ -63,10 +64,9 @@ def standard_deviation(X: np.ndarray) -> float:
 
 if __name__ == "__main__":
     #  define figure to plot raw data in
-    fig, ax = plt.subplots(2, 2, figsize=(15, 15))
+    fig, ax = plt.subplots(2, 2)
     fig.supxlabel("Time [s]")
     fig.supylabel("E vs SCE [V]")
-    fig.tight_layout()
 
 
 def plot_ocp_files():
@@ -89,6 +89,7 @@ def plot_ocp_files():
         ax[loc].set_ylim(np.min(potential) - 0.1, np.max(potential) + 0.1)
         ax[loc].legend()
         if (idx + 1) % 4 == 0 or (idx + 1) == len(files):
+            get_grid_for_axs(ax)
             if idx + 1 == len(files) and (idx + 1) % 4 != 0:
                 ax[1, 1].remove()
 
@@ -120,7 +121,10 @@ def plot_ocp_files():
         )
         fig_ph_ocp.tight_layout()
         for ftype in ["pgf", "pdf"]:
-            fig_ph_ocp.savefig(f"summarized_data_figures_datafiles/ocp_vs_ph{np.array(phs)[mask][-1]}.{ftype}")
+            fig.tight_layout()
+            fig_ph_ocp.savefig(
+                f"summarized_data_figures_datafiles/{ftype}_plots/ocp_vs_ph_error_bars{np.array(phs)[mask][-1]}.{ftype}"
+            )
         fig_ph_ocp.clf()
 
 

@@ -906,7 +906,7 @@ def plot_losses():
     fig_loss_ANN.tight_layout()
     for ftype in ["pgf", "pdf"]:
         fig_loss_trees.savefig(f"summarized_data_figures_datafiles/{ftype}_plots/learning_curves_GBDTS.{ftype}")
-        fig_loss_ANN.savefig(f"summarized_data_figures_datafiles/{ftype}_plots/train_val_loss_ANN.{ftype}")
+        fig_loss_ANN.savefig(f"summarized_data_figures_datafiles/{ftype}_plots/train_val_loss_ANN_best_model.{ftype}")
 
 
 if __name__ == "__main__":
