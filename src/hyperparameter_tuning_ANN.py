@@ -30,18 +30,20 @@ def epochs_for_search_and_train():
     return 80
 
 
+# 90 trials 80 epochs took 5.5 hours
 def trials():
-    return 90
+    return 200
 
 
 def early_stopping_callback() -> list[EarlyStopping]:
-    return [EarlyStopping("val_loss", patience=5)]
+    return [EarlyStopping("val_loss", patience=4)]
 
 
 def search_spaces() -> list[list | float]:
     # neurons_space = [i for i in range(20, 160)[::10]]
-    neurons_space = [i for i in range(30, 170)[::20]]
-    num_layers_space = [i for i in range(2, 5)]
+    # neurons_space = [i for i in range(30, 170)[::20]]
+    neurons_space = [20, 50, 100, 200, 400, 600, 900]
+    num_layers_space = [i for i in range(2, 6)]
     l2s_space = [1e-4, 1e-3, 1e-2]
     # optimizers_space = ["adam", "sgd", "adagrad"]
     # optimizers_space = [
@@ -52,9 +54,9 @@ def search_spaces() -> list[list | float]:
     learning_rate_space = [1e-3, 1e-2, 1e-1]
     # loss_funcs_space = ["mse", "mae", "msle"]
     loss_funcs_space = ["mse", "mae"]
-    activation_func_space = ["relu", "tanh", "sigmoid"]
+    activation_func_space = ["relu"]
     # activation_func_space = ["relu"]
-    output_act_func_space = ["softmax", "linear"]
+    output_act_func_space = ["linear"]
     batch_size_space = [16, 32, 64, 128]
     # batch_size_space = [32]
 
@@ -183,10 +185,10 @@ def store_tuning_results() -> pd.DataFrame:
 
     best_hps, best_models = create_tuner_and_return_results()
     _, X_val, _, y_val, _, _ = normalize_data_for_ANN()
-    results = []  # append hyperparams for each trial to this list
+    results = []
     for hp_element, best_model in zip(best_hps, best_models):
         results_dict = {}
-        _, rmse_loss = best_model.evaluate(X_val, y_val)  # tuple of loss and metric (equal)
+        _, rmse_loss = best_model.evaluate(X_val, y_val)
         results_dict["val_loss_rmse"] = rmse_loss
 
         for hp_name in hp_element.values:
@@ -195,8 +197,10 @@ def store_tuning_results() -> pd.DataFrame:
         results.append(results_dict)
 
     results = pd.DataFrame(results).sort_values(by="val_loss_rmse", ascending=True)  # lowest loss : index 1
+    epochs, _trials = epochs_for_search_and_train(), trials()
     results.insert(0, "best_models_sorted", [i for i in range(1, len(best_models) + 1)])
-    results.to_csv(f"{directory_for_tuning_results()}/{name_df_hyperparams_results()}", sep=",", index=False)
+    string = f"epochs_{epochs}_trials_{_trials}"
+    results.to_csv(f"{directory_for_tuning_results()}/{name_df_hyperparams_results()}_{string}", sep=",", index=False)
     return results
 
 

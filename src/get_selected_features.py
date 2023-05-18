@@ -56,7 +56,8 @@ def linreg_tafel_line_ORR_or_HER(
         result.stderr,
         result.intercept_stderr,
     )
-    return [E_applied, i_applied_log_abs, slope, intercept, rvalue, std_error_slope, intercept_stderr]
+    residual = E_applied - (intercept + slope * i_applied_log_abs)
+    return [E_applied, i_applied_log_abs, slope, intercept, rvalue, std_error_slope, intercept_stderr, residual]
 
 
 def lower_upper_confidence_interval_slope(

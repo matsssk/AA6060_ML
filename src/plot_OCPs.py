@@ -1,4 +1,5 @@
 import os
+import time
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -7,6 +8,7 @@ from scipy.stats import tstd
 from io import StringIO
 from src.load_data import list_of_filenames
 from src.plot_raw_data import get_grid_for_axs
+from sklearn.preprocessing import MinMaxScaler
 
 pdflatex_path = "/usr/bin/pdflatex"
 matplotlib.use("pgf")
@@ -46,7 +48,7 @@ def sort_files_based_on_ph(filename: str) -> float:
     return float(filename.split("h")[1].split(",")[0] + "." + filename.split(",")[1].split(".")[0])
 
 
-def one_third_of_ocp_data(X):
+def one_third_of_data(X):
     return X[(int(len(X) / 3 * 2)) :]
 
 
@@ -62,6 +64,18 @@ def standard_deviation(X: np.ndarray) -> float:
     return tstd(X, limits=None)
 
 
+def normalize_data(ocp_vals: np.ndarray):
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    return scaler.fit_transform(ocp_vals.reshape(-1, 1))
+
+
+def sma_ocps(ocps: np.ndarray):
+    delta_ocp = abs(np.diff(ocps[::30]))
+    window = np.ones(3) / 3  # type: ignore
+    sma = np.convolve(delta_ocp, window, mode="valid")
+    return sma
+
+
 if __name__ == "__main__":
     #  define figure to plot raw data in
     fig, ax = plt.subplots(2, 2)
@@ -74,14 +88,28 @@ def plot_ocp_files():
 
     # the coordinates of the different subplots
     positions = [[0, 0], [0, 1], [1, 0], [1, 1]] * int(len(files) / 4 + 1)
-    std_list, mean_ocps_for_phs, phs = [], [], []
+    std_list, mean_ocps_for_phs, phs, all_ocp_data_normalized = [], [], [], []
+
+    # SMA figure
+    # fig_smas, ax_smas = plt.subplots()
+    # ax_smas.set_ylabel("20 window SMA of gradient of OCP per time")
+    # ax_smas.set_xlabel("Time")
+
+    sma_list = []  # List to store the SMA arrays for each file
 
     for idx, file in enumerate(files):
         file_path = os.path.join(folder_with_ocps(), file)
         time, potential = load_ocp_data(file_path)
+        one_third_of_ocps = one_third_of_data(potential)
 
-        mean_ocps_for_phs.append(np.mean(one_third_of_ocp_data(potential)))
-        std_list.append(standard_deviation(one_third_of_ocp_data(potential)))  # the last 1/3 of data
+        sma_values = sma_ocps(one_third_of_ocps)
+        x_values = one_third_of_data(time)[::30][: len(sma_values)]  # Ensure same length as sma_values
+
+        # ax_smas.plot(x_values, sma_values)
+        mean_ocps_for_phs.append(np.mean(one_third_of_ocps))
+        std_list.append(standard_deviation(one_third_of_ocps))
+        for val in normalize_data(one_third_of_ocps):
+            all_ocp_data_normalized.append(val)
         phs.append(float(file.split("h")[1].split(",")[0] + "." + file.split(",")[1].split(".")[0]))
 
         loc = positions[idx][0], positions[idx][1]
@@ -100,33 +128,40 @@ def plot_ocp_files():
                 if (idx + 1) != len(files):
                     subplot_ax.clear()
 
+        # Calculate SMA at all time positions
+        if len(sma_values) == 37:
+            sma_list.append(sma_values)
+
     pd.DataFrame({"pH": phs, "Corrected standard dev.": std_list}).to_csv(
         "summarized_data_figures_datafiles/csv_files/standard_dev_ocps.csv", index=False, sep="\t"
     )
-    masks = ([ph <= 10.2 for ph in phs], [ph > 10.2 for ph in phs])
-    for mask in masks:
-        # fig to plot ocp vs pH
-        fig_ph_ocp, ax_ph_ocp = plt.subplots()
-        ax_ph_ocp.set_xlabel("pH")
-        ax_ph_ocp.set_ylabel("Open Circuit Potential (OCP) vs SCE [V]")
 
-        ax_ph_ocp.scatter(np.array(phs)[mask], np.array(mean_ocps_for_phs)[mask], color="black", s=24)
-        ax_ph_ocp.errorbar(
-            np.array(phs)[mask],
-            np.array(mean_ocps_for_phs)[mask],
-            yerr=np.array(std_list)[mask],
-            fmt="none",
-            capsize=4,
-            color="black",
-        )
-        fig_ph_ocp.tight_layout()
-        for ftype in ["pgf", "pdf"]:
-            fig.tight_layout()
-            fig_ph_ocp.savefig(
-                f"summarized_data_figures_datafiles/{ftype}_plots/ocp_vs_ph_error_bars{np.array(phs)[mask][-1]}.{ftype}"
-            )
-        fig_ph_ocp.clf()
+    # Calculate the average SMA at each time position
+    avg_sma = np.mean(sma_list, axis=0)
+
+    # Plot the array of average SMA values
+    fig_avg_sma, ax_avg_sma = plt.subplots()
+    ax_avg_sma.scatter(x_values, avg_sma, color="black")
+    ax_avg_sma.set_xlabel("Time [s]")
+    ax_avg_sma.set_ylabel(
+        r"SMA (window = 3) of the 30 seconds change in potential $\left[\frac{\partial E}{\partial t}\right]$"
+    )
+    fig_avg_sma.tight_layout()
+
+    # Calculate and plot the normality test
+    fig_normality_test, ax_normality_test = plt.subplots()
+    hist, bins = np.histogram(all_ocp_data_normalized, bins="auto")
+    ax_normality_test.bar(bins[:-1], hist, align="edge", width=np.diff(bins), color="dimgray")
+    ax_normality_test.set_ylabel("Samples")
+    ax_normality_test.set_xlabel("Normalized value")
+    fig_normality_test.tight_layout()
+
+    for ftype in ["pgf", "pdf"]:
+        fig_normality_test.savefig(f"summarized_data_figures_datafiles/{ftype}_plots/normality_test_ocp.{ftype}")
+        fig_avg_sma.savefig(f"summarized_data_figures_datafiles/{ftype}_plots/average_sma.{ftype}")
 
 
 if __name__ == "__main__":
+    t0 = time.perf_counter()
     plot_ocp_files()
+    print(time.perf_counter() - t0)

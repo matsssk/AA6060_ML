@@ -179,6 +179,11 @@ def corrosion_potential_and_current_density(slope, i0, intercept) -> list[float]
     return [E_corr, i_corr]
 
 
+def add_residuals_to_txt_file(residuals: np.ndarray) -> None:
+    merged = np.concatenate((np.loadtxt("residuals_linreg.txt"), residuals), axis=0)
+    np.savetxt("residuals_linreg.txt", merged, fmt="%f")
+
+
 def plot_tafel_lines_E_corr_i_corr(
     ax,
     i_applied_log_abs,
@@ -238,6 +243,7 @@ def store_polarization_curve_features(E: np.ndarray, i: np.ndarray, model: str) 
         rvalue,
         std_error_slope,
         intercept_stderr,
+        residuals,
     ) = linreg_tafel_line_ORR_or_HER(ocp, E, i)
     # first value in the tafel line should be where E = ocp, solve for current
     i_applied_log_abs = np.insert(i_applied_log_abs, 0, (ocp - intercept) / slope)
@@ -258,6 +264,7 @@ def store_polarization_curve_features(E: np.ndarray, i: np.ndarray, model: str) 
         i_corr,
         lower_slope,
         upper_slope,
+        residuals,
     ]
 
 
@@ -285,6 +292,7 @@ def plot_experimental_testing_data(ph, loc1, loc2, df_features: pd.DataFrame) ->
             i_corr,
             lower_ci,
             upper_ci,
+            residuals,
         ]
     ) = store_polarization_curve_features(E, i, "exp")
     df_features["Exp. data"] = [
@@ -361,8 +369,10 @@ def random_forest_comparison(ph, loc1, loc2, df_features: pd.DataFrame) -> None:
             i_corr,
             lower_ci,
             upper_ci,
+            residuals,
         ]
     ) = store_polarization_curve_features(E, i, "RF")
+    np.savetxt("residuals_linreg.txt", residuals, fmt="%f")
     df_features["RF"] = [ocp, slope, rvalue**2, std_error_slope, lower_ci, upper_ci, intercept_stderr, E_corr, i_corr]
 
     linestyle, color = linestyles_and_markers_for_model_comparisons("rf")
@@ -419,8 +429,11 @@ def catboost_comparison(ph, store_mape: list, rmse_catboost: list, loc1, loc2, d
             i_corr,
             lower_ci,
             upper_ci,
+            residuals,
         ]
     ) = store_polarization_curve_features(E, i, "CB")
+
+    add_residuals_to_txt_file(residuals)
     df_features["CB"] = [ocp, slope, rvalue**2, std_error_slope, lower_ci, upper_ci, intercept_stderr, E_corr, i_corr]
 
     figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_cb[loc1, loc2]]
@@ -506,8 +519,10 @@ def xgboost_comparison(ph, store_mape, rmse_xgboost: list, loc1, loc2, df_featur
             i_corr,
             lower_ci,
             upper_ci,
+            residuals,
         ]
     ) = store_polarization_curve_features(E, i, "XGB")
+    add_residuals_to_txt_file(residuals)
     df_features["XGB"] = [
         ocp,
         slope,
@@ -589,8 +604,10 @@ def lgbm_comparison(ph, store_mape, rmse_lgb, loc1, loc2, df_features: pd.DataFr
             i_corr,
             lower_ci,
             upper_ci,
+            residuals,
         ]
     ) = store_polarization_curve_features(E, i, "LGBM")
+    add_residuals_to_txt_file(residuals)
     df_features["LGB"] = [
         ocp,
         slope,
@@ -688,8 +705,10 @@ def ANN_comparison(ph, store_mape, rmse_ann, loc1, loc2, df_features: pd.DataFra
                             i_corr,
                             lower_ci,
                             upper_ci,
+                            residuals,
                         ]
                     ) = store_polarization_curve_features(E, i, "ANN")
+                    add_residuals_to_txt_file(residuals)
                 except ValueError:
                     (
                         [
@@ -705,6 +724,7 @@ def ANN_comparison(ph, store_mape, rmse_ann, loc1, loc2, df_features: pd.DataFra
                             i_corr,
                             lower_ci,
                             upper_ci,
+                            residual,
                         ]
                     ) = store_polarization_curve_features(E, 10**y_test_ph, "ANN")
 
@@ -945,8 +965,8 @@ if __name__ == "__main__":
         )
 
         plot_experimental_testing_data(ph, loc1, loc2, df_features)
-        catboost_comparison(ph, mape_catboost, rmse_catboost, loc1, loc2, df_features)
         random_forest_comparison(ph, loc1, loc2, df_features)
+        catboost_comparison(ph, mape_catboost, rmse_catboost, loc1, loc2, df_features)
         xgboost_comparison(ph, mape_xgboost, rmse_xgboost, loc1, loc2, df_features)
         lgbm_comparison(ph, mape_lgbm, rmse_lgbm, loc1, loc2, df_features)
         ANN_comparison(ph, mape_ann, rmse_ann, loc1, loc2, df_features)
@@ -1018,5 +1038,5 @@ if __name__ == "__main__":
     # Appendix scientific paper
     for fig, model in zip([fig_rf, fig_cb, fig_lgb, fig_ann, fig_xgb], ["rf", "cb", "lgb", "ann", "xgb"]):
         fig.tight_layout()
-        for ftype in ["pgf"]:
+        for ftype in ["pgf", "pdf"]:
             fig.savefig(f"summarized_data_figures_datafiles/appendix/{model}.{ftype}")
