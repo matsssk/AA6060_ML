@@ -138,6 +138,9 @@ def ANN_model(hp: HyperParameters):
     return model
 
 
+a = 3
+
+
 def create_tuner_and_return_results() -> list[list]:
     X_train, X_val, y_train, y_val, _, _ = normalize_data_for_ANN()
 
