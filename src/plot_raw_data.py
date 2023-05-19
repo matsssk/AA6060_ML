@@ -50,25 +50,25 @@ def plot_and_return_dataframe_with_filtered_data(
     if __name__ == "__main__":
         #  define figure to plot raw data in
         fig_raw, ax_raw = plt.subplots(2, 2)
-        fig_raw.supxlabel("Current density ($i$) [A/cm$^2$]")
+        fig_raw.supxlabel(r"Absolute value of current density ($|\mathit{i}|$) [A/cm$^2$]")
         fig_raw.supylabel("Potential ($E$) vs SCE[V]")
         get_grid_for_axs(ax_raw)
 
         # define figure to plot filtered data in
         fig2_filt, ax2_filt = plt.subplots(2, 2)
-        fig2_filt.supxlabel("Current density ($i$) [A/cm$^2$]")
+        fig2_filt.supxlabel(r"Absolute value of current density ($|\mathit{i}|$) [A/cm$^2$]")
         fig2_filt.supylabel("Potential ($E$) vs SCE[V]")
         get_grid_for_axs(ax2_filt)
 
         # figure to plot raw data and filtered data in
         fig_compare_raw_filt, ax_compare = plt.subplots(2, 2)
-        fig_compare_raw_filt.supxlabel("Current density ($i$) [A/cm$^2$]")
+        fig_compare_raw_filt.supxlabel(r"Absolute value of current density ($|\mathit{i}|$) [A/cm$^2$]")
         fig_compare_raw_filt.supylabel("Potential ($E$) vs SCE[V]")
         get_grid_for_axs(ax_compare)
 
         # figure to plot tafel slopes
         fig_tafel, ax_tafel = plt.subplots(2, 2)
-        fig_tafel.supxlabel("Current density ($i$) [A/cm$^2$]")
+        fig_tafel.supxlabel(r"Absolute value of current density ($|\mathit{i}|$) [A/cm$^2$]")
         fig_tafel.supylabel("Potential ($E$) vs SCE[V]")
         get_grid_for_axs(ax_tafel)
 
@@ -107,11 +107,11 @@ def plot_and_return_dataframe_with_filtered_data(
                 r_value,
                 std_err_slope,
                 intercept_stderr,
+                _,
             ) = linreg_tafel_line_ORR_or_HER(ocp_t_half, potential_filtered, current_density_filtered)
             # slope is delta E / delta abs(i), we need delta E / delta log10(r"$\lvert i \rvert$")
-        except ValueError:
-            print(f"Something wrong with file: {file_raw}")
-            raise ValueError
+        except Exception as e:
+            raise e
 
         df_add_to_selected_features = pd.DataFrame(
             {
@@ -206,7 +206,7 @@ def plot_and_return_dataframe_with_filtered_data(
                 fig_ph12, ax_ph12 = plt.subplots(1, 2, figsize=(5 * 1.11317 / 0.85, 2.306 / 0.85))  # fitted to latex
                 ax_ph12[0].grid()
                 ax_ph12[1].grid()
-                fig_ph12.supxlabel("Current density ($i$) [A/cm$^2$]")
+                fig_ph12.supxlabel(r"Absolute value of current density ($|\mathit{i}|$) [A/cm$^2$]")
                 fig_ph12.supylabel("Potential ($E$) vs SCE [V]")
                 ax_ph12[0].semilogx(abs(current_density_raw), potential_raw, color="k", label=f"pH = {pH}")
                 ax_ph12[1].semilogx(

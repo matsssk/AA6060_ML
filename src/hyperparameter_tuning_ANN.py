@@ -32,7 +32,7 @@ def epochs_for_search_and_train():
 
 # 90 trials 80 epochs took 5.5 hours
 def trials():
-    return 200
+    return 40
 
 
 def early_stopping_callback() -> list[EarlyStopping]:

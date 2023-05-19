@@ -6796,7 +6796,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=3.200000in,y=0.048000in,,bottom]{\color{textcolor}\rmfamily\fontsize{12.000000}{14.400000}\selectfont Current density (\(\displaystyle i\)) [A/cm\(\displaystyle ^2\)]}%
+\pgftext[x=3.200000in,y=0.048000in,,bottom]{\color{textcolor}\rmfamily\fontsize{12.000000}{14.400000}\selectfont Absolute value of current density (\(\displaystyle |\mathit{i}|\)) [A/cm\(\displaystyle ^2\)]}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
