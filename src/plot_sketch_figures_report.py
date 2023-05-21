@@ -23,7 +23,7 @@ matplotlib.rcParams.update(
 
 
 def plot_E_pit_ph10_2(folder: str = "raw_data"):
-    plt.figure(figsize=(5, 4))
+    plt.figure(figsize=(4, 3.5))
 
     plt.xlabel(r"Absolute value of current density ($|\mathit{i}|$) [A/cm$^2$]")
     plt.ylabel("Potential ($E$) vs Ref. [V]")
@@ -37,7 +37,7 @@ def plot_E_pit_ph10_2(folder: str = "raw_data"):
 
     plt.semilogx(abs(i_filtered), E_filtered, color="k")
     plt.text(2e-7, -0.63, "$E_{{\mathrm{{pit}}}}$")
-
+    plt.tight_layout()
     for ftype in ["pgf", "pdf"]:
         plt.savefig(f"sketches_for_report/E_pit.{ftype}")
 
@@ -89,7 +89,7 @@ def tafel_plot():
 
     inet = i0 * (ian + icat)
 
-    plt.figure(figsize=(5, 4))
+    plt.figure(figsize=(4, 3.5))
     plt.xlabel(r"Absolute value of current density ($|\mathit{i}|$) [A/cm$^2$]")
     plt.ylabel("Potential ($E$) vs Ref. [V]")
 
@@ -115,9 +115,9 @@ def tafel_plot():
     plt.axvline(10**-5, color="grey", linestyle="dashed")
 
     plt.text(1.1 * 10**-5, -1.02, "$i_{corr}$")
-    plt.text(0.32, -0.65, "$E_{corr}$")
-    plt.text(5 * 10**-5, -0.9 - 0.05, "Cathodic branch with extrapolated Tafel line")
-    plt.text(5 * 10**-5, -0.32 + 0.05, "Anodic branch with extrapolated Tafel line")
+    plt.text(0.22, -0.65, "$E_{corr}$")
+    plt.text(5 * 10**-5, -0.4, "Cathodic Tafel line")
+    plt.text(5 * 10**-5, -0.81, "Anodic Tafel line")
     # plt.annotate(
     #     "Cathodic branch with extrapolated Tafel line",
     #     xytext=(5 * 10**-5, -0.9 - 0.05),
@@ -159,7 +159,7 @@ def diffusion():
 
     inet = ian + icat
 
-    plt.figure(figsize=(5, 4))
+    plt.figure(figsize=(4, 3.5))
     # plt.title('Polarisation curve fictive reaction, Butler-Volmer')
     plt.xlabel(r"Absolute value of current density ($|\mathit{i}|$) [A/cm$^2$]")
     plt.ylabel("Potential ($E$) vs Ref. [V]")
@@ -188,9 +188,9 @@ def diffusion():
 def pourbaix_diagram():
     # pourbaix diagram for Aluminium
 
-    plt.figure(figsize=(5, 4))
+    plt.figure(figsize=(4, 3.5))
     plt.xlabel("pH")
-    "Potential ($E$) vs Ref. [V]"
+    plt.ylabel("Potential ($E$) vs Ref. [V]")
     x = np.linspace(-2, 16, 1000000)
     y = np.linspace(-3.5, 1.5, 1000000)
     plt.xlim(0, 13)
@@ -229,8 +229,8 @@ def pourbaix_diagram():
     plt.text(6, -2.5, "Al")
     plt.text(5.5, -2.8, "(Immune)")
 
-    plt.text(6, -1, "Al$_2$O$_3$")
-    plt.text(5.7, -1.3, "(Passive)")
+    plt.text(5.8, -1, "Al$_2$O$_3$")
+    plt.text(5.5, -1.3, "(Passive)")
     plt.text(10, 0.2, "AlO$_2^-$")
     plt.text(9.7, -0.1, "(Active)")
     plt.text(2, 0, "HER")
@@ -238,7 +238,7 @@ def pourbaix_diagram():
 
     plt.tick_params(axis="x")
     plt.tick_params(axis="y")
-
+    plt.tight_layout()
     for ftype in ["pdf", "pgf"]:
         plt.savefig(f"sketches_for_report/pourbaix.{ftype}")
 

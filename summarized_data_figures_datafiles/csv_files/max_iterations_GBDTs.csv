@@ -1,4 +1,4 @@
 model	max_iterations
-cb	100
-xgb	100
-lgbm	100
+cb	100000
+xgb	100000
+lgbm	100000

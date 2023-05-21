@@ -51,25 +51,25 @@ def plot_and_return_dataframe_with_filtered_data(
         #  define figure to plot raw data in
         fig_raw, ax_raw = plt.subplots(2, 2)
         fig_raw.supxlabel(r"Absolute value of current density ($|\mathit{i}|$) [A/cm$^2$]")
-        fig_raw.supylabel("Potential ($E$) vs SCE[V]")
+        fig_raw.supylabel("Potential ($E$) vs SCE [V]")
         get_grid_for_axs(ax_raw)
 
         # define figure to plot filtered data in
         fig2_filt, ax2_filt = plt.subplots(2, 2)
         fig2_filt.supxlabel(r"Absolute value of current density ($|\mathit{i}|$) [A/cm$^2$]")
-        fig2_filt.supylabel("Potential ($E$) vs SCE[V]")
+        fig2_filt.supylabel("Potential ($E$) vs SCE [V]")
         get_grid_for_axs(ax2_filt)
 
         # figure to plot raw data and filtered data in
         fig_compare_raw_filt, ax_compare = plt.subplots(2, 2)
         fig_compare_raw_filt.supxlabel(r"Absolute value of current density ($|\mathit{i}|$) [A/cm$^2$]")
-        fig_compare_raw_filt.supylabel("Potential ($E$) vs SCE[V]")
+        fig_compare_raw_filt.supylabel("Potential ($E$) vs SCE [V]")
         get_grid_for_axs(ax_compare)
 
         # figure to plot tafel slopes
         fig_tafel, ax_tafel = plt.subplots(2, 2)
         fig_tafel.supxlabel(r"Absolute value of current density ($|\mathit{i}|$) [A/cm$^2$]")
-        fig_tafel.supylabel("Potential ($E$) vs SCE[V]")
+        fig_tafel.supylabel("Potential ($E$) vs SCE [V]")
         get_grid_for_axs(ax_tafel)
 
     # create empty dataframe and add data to it from all files

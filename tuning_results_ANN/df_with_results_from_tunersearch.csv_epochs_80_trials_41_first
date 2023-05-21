@@ -1,0 +1,3 @@
+best_models_sorted,val_loss_rmse,neurons,num_hidden_layers,learning_rate,loss,activation,output_activation,batch_size
+1,0.012093454599380493,900,4,0.001,mse,relu,linear,16
+2,0.013516285456717014,400,4,0.001,mse,relu,linear,64

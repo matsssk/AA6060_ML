@@ -53,10 +53,10 @@ import os
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
-plt.rcParams["axes.labelsize"] = 22  # Font size for x and y axis labels
-plt.rcParams["xtick.labelsize"] = 22  # Font size for x-axis tick labels
-plt.rcParams["ytick.labelsize"] = 22  # Font size for y-axis tick labels
-plt.rcParams["legend.fontsize"] = 22  # Font size for legend
+# plt.rcParams["axes.labelsize"] = 22  # Font size for x and y axis labels
+# plt.rcParams["xtick.labelsize"] = 22  # Font size for x-axis tick labels
+# plt.rcParams["ytick.labelsize"] = 22  # Font size for y-axis tick labels
+# plt.rcParams["legend.fontsize"] = 22  # Font size for legend
 
 if __name__ == "__main__":
     # test ML algorithms on unseen data
@@ -101,23 +101,23 @@ if __name__ == "__main__":
     ax_loss_ANN.set_xlabel("Epochs")
     ax_loss_ANN.set_ylabel("Error, RMSE")
 
-    fig_rf, ax_individual_model_vs_exp_rf = plt.subplots(2, 2)
+    fig_rf, ax_individual_model_vs_exp_rf = plt.subplots(2, 2, figsize=(15, 15))
     fig_rf.supxlabel("|i| [A/cm$^2$]")
     fig_rf.supylabel("E [V]")
 
-    fig_cb, ax_individual_model_vs_exp_cb = plt.subplots(2, 2)
+    fig_cb, ax_individual_model_vs_exp_cb = plt.subplots(2, 2, figsize=(15, 15))
     fig_cb.supxlabel("|i| [A/cm$^2$]")
     fig_cb.supylabel("E [V]")
 
-    fig_lgb, ax_individual_model_vs_exp_lgb = plt.subplots(2, 2)
+    fig_lgb, ax_individual_model_vs_exp_lgb = plt.subplots(2, 2, figsize=(15, 15))
     fig_lgb.supxlabel("|i| [A/cm$^2$]")
     fig_lgb.supylabel("E [V]")
 
-    fig_ann, ax_individual_model_vs_exp_ann = plt.subplots(2, 2)
+    fig_ann, ax_individual_model_vs_exp_ann = plt.subplots(2, 2, figsize=(15, 15))
     fig_ann.supxlabel("|i| [A/cm$^2$]")
     fig_ann.supylabel("E [V]")
 
-    fig_xgb, ax_individual_model_vs_exp_xgb = plt.subplots(2, 2)
+    fig_xgb, ax_individual_model_vs_exp_xgb = plt.subplots(2, 2, figsize=(15, 15))
     fig_xgb.supxlabel("|i| [A/cm$^2$]")
     fig_xgb.supylabel("E [V]")
 
@@ -680,7 +680,7 @@ def ANN_comparison(ph, store_mape, rmse_ann, loc1, loc2, df_features: pd.DataFra
     for file in files:
         if file.endswith(".h5"):
             model = keras.models.load_model(f"tuning_results_ANN/{file}")  # type: ignore
-            y_pred_log = y_scaler.inverse_transform(model.predict(x_scaler.fit_transform(X_test_ph)))
+            y_pred_log = y_scaler.inverse_transform(model.predict(x_scaler.transform(X_test_ph)))
             y_pred = 10**y_pred_log
             which_model: str = file.split("_")[0]
 
@@ -1034,8 +1034,7 @@ if __name__ == "__main__":
     best_scores_rmse_log.to_csv(
         "summarized_data_figures_datafiles/csv_files/rmse_of_pred_log.csv", sep="\t", index=False
     )
-
-    # Appendix scientific paper
+    # # Appendix scientific paper
     for fig, model in zip([fig_rf, fig_cb, fig_lgb, fig_ann, fig_xgb], ["rf", "cb", "lgb", "ann", "xgb"]):
         fig.tight_layout()
         for ftype in ["pgf", "pdf"]:

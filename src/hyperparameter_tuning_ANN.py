@@ -23,7 +23,7 @@ def directory_for_tuning_results():
 
 
 def name_df_hyperparams_results():
-    return "df_with_results_from_tunersearch.csv"
+    return "df_with_results_from_tunersearch"
 
 
 def epochs_for_search_and_train():
@@ -32,7 +32,7 @@ def epochs_for_search_and_train():
 
 # 90 trials 80 epochs took 5.5 hours
 def trials():
-    return 40
+    return 41
 
 
 def early_stopping_callback() -> list[EarlyStopping]:
@@ -42,16 +42,16 @@ def early_stopping_callback() -> list[EarlyStopping]:
 def search_spaces() -> list[list | float]:
     # neurons_space = [i for i in range(20, 160)[::10]]
     # neurons_space = [i for i in range(30, 170)[::20]]
-    neurons_space = [20, 50, 100, 200, 400, 600, 900]
+    neurons_space = [20, 50, 100, 150, 200, 400, 600, 900]
     num_layers_space = [i for i in range(2, 6)]
-    l2s_space = [1e-4, 1e-3, 1e-2]
+    # l2s_space = [1e-5, 1e-4, 1e-3]
     # optimizers_space = ["adam", "sgd", "adagrad"]
     # optimizers_space = [
     #     tf.keras.optimizers.Adam(learning_rate=1e-3),
     #     tf.keras.optimizers.Adam(learning_rate=1e-2),
     #     tf.keras.optimizers.Adam(learning_rate=1e-1),
     # ]
-    learning_rate_space = [1e-3, 1e-2, 1e-1]
+    learning_rate_space = [1e-3]
     # loss_funcs_space = ["mse", "mae", "msle"]
     loss_funcs_space = ["mse", "mae"]
     activation_func_space = ["relu"]
@@ -63,7 +63,7 @@ def search_spaces() -> list[list | float]:
     combinations = (
         len(neurons_space)
         * len(num_layers_space)
-        * len(l2s_space)
+        # * len(l2s_space)
         * len(learning_rate_space)
         * len(loss_funcs_space)
         * len(activation_func_space)
@@ -73,7 +73,7 @@ def search_spaces() -> list[list | float]:
     return [
         neurons_space,
         num_layers_space,
-        l2s_space,
+        # l2s_space,
         learning_rate_space,
         loss_funcs_space,
         activation_func_space,
@@ -85,10 +85,11 @@ def search_spaces() -> list[list | float]:
 
 def ANN_model(hp: HyperParameters):
     # call search spaces
+    # legg til L2 om jeg skal bruke den
     (
         neurons_space,
+        # l2
         num_layers_space,
-        l2s_space,
         learning_rates_space,
         loss_funcs_space,
         activation_func_space,
@@ -99,7 +100,7 @@ def ANN_model(hp: HyperParameters):
 
     neurons = hp.Choice("neurons", values=neurons_space)
     num_layers = hp.Choice("num_hidden_layers", values=num_layers_space)
-    l2s = hp.Choice("l2", values=l2s_space)
+    # l2s = hp.Choice("l2", values=l2s_space)
     learning_rate = hp.Choice("learning_rate", values=learning_rates_space)
     loss_funcs = hp.Choice("loss", values=loss_funcs_space)
     activation_func = hp.Choice("activation", values=activation_func_space)
@@ -116,7 +117,7 @@ def ANN_model(hp: HyperParameters):
             neurons,
             input_shape=(2,),
             activation=activation_func,
-            kernel_regularizer=regularizers.l2(l2=l2s),  # type: ignore
+            # kernel_regularizer=regularizers.l2(l2=l2s),  # type: ignore
         )
     )
 
@@ -127,7 +128,7 @@ def ANN_model(hp: HyperParameters):
             Dense(
                 neurons,
                 activation=activation_func,
-                kernel_regularizer=regularizers.l2(l2=l2s),  # type: ignore
+                # kernel_regularizer=regularizers.l2(l2=l2s),  # type: ignore
             )
         )
 
@@ -138,12 +139,10 @@ def ANN_model(hp: HyperParameters):
     return model
 
 
-a = 3
+X_train, X_val, y_train, y_val, _, _ = normalize_data_for_ANN()
 
 
 def create_tuner_and_return_results() -> list[list]:
-    X_train, X_val, y_train, y_val, _, _ = normalize_data_for_ANN()
-
     tuner = keras_tuner.RandomSearch(
         ANN_model,
         objective="val_loss",
@@ -162,7 +161,7 @@ def create_tuner_and_return_results() -> list[list]:
     )
     tuner.results_summary()
     best_hps: list = tuner.get_best_hyperparameters(num_trials=trials())
-    best_models: list = tuner.get_best_models(num_models=trials())
+    best_models: list = tuner.get_best_models(num_models=2)
 
     # save the two best models
     for i in [0, 1]:
@@ -187,7 +186,6 @@ def store_tuning_results() -> pd.DataFrame:
     """
 
     best_hps, best_models = create_tuner_and_return_results()
-    _, X_val, _, y_val, _, _ = normalize_data_for_ANN()
     results = []
     for hp_element, best_model in zip(best_hps, best_models):
         results_dict = {}
@@ -203,7 +201,9 @@ def store_tuning_results() -> pd.DataFrame:
     epochs, _trials = epochs_for_search_and_train(), trials()
     results.insert(0, "best_models_sorted", [i for i in range(1, len(best_models) + 1)])
     string = f"epochs_{epochs}_trials_{_trials}"
-    results.to_csv(f"{directory_for_tuning_results()}/{name_df_hyperparams_results()}_{string}", sep=",", index=False)
+    results.to_csv(
+        f"{directory_for_tuning_results()}/{name_df_hyperparams_results()}_{string}.csv", sep=",", index=False
+    )
     return results
 
 

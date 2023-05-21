@@ -6050,7 +6050,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=0.253000in, y=1.525154in, left, base,rotate=90.000000]{\color{textcolor}\rmfamily\fontsize{12.000000}{14.400000}\selectfont Potential (\(\displaystyle E\)) vs SCE[V]}%
+\pgftext[x=0.253000in, y=1.497955in, left, base,rotate=90.000000]{\color{textcolor}\rmfamily\fontsize{12.000000}{14.400000}\selectfont Potential (\(\displaystyle E\)) vs SCE [V]}%
 \end{pgfscope}%
 \end{pgfpicture}%
 \makeatother%
