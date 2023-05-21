@@ -32,7 +32,7 @@ def epochs_for_search_and_train():
 
 # 90 trials 80 epochs took 5.5 hours
 def trials():
-    return 41
+    return 10
 
 
 def early_stopping_callback() -> list[EarlyStopping]:
@@ -42,8 +42,8 @@ def early_stopping_callback() -> list[EarlyStopping]:
 def search_spaces() -> list[list | float]:
     # neurons_space = [i for i in range(20, 160)[::10]]
     # neurons_space = [i for i in range(30, 170)[::20]]
-    neurons_space = [20, 50, 100, 150, 200, 400, 600, 900]
-    num_layers_space = [i for i in range(2, 6)]
+    neurons_space = [50, 100, 150, 200, 300, 400, 600, 900]
+    num_layers_space = [i for i in range(3, 7)]
     # l2s_space = [1e-5, 1e-4, 1e-3]
     # optimizers_space = ["adam", "sgd", "adagrad"]
     # optimizers_space = [
@@ -161,7 +161,7 @@ def create_tuner_and_return_results() -> list[list]:
     )
     tuner.results_summary()
     best_hps: list = tuner.get_best_hyperparameters(num_trials=trials())
-    best_models: list = tuner.get_best_models(num_models=2)
+    best_models: list = tuner.get_best_models(num_models=trials())
 
     # save the two best models
     for i in [0, 1]:
