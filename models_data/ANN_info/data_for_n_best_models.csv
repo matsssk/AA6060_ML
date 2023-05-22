@@ -1,4 +1,2 @@
-best_models_sorted,neurons,num_hidden_layers,l2,learning_rate,loss,activation,output_activation,batch_size,runtime,epochs
-1,70,3,0.0001,0.001,mae,relu,linear,64,263.1980596380017,25
-2,110,4,0.001,0.001,mae,relu,linear,64,214.04221325399703,17
-3,50,4,0.0001,0.001,mae,tanh,linear,32,421.4344745230046,19
+val_rmse	neurons	num_hidden_layers	loss_function	batch_size	runtime	epochs
+0.011663818731904	200	6	mse	32	696.0465857340023	21

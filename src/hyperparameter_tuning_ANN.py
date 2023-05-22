@@ -32,7 +32,7 @@ def epochs_for_search_and_train():
 
 # 90 trials 80 epochs took 5.5 hours
 def trials():
-    return 10
+    return 45
 
 
 def early_stopping_callback() -> list[EarlyStopping]:
@@ -42,8 +42,8 @@ def early_stopping_callback() -> list[EarlyStopping]:
 def search_spaces() -> list[list | float]:
     # neurons_space = [i for i in range(20, 160)[::10]]
     # neurons_space = [i for i in range(30, 170)[::20]]
-    neurons_space = [50, 100, 150, 200, 300, 400, 600, 900]
-    num_layers_space = [i for i in range(3, 7)]
+    neurons_space = [150, 200, 300, 400, 600, 900, 1200]
+    num_layers_space = [i for i in range(5, 10)]
     # l2s_space = [1e-5, 1e-4, 1e-3]
     # optimizers_space = ["adam", "sgd", "adagrad"]
     # optimizers_space = [
@@ -202,7 +202,9 @@ def store_tuning_results() -> pd.DataFrame:
     results.insert(0, "best_models_sorted", [i for i in range(1, len(best_models) + 1)])
     string = f"epochs_{epochs}_trials_{_trials}"
     results.to_csv(
-        f"{directory_for_tuning_results()}/{name_df_hyperparams_results()}_{string}.csv", sep=",", index=False
+        f"{directory_for_tuning_results()}/{name_df_hyperparams_results()}_{string}_la_til_1200_nevroner.csv",
+        sep="\t",
+        index=False,
     )
     return results
 

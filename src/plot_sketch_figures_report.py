@@ -116,8 +116,8 @@ def tafel_plot():
 
     plt.text(1.1 * 10**-5, -1.02, "$i_{corr}$")
     plt.text(0.22, -0.65, "$E_{corr}$")
-    plt.text(5 * 10**-5, -0.4, "Cathodic Tafel line")
-    plt.text(5 * 10**-5, -0.81, "Anodic Tafel line")
+    plt.text(5 * 10**-5, -0.4, "Anodic Tafel line")
+    plt.text(5 * 10**-5, -0.81, "Cathodic Tafel line")
     # plt.annotate(
     #     "Cathodic branch with extrapolated Tafel line",
     #     xytext=(5 * 10**-5, -0.9 - 0.05),
