@@ -1,10 +1,10 @@
 	Exp. data	RF	CB	XGB	LGB	ANN	Mean error ML	Mean error ML - Exp. data	MAPE
-OCP [V]	-0.809	-0.785	-0.786	-0.785	-0.787	-0.681	-0.772	0.0372	4.59
-Tafel slope $[$mv/dec$]$	-377	-380	-385	-383	-383	-326	-372	4.94	1.31
-R\textsuperscript{2} value slope	0.996	0.987	0.996	0.996	0.996	1	0.995	-0.000354	0.0355
-Std. error slope (10$^3$)	0.596	0.898	0.5	0.496	0.527	0.0353	0.509	-0.0875	14.7
-Lower limit 99\% confidence interval	-379	-383	-386	-384	-385	-326	-374	5.16	1.36
-Upper limit 99\% confidence interval	-376	-378	-383	-381	-382	-326	-371	4.71	1.25
-Std. error intercept (10$^3$)	3.27	4.92	2.74	2.71	2.89	0.2	2.79	-0.483	14.8
-E\textsubscript{corr} [V]	-0.809	-0.785	-0.786	-0.785	-0.787	-0.681	-0.772	0.0371	4.59
-i\textsubscript{corr} \text{[$\mu$A cm\textsuperscript{-2}]}	0.99	0.953	0.965	0.955	0.963	0.334	0.86	-0.13	13.2
+OCP [V]	-0.809	-0.785	-0.786	-0.785	-0.787	-0.799	-0.792	0.0176	2.17
+Tafel slope $[$mv/dec$]$	-377	-383	-385	-383	-383	-294	-368	9.77	2.59
+R\textsuperscript{2} value slope	0.996	0.993	0.996	0.996	0.996	0.977	0.992	-0.00332	0.334
+Std. error slope (10$^3$)	0.596	0.69	0.5	0.496	0.527	1	0.635	0.0392	6.57
+Lower limit 99\% confidence interval	-379	-385	-386	-384	-385	-296	-369	9.67	2.55
+Upper limit 99\% confidence interval	-376	-382	-383	-381	-382	-291	-366	9.87	2.63
+Std. error intercept (10$^3$)	3.27	3.78	2.74	2.71	2.89	5.34	3.45	0.184	5.62
+E\textsubscript{corr} [V]	-0.809	-0.785	-0.786	-0.785	-0.787	-0.799	-0.792	0.0175	2.17
+i\textsubscript{corr} \text{[$\mu$A cm\textsuperscript{-2}]}	0.99	0.96	0.965	0.955	0.963	0.995	0.971	-0.0188	1.9

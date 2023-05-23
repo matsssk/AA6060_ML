@@ -32,7 +32,9 @@ def plot_learning_curves_best_n_models(best_n):
     plt.ylabel("Error, RMSE")
 
     hyperparams_df_best_n = (
-        pd.read_csv(f"{directory_for_tuning_results()}/{name_df_hyperparams_results()}", sep=",").head(best_n).copy()
+        pd.read_csv(f"{directory_for_tuning_results()}/df_results_ingen_L2_41_trials_avbrutt_på_trial31", sep="\t")
+        .head(best_n)
+        .copy()
     )
     # create model and train it, as well as plot the learning curve for each model
     X_train, X_val, y_train, y_val, _, _ = normalize_data_for_ANN()
@@ -52,26 +54,19 @@ def plot_learning_curves_best_n_models(best_n):
             Dense(
                 row["neurons"],
                 input_shape=(2,),
-                activation=row["activation"],
-                kernel_regularizer=regularizers.l2(l2=row["l2"]),
+                activation="relu",
             )
         )
         # add additional layers if num_layers is greater than 1
         # for loop will not trigger if num_hidden_layers = 1
         for _ in range(1, row["num_hidden_layers"]):
-            model.add(
-                Dense(
-                    row["neurons"],
-                    activation=row["activation"],
-                    kernel_regularizer=regularizers.l2(l2=row["l2"]),
-                )
-            )
+            model.add(Dense(row["neurons"], activation="relu"))
 
         # add output layer. 1 output: current density
-        model.add(Dense(1, activation=row["output_activation"]))
+        model.add(Dense(1, activation="linear"))
         model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=row["learning_rate"]),
-            loss=row["loss"],
+            optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
+            loss=row["loss_function"],
             metrics=[tf.keras.metrics.RootMeanSquaredError(name="rmse")],
         )
 
@@ -104,10 +99,10 @@ def plot_learning_curves_best_n_models(best_n):
 
     hyperparams_df_best_n["runtime"] = runtimes
     hyperparams_df_best_n["epochs"] = epochs
-    hyperparams_df_best_n = hyperparams_df_best_n.drop(
-        "val_loss_rmse", axis=1
-    )  #  remove old val_loss from tuner.search
-    hyperparams_df_best_n.to_csv("models_data/ANN_info/data_for_n_best_models.csv", sep=",", index=False)
+    # hyperparams_df_best_n = hyperparams_df_best_n.drop(
+    #     "val_loss_rmse", axis=1
+    # )  #  remove old val_loss from tuner.search
+    hyperparams_df_best_n.to_csv("models_data/ANN_info/data_for_n_best_models.csv", sep="\t", index=False)
 
     plt.legend()
     plt.savefig("summarized_data_figures_datafiles/pgf_plots/learning_curves_best_models_tuned_ann.pgf")
@@ -115,4 +110,4 @@ def plot_learning_curves_best_n_models(best_n):
 
 
 if __name__ == "__main__":
-    plot_learning_curves_best_n_models(best_n=3)
+    plot_learning_curves_best_n_models(best_n=1)

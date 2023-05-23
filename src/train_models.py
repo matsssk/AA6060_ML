@@ -237,7 +237,7 @@ def load_ANN_runtime() -> None:
     # ANN is already trained through tuner.search in hyperparameter_tunig.py
 
     training_times_all_models["ANN"] = pd.read_csv(
-        "models_data/ANN_info/data_for_n_best_models.csv", sep=",", usecols=["runtime"]
+        "models_data/ANN_info/data_for_n_best_models.csv", sep="\t", usecols=["runtime"]
     )["runtime"][0]
 
 
