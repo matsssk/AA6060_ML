@@ -71,10 +71,10 @@ if __name__ == "__main__":
     fig_loss_trees = plt.figure()
     ax_loss_trees = fig_loss_trees.subplots()
     ax_loss_trees.set_xlabel("Iterations")
-    ax_loss_trees.set_ylabel("Loss, RMSE [log|i|]")
+    ax_loss_trees.set_ylabel("Loss, RMSE [log($|i|$)]")
     ax_loss_trees.set_yscale("log")
     ax_loss_trees2 = ax_loss_trees.twinx()  # plot loss gradients
-    ax_loss_trees2.set_ylabel("Loss Gradient, RMSE [log|i|]")
+    ax_loss_trees2.set_ylabel("Loss Gradient, RMSE [log($|i|$)]")
     ax_loss_trees2.set_yscale("log")
 
     # # plot the zoomed portion with markers
@@ -102,23 +102,23 @@ if __name__ == "__main__":
     ax_loss_ANN.set_ylabel("Error, RMSE")
 
     fig_rf, ax_individual_model_vs_exp_rf = plt.subplots(2, 2, figsize=(15, 15))
-    fig_rf.supxlabel("|i| [A/cm$^2$]")
+    fig_rf.supxlabel("$|i|$ [A/cm$^2$]")
     fig_rf.supylabel("E [V]")
 
     fig_cb, ax_individual_model_vs_exp_cb = plt.subplots(2, 2, figsize=(15, 15))
-    fig_cb.supxlabel("|i| [A/cm$^2$]")
+    fig_cb.supxlabel("$|i|$ [A/cm$^2$]")
     fig_cb.supylabel("E [V]")
 
     fig_lgb, ax_individual_model_vs_exp_lgb = plt.subplots(2, 2, figsize=(15, 15))
-    fig_lgb.supxlabel("|i| [A/cm$^2$]")
+    fig_lgb.supxlabel("$|i|$ [A/cm$^2$]")
     fig_lgb.supylabel("E [V]")
 
     fig_ann, ax_individual_model_vs_exp_ann = plt.subplots(2, 2, figsize=(15, 15))
-    fig_ann.supxlabel("|i| [A/cm$^2$]")
+    fig_ann.supxlabel("$|i|$ [A/cm$^2$]")
     fig_ann.supylabel("E [V]")
 
     fig_xgb, ax_individual_model_vs_exp_xgb = plt.subplots(2, 2, figsize=(15, 15))
-    fig_xgb.supxlabel("|i| [A/cm$^2$]")
+    fig_xgb.supxlabel("$|i|$ [A/cm$^2$]")
     fig_xgb.supylabel("E [V]")
 
 
@@ -676,16 +676,19 @@ def ANN_comparison(ph, store_mape, rmse_ann, loc1, loc2, df_features: pd.DataFra
     X_test_ph, y_test_ph = filter_x_y_boolean_mask(ph)
 
     # plot the two best models to compare hyperparameters
-    files: list[str] = os.listdir("tuning_results_ANN")
+    # files: list[str] = os.listdir("tuning_results_ANN")
+    files: list[str] = os.listdir("models_saved")
     for file in files:
-        if file.endswith(".h5"):
-            model = keras.models.load_model(f"tuning_results_ANN/{file}")  # type: ignore
+        # if file.endswith(".h5"):
+        if file == "ANN_final_model.h5":
+            best_model_path = f"models_saved/{file}"
+            model = keras.models.load_model(best_model_path)  # type: ignore
             y_pred_log = y_scaler.inverse_transform(model.predict(x_scaler.transform(X_test_ph)))
             y_pred = 10**y_pred_log
             which_model: str = file.split("_")[0]
 
             # store error only if best model
-            if file == "first_best_model.h5":
+            if file == "ANN_final_model.h5":
                 store_mape.append(mape(y_test_ph, y_pred_log) * 100)
                 rmse_ann.append(mse(y_test_ph, y_pred_log, squared=False))
                 # store features
@@ -747,7 +750,8 @@ def ANN_comparison(ph, store_mape, rmse_ann, loc1, loc2, df_features: pd.DataFra
                     ax.semilogx(
                         i,
                         E,
-                        label=f"ANN {which_model}" if idx < 2 else f"ANN, pH = {ph}",
+                        # label=f"ANN {which_model}" if idx < 2 else f"ANN, pH = {ph}",
+                        label="ANN",
                         linestyle=linestyle,
                         color=color,
                     )
@@ -770,7 +774,8 @@ def ANN_comparison(ph, store_mape, rmse_ann, loc1, loc2, df_features: pd.DataFra
                         )
 
             else:
-                ax_compare_anns.semilogx(y_pred, X_test_ph[:, 0], label=f"ANN {which_model}")
+                # ax_compare_anns.semilogx(y_pred, X_test_ph[:, 0], label=f"ANN {which_model}")
+                pass
 
 
 def plot_train_val_loss_ann_best_model():
@@ -895,10 +900,10 @@ def plot_mape_rmse_pointers(best_scores_mape_log: pd.DataFrame, best_scores_rmse
         [f"MAPE      RMSE\n\npH = {ph}" for ph in best_scores_mape_log["pH"]], rotation=0, ha="center", fontsize=10
     )
 
-    ax.set_ylabel("Mean Absolute Percentage Error of log10(|i|) [%]")
+    ax.set_ylabel("Mean Absolute Percentage Error of log10($|i|$) [%]")
     ax.set_ylim(0, 15)
 
-    ax2.set_ylabel("Root Mean Squared Error of log10(|i|)")
+    ax2.set_ylabel("Root Mean Squared Error of log10($|i|$)")
 
     # Create legend
     legend_elements = [Line2D([0], [0], color=colors[label], lw=2, label=label) for label in labels]
@@ -997,7 +1002,7 @@ if __name__ == "__main__":
         # save figs
         try:
             for _ax in [ax_pred, ax_compare_anns]:
-                _ax.set_xlabel("|i| [A/cm$^2$]")
+                _ax.set_xlabel("$|i|$ [A/cm$^2$]")
                 _ax.set_ylabel("E [V]")
                 _ax.legend(loc="upper left")
 

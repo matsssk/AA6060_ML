@@ -59,14 +59,14 @@ def random_forest_model(tune: bool = True) -> None:
         # store feature importances to csv
         df = pd.DataFrame(feat_imp_list, columns=["n_estimators", "max_features", "potential (E)", "pH"])
         df.to_csv("models_data/random_forest_output/results_from_tuning/feature_importances.csv", sep="\t", index=False)
-        df.style.hide(axis="index").to_latex(
-            "models_data/random_forest_output/results_from_tuning/feature_importances.tex",
-            hrules=True,
-            position="H",
-            position_float="centering",
-            label="feature_imp_RF_tuning",
-            caption="Feature importances for the trials for tuning RF",
-        )
+        # df.style.hide(axis="index").to_latex(
+        #     "models_data/random_forest_output/results_from_tuning/feature_importances.tex",
+        #     hrules=True,
+        #     position="H",
+        #     position_float="centering",
+        #     label="feature_imp_RF_tuning",
+        #     caption="Feature importances for the trials for tuning RF",
+        # )
         create_df_average_error_for_each_trial_across_phs(
             tuning_files_dir="models_data/random_forest_output/results_from_tuning/"
         )
@@ -130,7 +130,7 @@ def catboost_model() -> None:
         For default learning rate(adjusted) the model could do 10000 iterations without converging
 
     """
-    n_iterations = 100000
+    n_iterations = 10**5
     n_iterations_GBTS["cb"] = n_iterations
 
     # load hyperparams from RandomSearchCV in hyperparameter_tuning.py
@@ -160,7 +160,7 @@ def xgboost_model() -> None:
     Earlystopping of 50 rounds are applied, i.e. model will stop if no new loss minima
     are found within 50 iterations after the previous minima
     """
-    n_iterations = 100000
+    n_iterations = 10**5
     n_iterations_GBTS["xgb"] = n_iterations
 
     X, y = return_training_data_X_y()
@@ -237,7 +237,7 @@ def load_ANN_runtime() -> None:
     # ANN is already trained through tuner.search in hyperparameter_tunig.py
 
     training_times_all_models["ANN"] = pd.read_csv(
-        "models_data/ANN_info/data_for_n_best_models.csv", sep="\t", usecols=["runtime"]
+        "models_data/ANN_info/hyp_pam_final_model.csv", sep="\t", usecols=["runtime"]
     )["runtime"][0]
 
 
@@ -289,7 +289,7 @@ def save_iterations_GBDTs_into_df():
 
 
 if __name__ == "__main__":
-    random_forest_model(tune=False)
+    random_forest_model(tune=True)
     catboost_model()
     xgboost_model()
     lightgbm_model()

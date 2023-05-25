@@ -93,6 +93,8 @@ def train_random_forest_for_some_hyperparams(
 
 def create_df_average_error_for_each_trial_across_phs(tuning_files_dir: str) -> None:
     """
+    RANDOM FOREST
+
     Loops through all csv files with errors for the various trials in results_from_tuning
     and stores a dataframe with the average error across all pH for that trial
 
