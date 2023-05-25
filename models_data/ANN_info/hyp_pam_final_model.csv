@@ -1,0 +1,2 @@
+val_rmse	neurons	num_hidden_layers	loss_function	batch_size	runtime	epochs
+0.0103369820863008	900	7	mae	16	13519.11126511707	16

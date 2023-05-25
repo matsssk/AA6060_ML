@@ -19,7 +19,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 
-def plot_learning_curves_best_n_models(best_n):
+def plot_learning_curves_best_n_models(best_n=1):
     """
     It would be benefitial to access the learning curves directly
     from the tuner.search. This is however not possible yet with
@@ -32,9 +32,7 @@ def plot_learning_curves_best_n_models(best_n):
     plt.ylabel("Error, RMSE")
 
     hyperparams_df_best_n = (
-        pd.read_csv(f"{directory_for_tuning_results()}/df_results_ingen_L2_41_trials_avbrutt_på_trial31", sep="\t")
-        .head(best_n)
-        .copy()
+        pd.read_csv(f"{directory_for_tuning_results()}/df_results_8_HL.csv", sep="\t").head(best_n).copy()
     )
     # create model and train it, as well as plot the learning curve for each model
     X_train, X_val, y_train, y_val, _, _ = normalize_data_for_ANN()
@@ -80,6 +78,7 @@ def plot_learning_curves_best_n_models(best_n):
             verbose=1,
             validation_data=(X_val, y_val),
         )
+        model.save("models_saved/ANN_final_model.h5")
         runtimes.append(time.perf_counter() - t0)
         df_loss = pd.DataFrame(history.history)
         epochs_list = [iter for iter in range(1, df_loss.shape[0] + 1, 1)]
@@ -87,26 +86,23 @@ def plot_learning_curves_best_n_models(best_n):
         epochs.append(df_loss.shape[0])
 
         # store training and validation loss
-        df_loss.to_csv(f"models_data/ANN_info/training_val_loss{idx}", sep="\t", index=False)
+        df_loss.to_csv(f"models_data/ANN_info/training_val_loss_final_model", sep="\t", index=False)
 
         # plot learning curves for each model
 
-        model_index = idx + 1  # type: ignore
-        plt.semilogy(epochs_list, df_loss["rmse"], f"{markers[idx]}-", label=f"Training loss, model {model_index}", color=colors[idx])  # type: ignore
-        plt.semilogy(
-            epochs_list, df_loss["val_rmse"], f"{markers[idx]}--", label=f"Validation loss, model {model_index}", color=colors[idx]  # type: ignore
-        )
+        plt.semilogy(epochs_list, df_loss["rmse"], "s-", label=f"Training loss", color="k")
+        plt.semilogy(epochs_list, df_loss["val_rmse"], "s--", label=f"Validation loss", color="k")
 
     hyperparams_df_best_n["runtime"] = runtimes
     hyperparams_df_best_n["epochs"] = epochs
     # hyperparams_df_best_n = hyperparams_df_best_n.drop(
     #     "val_loss_rmse", axis=1
     # )  #  remove old val_loss from tuner.search
-    hyperparams_df_best_n.to_csv("models_data/ANN_info/data_for_n_best_models.csv", sep="\t", index=False)
+    hyperparams_df_best_n.to_csv("models_data/ANN_info/hyp_pam_final_model.csv", sep="\t", index=False)
 
     plt.legend()
-    plt.savefig("summarized_data_figures_datafiles/pgf_plots/learning_curves_best_models_tuned_ann.pgf")
-    plt.savefig("summarized_data_figures_datafiles/pdf_plots/learning_curves_best_models_tuned_ann.pdf")
+    plt.savefig("summarized_data_figures_datafiles/pgf_plots/learning_curves_best_model__final_tuned_ann.pgf")
+    plt.savefig("summarized_data_figures_datafiles/pdf_plots/learning_curves_best_model_final_tuned_ann.pdf")
 
 
 if __name__ == "__main__":

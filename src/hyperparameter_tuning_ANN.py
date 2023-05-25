@@ -30,7 +30,6 @@ def epochs_for_search_and_train():
     return 80
 
 
-# 90 trials 80 epochs took 5.5 hours
 def trials():
     return 45
 
