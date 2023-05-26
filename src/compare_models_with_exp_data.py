@@ -95,31 +95,47 @@ if __name__ == "__main__":
     # ax_val_loss_trees2.set_yscale("log")
     # ax_loss_trees2.set_ylabel("Loss Gradient")
 
+    # set other sizes for plots that are too big for pgf
+    plt.rcParams["axes.labelsize"] = 14  # Set size for axis labels
+    plt.rcParams["xtick.labelsize"] = 14  # Set size for x-axis tick labels
+    plt.rcParams["ytick.labelsize"] = 14  # Set size for y-axis tick labels
+    plt.rcParams["legend.fontsize"] = 14  # Set size for legend
+    plt.rcParams["figure.figsize"] = [6.1, 6.1]
     # ANN losses
     fig_loss_ANN = plt.figure()
     ax_loss_ANN = fig_loss_ANN.subplots()
     ax_loss_ANN.set_xlabel("Epochs")
     ax_loss_ANN.set_ylabel("Error, RMSE")
 
-    fig_rf, ax_individual_model_vs_exp_rf = plt.subplots(2, 2, figsize=(15, 15))
-    fig_rf.supxlabel("$|i|$ [A/cm$^2$]")
-    fig_rf.supylabel("E [V]")
+    fig_rf, ax_individual_model_vs_exp_rf = plt.subplots()  # figsize=(7, 7))  # 2, 2, figsize=(12, 12))
+    # fig_rf.supxlabel("$|i|$ [A/cm$^2$]")
+    # fig_rf.supylabel("E [V]")
+    ax_individual_model_vs_exp_rf.set_xlabel("Absolute value of current density ($|i|$) [A/cm$^2$]")
+    ax_individual_model_vs_exp_rf.set_ylabel("Potential ($E$) vs SCE [V]")
 
-    fig_cb, ax_individual_model_vs_exp_cb = plt.subplots(2, 2, figsize=(15, 15))
-    fig_cb.supxlabel("$|i|$ [A/cm$^2$]")
-    fig_cb.supylabel("E [V]")
+    fig_cb, ax_individual_model_vs_exp_cb = plt.subplots()  # , figsize=(15, 15))
+    # fig_cb.supxlabel("$|i|$ [A/cm$^2$]")
+    # fig_cb.supylabel("E [V]")
+    ax_individual_model_vs_exp_cb.set_xlabel("Absolute value of current density ($|i|$) [A/cm$^2$]")
+    ax_individual_model_vs_exp_cb.set_ylabel("Potential ($E$) vs SCE [V]")
 
-    fig_lgb, ax_individual_model_vs_exp_lgb = plt.subplots(2, 2, figsize=(15, 15))
-    fig_lgb.supxlabel("$|i|$ [A/cm$^2$]")
-    fig_lgb.supylabel("E [V]")
+    fig_lgb, ax_individual_model_vs_exp_lgb = plt.subplots()  # , figsize=(15, 15))
+    # fig_lgb.supxlabel("$|i|$ [A/cm$^2$]")
+    # fig_lgb.supylabel("Potential ($E$) vs SCE [V]")
+    ax_individual_model_vs_exp_lgb.set_xlabel("Absolute value of current density ($|i|$) [A/cm$^2$]")
+    ax_individual_model_vs_exp_lgb.set_ylabel("Potential ($E$) vs SCE [V]")
 
-    fig_ann, ax_individual_model_vs_exp_ann = plt.subplots(2, 2, figsize=(15, 15))
-    fig_ann.supxlabel("$|i|$ [A/cm$^2$]")
-    fig_ann.supylabel("E [V]")
+    fig_ann, ax_individual_model_vs_exp_ann = plt.subplots()  # , figsize=(15, 15))
+    # fig_ann.supxlabel("$|i|$ [A/cm$^2$]")
+    # fig_ann.supylabel("Potential ($E$) vs SCE [V]")
+    ax_individual_model_vs_exp_ann.set_xlabel("Absolute value of current density ($|i|$) [A/cm$^2$]")
+    ax_individual_model_vs_exp_ann.set_ylabel("Potential ($E$) vs SCE [V]")
 
-    fig_xgb, ax_individual_model_vs_exp_xgb = plt.subplots(2, 2, figsize=(15, 15))
-    fig_xgb.supxlabel("$|i|$ [A/cm$^2$]")
-    fig_xgb.supylabel("E [V]")
+    fig_xgb, ax_individual_model_vs_exp_xgb = plt.subplots()  # , figsize=(15, 15))
+    # fig_xgb.supxlabel("$|i|$ [A/cm$^2$]")
+    # fig_xgb.supylabel("Potential ($E$) vs SCE [V]")
+    ax_individual_model_vs_exp_xgb.set_xlabel("Absolute value of current density ($|i|$) [A/cm$^2$]")
+    ax_individual_model_vs_exp_xgb.set_ylabel("Potential ($E$) vs SCE [V]")
 
 
 def return_test_data() -> tuple[NDArray[Shape["N_ROWS, 2"], Float], NDArray[Shape["1, N_ROWS"], Float]]:
@@ -204,7 +220,7 @@ def plot_tafel_lines_E_corr_i_corr(
     ax.semilogx(
         x,
         y,
-        label=f"{tafel_math_expression()} = {int(slope*1000)} mV/dec, R\u00b2 = {round_r_value(r_value)}",
+        # label=f"{tafel_math_expression()} = {int(slope*1000)} mV/dec, R\u00b2 = {round_r_value(r_value)}",
         color=color,
         linestyle="--",
     )
@@ -222,14 +238,14 @@ def plot_tafel_lines_E_corr_i_corr(
     )
 
     # plot horizontal line at ocp to calculate i_corr
-    ax.axhline(ocp, color="grey", linestyle="--")
+    # ax.axhline(ocp, color="grey", linestyle="--")
     ax.scatter(
         i_corr,
         E_corr,
         color=color,
-        label=r"{}: $E_{{corr}}$ = {:.2f} V, $i_{{corr}}$ = {:.2f} $\mu$A/cm$^{{2}}$".format(
-            model, E_corr, i_corr * 10**6
-        ),
+        # label=r"{}: $E_{{corr}}$ = {:.2f} V, $i_{{corr}}$ = {:.2f} $\mu$A/cm$^{{2}}$".format(
+        #    model, E_corr, i_corr * 10**6
+        label=f"{model}: $E_{{\\mathrm{{corr}}}}, i_{{\\mathrm{{corr}}}}$",
     )
 
 
@@ -309,11 +325,11 @@ def plot_experimental_testing_data(ph, loc1, loc2, df_features: pd.DataFrame) ->
     figures_to_plot_exp_data_in = [
         ax_pred,
         ax_compare_anns,
-        ax_individual_model_vs_exp_rf[loc1, loc2],
-        ax_individual_model_vs_exp_cb[loc1, loc2],
-        ax_individual_model_vs_exp_lgb[loc1, loc2],
-        ax_individual_model_vs_exp_xgb[loc1, loc2],
-        ax_individual_model_vs_exp_ann[loc1, loc2],
+        ax_individual_model_vs_exp_rf,  # [loc1, loc2],
+        ax_individual_model_vs_exp_cb,  # [loc1, loc2],
+        ax_individual_model_vs_exp_lgb,  # [loc1, loc2],
+        ax_individual_model_vs_exp_xgb,  # [loc1, loc2],
+        ax_individual_model_vs_exp_ann,  # [loc1, loc2],
     ]
     for idx, fig in enumerate(figures_to_plot_exp_data_in):
         fig.semilogx(
@@ -335,8 +351,8 @@ def plot_experimental_testing_data(ph, loc1, loc2, df_features: pd.DataFrame) ->
                 rvalue,
                 E_corr,
                 i_corr,
-                "blue",
-                "Exp_data",
+                "k",
+                "Exp. data",
                 std_error_slope,
                 intercept_stderr,
             )
@@ -376,7 +392,7 @@ def random_forest_comparison(ph, loc1, loc2, df_features: pd.DataFrame) -> None:
     df_features["RF"] = [ocp, slope, rvalue**2, std_error_slope, lower_ci, upper_ci, intercept_stderr, E_corr, i_corr]
 
     linestyle, color = linestyles_and_markers_for_model_comparisons("rf")
-    figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_rf[loc1, loc2]]
+    figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_rf]  # [loc1, loc2]]
     for ax in figures_to_plot_pred_in:
         ax.semilogx(
             current_density_pred,
@@ -386,7 +402,7 @@ def random_forest_comparison(ph, loc1, loc2, df_features: pd.DataFrame) -> None:
             color=color,
         )
         # plot tafel lines for each pH and have it in appendix
-        if ax == ax_individual_model_vs_exp_rf[loc1, loc2]:
+        if ax == ax_individual_model_vs_exp_rf:  # [loc1, loc2]:
             plot_tafel_lines_E_corr_i_corr(
                 ax,
                 i_applied_log_abs,
@@ -436,7 +452,7 @@ def catboost_comparison(ph, store_mape: list, rmse_catboost: list, loc1, loc2, d
     add_residuals_to_txt_file(residuals)
     df_features["CB"] = [ocp, slope, rvalue**2, std_error_slope, lower_ci, upper_ci, intercept_stderr, E_corr, i_corr]
 
-    figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_cb[loc1, loc2]]
+    figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_cb]  # [loc1, loc2]]
     for ax in figures_to_plot_pred_in:
         ax.semilogx(
             i,
@@ -536,7 +552,7 @@ def xgboost_comparison(ph, store_mape, rmse_xgboost: list, loc1, loc2, df_featur
     ]
 
     linestyle, color = linestyles_and_markers_for_model_comparisons("xgb")
-    figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_xgb[loc1, loc2]]
+    figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_xgb]  # [loc1, loc2]]
     for ax in figures_to_plot_pred_in:
         ax.semilogx(
             i,
@@ -622,7 +638,7 @@ def lgbm_comparison(ph, store_mape, rmse_lgb, loc1, loc2, df_features: pd.DataFr
 
     linestyle, color = linestyles_and_markers_for_model_comparisons("lgb")
 
-    figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_lgb[loc1, loc2]]
+    figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_lgb]  # [loc1, loc2]]
     for ax in figures_to_plot_pred_in:
         ax.semilogx(
             i,
@@ -745,13 +761,13 @@ def ANN_comparison(ph, store_mape, rmse_ann, loc1, loc2, df_features: pd.DataFra
 
                 linestyle, color = linestyles_and_markers_for_model_comparisons("ann")
 
-                figures_to_plot_pred_in = [ax_pred, ax_compare_anns, ax_individual_model_vs_exp_ann[loc1, loc2]]
+                figures_to_plot_pred_in = [ax_pred, ax_compare_anns, ax_individual_model_vs_exp_ann]  # [loc1, loc2]]
                 for idx, ax in enumerate(figures_to_plot_pred_in):
                     ax.semilogx(
                         i,
                         E,
                         # label=f"ANN {which_model}" if idx < 2 else f"ANN, pH = {ph}",
-                        label="ANN",
+                        label=f"ANN, pH = {ph}",
                         linestyle=linestyle,
                         color=color,
                     )
@@ -780,11 +796,11 @@ def ANN_comparison(ph, store_mape, rmse_ann, loc1, loc2, df_features: pd.DataFra
 
 def plot_train_val_loss_ann_best_model():
     # plot loss from training for best model
-    df_loss = pd.read_csv("models_data/ANN_info/training_val_loss0", sep="\t")
+    df_loss = pd.read_csv("models_data/ANN_info/training_val_loss_final_model", sep="\t")
     epochs = [iter for iter in range(1, len(df_loss["val_rmse"]) + 1, 1)]
     # plot epochs vs rmse (root of mse which is the loss given in df) for best model
-    ax_loss_ANN.semilogy(epochs, df_loss["rmse"], "s-", label="ANN training loss best model", color="r")
-    ax_loss_ANN.semilogy(epochs, df_loss["val_rmse"], "s--", label="ANN validation loss best model", color="r")
+    ax_loss_ANN.semilogy(epochs, df_loss["rmse"], "s-", label="ANN training loss best model", color="k")
+    ax_loss_ANN.semilogy(epochs, df_loss["val_rmse"], "s--", label="ANN validation loss best model", color="k")
 
 
 # def plot_histogram_mape_rmse_models(best_scores_mape_log: pd.DataFrame, best_scores_rmse_log: pd.DataFrame):
@@ -945,10 +961,10 @@ if __name__ == "__main__":
     rmse_catboost, rmse_xgboost, rmse_lgbm, rmse_ann = [], [], [], []
 
     df_features = pd.read_csv("testing_pHs.csv", sep="\t")
-    ax_locs_appendix = [[0, 1], [1, 1], [1, 0], [0, 0]]
+    ax_locs_appendix = [[0, 0], [0, 1], [1, 0], [1, 1]]
 
     # do preds for each pH in the test data set
-    for ax_loc, ph in zip(ax_locs_appendix, df_features["test_pHs"]):
+    for ax_loc, ph in zip(ax_locs_appendix, df_features["test_pHs"].sort_values()):
         loc1, loc2 = ax_loc[0], ax_loc[1]
 
         # Create dataframe to store calculated parameters from the curves. store to tex (latex) format
@@ -988,7 +1004,7 @@ if __name__ == "__main__":
         df_features[cols_to_round] = df_features[cols_to_round].applymap(lambda x: f"{x:.3g}")
         df_features.to_csv(f"summarized_data_figures_datafiles/csv_files/df_features{ph}.csv", sep="\t", index=False)
 
-        """Plot figures"""
+        """Save appendix figures"""
         ax_list_appendix_plots = [
             ax_individual_model_vs_exp_rf,
             ax_individual_model_vs_exp_cb,
@@ -996,8 +1012,23 @@ if __name__ == "__main__":
             ax_individual_model_vs_exp_xgb,
             ax_individual_model_vs_exp_ann,
         ]
-        for ax in ax_list_appendix_plots:
-            ax[loc1, loc2].legend(loc="upper left")
+        figs = [fig_rf, fig_cb, fig_lgb, fig_xgb, fig_ann]
+        models = ["RF", "CB", "LGB", "XGB", "ANN"]
+        X_test_ph, y_test_ph = filter_x_y_boolean_mask(ph)
+
+        E, i = X_test_ph[:, 0], 10**y_test_ph
+        for ax, fig, model in zip(ax_list_appendix_plots, figs, models):
+            # ax[loc1, loc2].legend(loc="upper left")
+            ax.set_ylim(np.min(X_test_ph[:, 0]), np.max(X_test_ph[:, 0]))
+            ax.set_xlim(np.min(abs(i)), np.max(abs(i)))
+            ax.grid(True, linestyle="-", color="lightgray")
+            ax.legend()
+            fig.tight_layout()
+            fig.savefig(f"summarized_data_figures_datafiles/appendix/{model}_{ph}.pdf")
+            # fig_rf.savefig(f"summarized_data_figures_datafiles/appendix/rf{ph}.pgf")
+            ax.clear()
+            ax.set_xlabel("Absolute value of current density ($|i|$) [A/cm$^2$]")
+            ax.set_ylabel("Potential ($E$) vs SCE [V]")
 
         # save figs
         try:
@@ -1040,7 +1071,9 @@ if __name__ == "__main__":
         "summarized_data_figures_datafiles/csv_files/rmse_of_pred_log.csv", sep="\t", index=False
     )
     # # Appendix scientific paper
-    for fig, model in zip([fig_rf, fig_cb, fig_lgb, fig_ann, fig_xgb], ["rf", "cb", "lgb", "ann", "xgb"]):
-        fig.tight_layout()
-        for ftype in ["pgf", "pdf"]:
-            fig.savefig(f"summarized_data_figures_datafiles/appendix/{model}.{ftype}")
+
+    # for fig, model in zip([fig_rf, fig_cb, fig_lgb, fig_ann, fig_xgb], ["rf", "cb", "lgb", "ann", "xgb"]):
+    # for fig, model in zip([fig_rf], ["rf"]):
+    #     fig.tight_layout()
+    #     for ftype in ["pdf"]:  # ["pgf", "pdf"]:
+    #         fig.savefig(f"summarized_data_figures_datafiles/appendix/{model}.{ftype}")

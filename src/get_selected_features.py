@@ -108,7 +108,7 @@ def plot_confidence_interval(
         lower_ci,
         alpha=0.2,
         color=color,
-        label=f"{int(confidence_level*100)}% confidence interval {model}",
+        label=f"{model}: {int(confidence_level*100)}% CI Tafel",
     )
 
 

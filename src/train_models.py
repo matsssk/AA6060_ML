@@ -79,25 +79,28 @@ def random_forest_model(tune: bool = True) -> None:
         # collect best hyperparams
         # need to find the combination with lowest error (any column)
         # the best combo has lowest average error (or sum, equivalent)
-        lowest_sum = np.inf
-        lowest_df = None
+        # lowest_sum = np.inf
+        # lowest_df = None
         n_trees_best, max_feat_best = 0, 0
         # Loop through all files in the folder and find the file with best hyperparams
         for file_name in os.listdir("models_data/random_forest_output/results_from_tuning"):
-            if file_name.endswith(".csv") and file_name.startswith("errors"):
+            if file_name.endswith(".csv") and file_name.startswith("average_rmse"):
                 file_path = os.path.join("models_data/random_forest_output/results_from_tuning/", file_name)
                 df = pd.read_csv(file_path, sep="\t")
-                ph_sum = df["rmse"].sum()
-                # Check if this sum is the lowest so far
-                if ph_sum < lowest_sum:
-                    lowest_sum = ph_sum
-                    lowest_df = df
-                    try:
-                        n_trees_best, max_feat_best = int(file_name.split("errors_trees_")[1].split("_")[0]), float(
-                            file_name.split(".csv")[0][-3:]
-                        )
-                    except FileNotFoundError:
-                        raise FileNotFoundError
+
+                n_trees_best, max_feat_best = df["Trees"][0], df["Max features"][0]
+                print(n_trees_best, max_feat_best)
+                # ph_sum = df["rmse"].sum()
+                # # Check if this sum is the lowest so far
+                # if ph_sum < lowest_sum:
+                #     lowest_sum = ph_sum
+                #     lowest_df = df
+                #     try:
+                #         n_trees_best, max_feat_best = int(file_name.split("errors_trees_")[1].split("_")[0]), float(
+                #             file_name.split(".csv")[0][-3:]
+                #         )
+                #     except FileNotFoundError:
+                #         raise FileNotFoundError
 
         # train the model with the optimized hyperparameters
         train_random_forest_for_some_hyperparams(
@@ -289,7 +292,7 @@ def save_iterations_GBDTs_into_df():
 
 
 if __name__ == "__main__":
-    random_forest_model(tune=True)
+    random_forest_model(tune=False)  # must tune first
     catboost_model()
     xgboost_model()
     lightgbm_model()

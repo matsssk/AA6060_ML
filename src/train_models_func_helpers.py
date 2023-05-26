@@ -76,10 +76,10 @@ def train_random_forest_for_some_hyperparams(
             df_pred = pd.DataFrame({"E [V]": X_test_ph[:, 0], "Current density [A/cm2]": 10**pred_ph})
             df_pred.to_csv(f"models_data/random_forest_output/current_density_pred_ph_{ph}.csv", sep="\t", index=False)
 
-            # get errors from training data vs test data
-            mape_log_list.append(mape(y_test_ph, pred_ph))  # must be array-like
-            mape_list.append(10 ** mape_log_list[-1])
-            rmse_list.append(mse(y_test_ph, pred_ph, squared=False))
+        # get errors from training data vs test data
+        mape_log_list.append(mape(y_test_ph, pred_ph))  # must be array-like
+        mape_list.append(10 ** mape_log_list[-1])
+        rmse_list.append(mse(y_test_ph, pred_ph, squared=False))
 
     df_errors["(MAPE of log)"] = mape_log_list
     df_errors["mape"] = mape_list
