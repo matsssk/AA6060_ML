@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
 from scipy import stats
+import pandas as pd
 
 # plt.rcParams["font.family"] = "serif"
 # plt.rcParams["font.serif"] = ["Times New Roman"] + plt.rcParams["font.serif"]
@@ -243,9 +244,83 @@ def pourbaix_diagram():
         plt.savefig(f"sketches_for_report/pourbaix.{ftype}")
 
 
+# def plot_feature_imp_as_func_of_iter():
+#     df = pd.read_csv("models_data/random_forest_output/results_from_tuning/feature_importances.csv", sep="\t")
+#     df_1 = df[df["max_features"] == 1.0]
+#     df_03 = df[df["max_features"] == 0.3]
+#     print(df_1)
+#     fig, ax1 = plt.subplots()
+
+#     ax1.set_xlabel("Number of estimators/trees (n\\_estimators)")
+#     ax1.set_ylabel("Potential / pH, max\\_features = 0.3, , marker = circle", color="gray")
+#     ax1.scatter(df_03["n_estimators"], df_03["potential (E)"] / df_03["pH"], color="gray", marker="o")
+#     ax1.tick_params(axis="y", labelcolor="grey")
+
+#     ax2 = ax1.twinx()
+
+#     ax2.set_ylabel("Potential / pH, max\\_features = 1.0, marker = square", color="black")
+#     ax2.scatter(df_1["n_estimators"], df_1["potential (E)"] / df_1["pH"], color="black", marker="s")
+#     ax2.tick_params(axis="y", labelcolor="k")
+
+#     fig.tight_layout()
+#     fig.savefig("summarized_data_figures_datafiles/pdf_plots/rf_feature_imp_plot.pdf")
+#     fig.savefig("summarized_data_figures_datafiles/pgf_plots/rf_feature_imp_plot.pgf")
+
+
+def plot_feature_imp_as_func_of_iter():
+    df = pd.read_csv("models_data/random_forest_output/results_from_tuning/feature_importances.csv", sep="\t")
+    df_1 = df[df["max_features"] == 1.0]
+    df_03 = df[df["max_features"] == 0.3]
+
+    fig, ax1 = plt.subplots(figsize=(3.5, 3))
+
+    ax1.set_xlabel("Number of estimators/trees (n\\_estimators)")
+    ax1.set_ylabel("Potential ($E$) / pH")
+    ax1.scatter(
+        df_03["n_estimators"],
+        df_03["potential (E)"] / df_03["pH"],
+        color="gray",
+        marker="o",
+        label="max\\_features = 0.3",
+    )
+
+    # ax2.set_ylabel("Potential / pH, max\\_features = 1.0, marker = square", color="black")
+    ax1.scatter(
+        df_1["n_estimators"],
+        df_1["potential (E)"] / df_1["pH"],
+        color="black",
+        marker="s",
+        label="max\\_features = 1.0",
+    )
+    ax1.legend()
+
+    fig.tight_layout()
+    fig.savefig("summarized_data_figures_datafiles/pdf_plots/rf_feature_imp_plot.pdf")
+    fig.savefig("summarized_data_figures_datafiles/pgf_plots/rf_feature_imp_plot.pgf")
+
+
+def lgbm_tuning_last_iterations_before_termination_rmse():
+    df = pd.read_excel("models_data/lgbm_info/tuning_last_iterations_before_termination_excel.xlsx")
+    fig, ax1 = plt.subplots(figsize=(3.5, 3))
+
+    iter = df["iter"]
+    train = df["train_rmse"]
+    val = df["val_rmse"]
+    ax1.set_xlabel("Iterations")
+    ax1.set_ylabel("RMSE [log($i$)]")
+    ax1.plot(iter, train, label="Training loss", color="k")
+    ax1.plot(iter, val, label="Validation loss", color="gray", linestyle="--")
+    ax1.legend()
+    fig.tight_layout()
+    fig.savefig("summarized_data_figures_datafiles/pdf_plots/lgbm_last_iter_tuning_loss.pdf")
+    fig.savefig("summarized_data_figures_datafiles/pgf_plots/lgbm_last_iter_tuning_loss.pgf")
+
+
 if __name__ == "__main__":
-    plot_E_pit_ph10_2()
-    overfit_underfit_good_fit()
-    tafel_plot()
-    diffusion()
-    pourbaix_diagram()
+    # plot_E_pit_ph10_2()
+    # overfit_underfit_good_fit()
+    # tafel_plot()
+    # diffusion()
+    # pourbaix_diagram()
+    # plot_feature_imp_as_func_of_iter()
+    #lgbm_tuning_last_iterations_before_termination_rmse()

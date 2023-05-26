@@ -258,6 +258,7 @@ def plot_histogram_training_time_all_models() -> None:
     )
 
     plt.savefig("summarized_data_figures_datafiles/models_training_time_all_models.pgf")
+    plt.savefig("summarized_data_figures_datafiles/models_training_time_all_models.pdf")
 
 
 def plot_histogram_training_time_per_tree_DTs():
@@ -274,6 +275,7 @@ def plot_histogram_training_time_per_tree_DTs():
     )
 
     plt.savefig("summarized_data_figures_datafiles/models_training_time_per_tree_DTs.pgf")
+    plt.savefig("summarized_data_figures_datafiles/models_training_time_per_tree_DTs.pdf")
 
 
 def feature_importances_to_pd():
