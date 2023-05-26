@@ -50,7 +50,7 @@ def train_random_forest_for_some_hyperparams(
     if best_model and feat_imp_list is None:
         training_times_all_models["rf"] = runtime
         training_time_per_tree["rf"] = _training_time_per_tree(runtime, n_trees)
-        feature_imp["rf"] = rf.feature_importances_
+        # feature_imp["rf"] = rf.feature_importances_
 
     # evaluate the feature importances against each other to compare
     elif not best_model and feat_imp_list is not None:
@@ -72,9 +72,9 @@ def train_random_forest_for_some_hyperparams(
         # predict and store results to pandas dataframe
         pred_ph = rf.predict(X_test_ph)
         # store results if we have the best model
-        if best_model:
-            df_pred = pd.DataFrame({"E [V]": X_test_ph[:, 0], "Current density [A/cm2]": 10**pred_ph})
-            df_pred.to_csv(f"models_data/random_forest_output/current_density_pred_ph_{ph}.csv", sep="\t", index=False)
+        # if best_model:
+        #     df_pred = pd.DataFrame({"E [V]": X_test_ph[:, 0], "Current density [A/cm2]": 10**pred_ph})
+        #     df_pred.to_csv(f"models_data/random_forest_output/current_density_pred_ph_{ph}.csv", sep="\t", index=False)
 
         # get errors from training data vs test data
         mape_log_list.append(mape(y_test_ph, pred_ph))  # must be array-like
@@ -84,11 +84,11 @@ def train_random_forest_for_some_hyperparams(
     df_errors["(MAPE of log)"] = mape_log_list
     df_errors["mape"] = mape_list
     df_errors["rmse"] = rmse_list
-    df_errors.to_csv(
-        directory_to_save_df,
-        sep="\t",
-        index=False,
-    )
+    # df_errors.to_csv(
+    #     directory_to_save_df,
+    #     sep="\t",
+    #     index=False,
+    # )
 
 
 def create_df_average_error_for_each_trial_across_phs(tuning_files_dir: str) -> None:

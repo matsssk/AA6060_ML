@@ -69,11 +69,20 @@ def normalize_data(ocp_vals: np.ndarray):
     return scaler.fit_transform(ocp_vals.reshape(-1, 1))
 
 
-def sma_ocps(ocps: np.ndarray):
+# def sma_ocps(ocps: np.ndarray):
+#     """Calculates the 3 window SMA for the 30 seconds change in potential"""
+#     delta_ocp = abs(np.diff(ocps[::30]))
+#     window = np.ones(3) / 3  # type: ignore
+#     sma = np.convolve(delta_ocp, window, mode="valid")
+#     return sma
+
+
+def deltaocps(ocps: np.ndarray):
+    """Calculates the 3 window SMA for the 30 seconds change in potential"""
     delta_ocp = abs(np.diff(ocps[::30]))
     window = np.ones(3) / 3  # type: ignore
     sma = np.convolve(delta_ocp, window, mode="valid")
-    return sma
+    return delta_ocp
 
 
 if __name__ == "__main__":
@@ -102,9 +111,9 @@ def plot_ocp_files():
         time, potential = load_ocp_data(file_path)
         one_third_of_ocps = one_third_of_data(potential)
 
-        sma_values = sma_ocps(one_third_of_ocps)
-        x_values = one_third_of_data(time)[::30][: len(sma_values)]  # Ensure same length as sma_values
-
+        deltaocp_30s = deltaocps(one_third_of_ocps)
+        x_values = one_third_of_data(time)[::30][: len(deltaocp_30s)]  # Ensure same length as sma_values
+        # print(len(sma_values))
         # ax_smas.plot(x_values, sma_values)
         mean_ocps_for_phs.append(np.mean(one_third_of_ocps))
         std_list.append(standard_deviation(one_third_of_ocps))
@@ -129,27 +138,30 @@ def plot_ocp_files():
                     subplot_ax.clear()
 
         # Calculate SMA at all time positions
-        if len(sma_values) == 37:
-            sma_list.append(sma_values)
+        if len(deltaocp_30s) == 39:
+            sma_list.append(deltaocp_30s)
 
     pd.DataFrame({"pH": phs, "Corrected standard dev.": std_list}).to_csv(
         "summarized_data_figures_datafiles/csv_files/standard_dev_ocps.csv", index=False, sep="\t"
     )
 
     # Calculate the average SMA at each time position
-    avg_sma = np.mean(sma_list, axis=0)
+    avg_delta_ocp30s = np.mean(sma_list, axis=0)
 
     # Plot the array of average SMA values
-    fig_avg_sma, ax_avg_sma = plt.subplots()
-    ax_avg_sma.scatter(x_values, avg_sma, color="black")
-    ax_avg_sma.set_xlabel("Time [s]")
-    ax_avg_sma.set_ylabel(
-        r"SMA (window = 3) of the 30 seconds change in potential $\left[\frac{\partial E}{\partial t}\right]$"
-    )
-    fig_avg_sma.tight_layout()
+    fig_deltaocp, ax_deltaocp = plt.subplots(figsize=(3, 3))
+    ax_deltaocp.plot(x_values, avg_delta_ocp30s * 1000, color="dimgray", linestyle="-", marker="o")
+
+    ax_deltaocp.axhline(np.mean(avg_delta_ocp30s * 1000), label="Mean", linestyle="--", color="dimgray")
+    ax_deltaocp.set_xlabel("Time [s]")
+    # ax_avg_sma.set_ylabel(
+    #     r"SMA (window = 3) of the 30 seconds change in potential $\left[\frac{\partial E}{\partial t}\right]$"
+    # )
+    ax_deltaocp.set_ylabel("Average $\Delta E_{{\\mathrm{{t}}}}(\Delta t = 30$ s) [mV]")
+    fig_deltaocp.tight_layout()
 
     # Calculate and plot the normality test
-    fig_normality_test, ax_normality_test = plt.subplots()
+    fig_normality_test, ax_normality_test = plt.subplots(figsize=(3, 3))
     hist, bins = np.histogram(all_ocp_data_normalized, bins="auto")
     ax_normality_test.bar(bins[:-1], hist, align="edge", width=np.diff(bins), color="dimgray")
     ax_normality_test.set_ylabel("Samples")
@@ -158,7 +170,7 @@ def plot_ocp_files():
 
     for ftype in ["pgf", "pdf"]:
         fig_normality_test.savefig(f"summarized_data_figures_datafiles/{ftype}_plots/normality_test_ocp.{ftype}")
-        fig_avg_sma.savefig(f"summarized_data_figures_datafiles/{ftype}_plots/average_sma.{ftype}")
+        fig_deltaocp.savefig(f"summarized_data_figures_datafiles/{ftype}_plots/average_deltaocp_30s.{ftype}")
 
 
 if __name__ == "__main__":

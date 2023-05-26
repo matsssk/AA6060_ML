@@ -114,9 +114,9 @@ def random_forest_model(tune: bool = True) -> None:
             feature_imp,
         )
 
-        create_df_average_error_for_each_trial_across_phs(
-            tuning_files_dir="models_data/random_forest_output/results_from_tuning/"
-        )
+        # create_df_average_error_for_each_trial_across_phs(
+        #     tuning_files_dir="models_data/random_forest_output/results_from_tuning/"
+        # )
 
     else:
         raise ValueError
@@ -154,7 +154,7 @@ def catboost_model() -> None:
     # get feature importances and divide by 100 to become fractions of 1
     feature_imp["cb"] = [v / 100 for v in cb.feature_importances_]
 
-    cb.save_model(f"models_saved/catboost_model.cbm", format="cbm")
+    # cb.save_model(f"models_saved/catboost_model.cbm", format="cbm")
 
 
 def xgboost_model() -> None:
@@ -192,7 +192,7 @@ def xgboost_model() -> None:
         }
     ).to_csv("models_data/xgboost_info/train_val_loss.csv", sep="\t", index=False)
 
-    xgb.save_model("models_saved/xgboost.txt")
+    # xgb.save_model("models_saved/xgboost.txt")
 
 
 def lightgbm_model() -> None:
@@ -232,7 +232,7 @@ def lightgbm_model() -> None:
         }
     ).to_csv("models_data/lgbm_info/train_val_loss.csv", sep="\t", index=False)
 
-    lgbm.booster_.save_model("models_saved/lgbm.txt")
+    # lgbm.booster_.save_model("models_saved/lgbm.txt")
 
 
 def load_ANN_runtime() -> None:

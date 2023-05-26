@@ -41,7 +41,7 @@ def plot_neurons_vs_rmse():
     path = "tuning_results_ANN/df_results_8_HL.csv"
     df = pd.read_csv(path, delimiter="\t")
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(3, 3))
 
     unique_combinations = df.drop_duplicates(subset=["num_hidden_layers", "loss_function", "batch_size"])
 
@@ -71,7 +71,7 @@ def plot_neurons_vs_rmse():
             linestyle="-",
             linewidth=1,
             color="gray",
-            label=f"Hyperparams: {combination[2]}, {combination[3]}, {combination[4]}",
+            label=f"HP: {combination[2]}, {combination[3]}, {combination[4]}",
         )
 
         ax.scatter(
@@ -101,7 +101,7 @@ def plot_HL_vs_rmse():
     path = "tuning_results_ANN/df_results_8_HL.csv"
     df = pd.read_csv(path, delimiter="\t")
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(3, 3))
 
     unique_combinations = df.drop_duplicates(subset=["neurons", "loss_function", "batch_size"])
 
@@ -131,7 +131,7 @@ def plot_HL_vs_rmse():
             linestyle="-",
             linewidth=1,
             color="gray",
-            label=f"Hyperparams: {combination[1]}, {combination[3]}, {combination[4]}",
+            label=f"HP: {combination[1]}, {combination[3]}, {combination[4]}",
         )
 
         ax.scatter(
@@ -157,7 +157,7 @@ def plot_lossfunc_vs_rmse():
     path = "tuning_results_ANN/df_results_8_HL.csv"
     df = pd.read_csv(path, delimiter="\t")
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(3, 3))
 
     unique_combinations = df.drop_duplicates(subset=["neurons", "num_hidden_layers", "batch_size"])
 
@@ -187,7 +187,7 @@ def plot_lossfunc_vs_rmse():
             linestyle="-",
             linewidth=1,
             color="gray",
-            label=f"Hyperparams: {combination[1]}, {combination[2]}, {combination[4]}",
+            label=f"HP: {combination[1]}, {combination[2]}, {combination[4]}",
         )
 
         ax.scatter(
@@ -212,7 +212,7 @@ def plot_batch_size_vs_rmse():
     path = "tuning_results_ANN/df_results_8_HL.csv"
     df = pd.read_csv(path, delimiter="\t")
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(3, 3))
 
     unique_combinations = df.drop_duplicates(subset=["neurons", "num_hidden_layers", "loss_function"])
 
@@ -242,7 +242,7 @@ def plot_batch_size_vs_rmse():
             linestyle="-",
             linewidth=1,
             color="gray",
-            label=f"Hyperparams:  {combination[1]},{combination[2]}, {combination[3]}",
+            label=f"HP:  {combination[1]},{combination[2]}, {combination[3]}",
         )
 
         ax.scatter(

@@ -1005,30 +1005,30 @@ if __name__ == "__main__":
         df_features.to_csv(f"summarized_data_figures_datafiles/csv_files/df_features{ph}.csv", sep="\t", index=False)
 
         """Save appendix figures"""
-        ax_list_appendix_plots = [
-            ax_individual_model_vs_exp_rf,
-            ax_individual_model_vs_exp_cb,
-            ax_individual_model_vs_exp_lgb,
-            ax_individual_model_vs_exp_xgb,
-            ax_individual_model_vs_exp_ann,
-        ]
-        figs = [fig_rf, fig_cb, fig_lgb, fig_xgb, fig_ann]
-        models = ["RF", "CB", "LGB", "XGB", "ANN"]
-        X_test_ph, y_test_ph = filter_x_y_boolean_mask(ph)
+        # ax_list_appendix_plots = [
+        #     ax_individual_model_vs_exp_rf,
+        #     ax_individual_model_vs_exp_cb,
+        #     ax_individual_model_vs_exp_lgb,
+        #     ax_individual_model_vs_exp_xgb,
+        #     ax_individual_model_vs_exp_ann,
+        # ]
+        # figs = [fig_rf, fig_cb, fig_lgb, fig_xgb, fig_ann]
+        # models = ["RF", "CB", "LGB", "XGB", "ANN"]
+        # X_test_ph, y_test_ph = filter_x_y_boolean_mask(ph)
 
-        E, i = X_test_ph[:, 0], 10**y_test_ph
-        for ax, fig, model in zip(ax_list_appendix_plots, figs, models):
-            # ax[loc1, loc2].legend(loc="upper left")
-            ax.set_ylim(np.min(X_test_ph[:, 0]), np.max(X_test_ph[:, 0]))
-            ax.set_xlim(np.min(abs(i)), np.max(abs(i)))
-            ax.grid(True, linestyle="-", color="lightgray")
-            ax.legend()
-            fig.tight_layout()
-            fig.savefig(f"summarized_data_figures_datafiles/appendix/{model}_{ph}.pdf")
-            # fig_rf.savefig(f"summarized_data_figures_datafiles/appendix/rf{ph}.pgf")
-            ax.clear()
-            ax.set_xlabel("Absolute value of current density ($|i|$) [A/cm$^2$]")
-            ax.set_ylabel("Potential ($E$) vs SCE [V]")
+        # E, i = X_test_ph[:, 0], 10**y_test_ph
+        # for ax, fig, model in zip(ax_list_appendix_plots, figs, models):
+        #     # ax[loc1, loc2].legend(loc="upper left")
+        #     ax.set_ylim(np.min(X_test_ph[:, 0]), np.max(X_test_ph[:, 0]))
+        #     ax.set_xlim(np.min(abs(i)), np.max(abs(i)))
+        #     ax.grid(True, linestyle="-", color="lightgray")
+        #     ax.legend()
+        #     fig.tight_layout()
+        #     fig.savefig(f"summarized_data_figures_datafiles/appendix/{model}_{ph}.pdf")
+        #     # fig_rf.savefig(f"summarized_data_figures_datafiles/appendix/rf{ph}.pgf")
+        #     ax.clear()
+        #     ax.set_xlabel("Absolute value of current density ($|i|$) [A/cm$^2$]")
+        #     ax.set_ylabel("Potential ($E$) vs SCE [V]")
 
         # save figs
         try:
