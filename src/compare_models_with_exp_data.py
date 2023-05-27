@@ -33,6 +33,7 @@ from catboost import CatBoostRegressor
 from nptyping import NDArray, Float, Shape
 from xgboost import XGBRegressor
 import lightgbm as lgb
+import matplotlib.ticker as ticker
 
 # tensorflow give GPU warning that process can be speede up by Nvidia GPU with TensorRT
 # remove this warning by os.environ
@@ -60,7 +61,8 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 if __name__ == "__main__":
     # test ML algorithms on unseen data
-    fig_pred = plt.figure()
+    fig_pred = plt.figure(figsize=(6, 4))
+
     ax_pred = fig_pred.subplots()
 
     # figure for comparison of best and second best ann tuned model
@@ -68,14 +70,20 @@ if __name__ == "__main__":
     ax_compare_anns = fig_compare_anns.subplots()
 
     # training loss GBDTs
-    fig_loss_trees = plt.figure()
+    fig_loss_trees = plt.figure(figsize=(5, 4))
     ax_loss_trees = fig_loss_trees.subplots()
+    # ax_loss_trees.grid(True, linestyle="-", color="gray")
     ax_loss_trees.set_xlabel("Iterations")
     ax_loss_trees.set_ylabel("Loss, RMSE [log($|i|$)]")
     ax_loss_trees.set_yscale("log")
     ax_loss_trees2 = ax_loss_trees.twinx()  # plot loss gradients
-    ax_loss_trees2.set_ylabel("Loss Gradient, RMSE [log($|i|$)]")
+    ax_loss_trees2.set_ylabel("3 window SMA of $\Delta$RMSE$_{{\\mathrm{{val}}}}$($\Delta$$N$ = 100) [log($|i|$)]")
     ax_loss_trees2.set_yscale("log")
+    ax_loss_trees.yaxis.set_minor_locator(ticker.LogLocator(base=10.0, subs=np.arange(2, 10) * 0.1, numticks=10))
+
+    # Turn on the minor TICKS, which are required for the minor GRID
+    ax_loss_trees.minorticks_on()
+    ax_loss_trees.grid(which="minor", axis="y", linestyle=":", color="gray")
 
     # # plot the zoomed portion with markers
     # zoom_scale = 0.2
@@ -95,17 +103,22 @@ if __name__ == "__main__":
     # ax_val_loss_trees2.set_yscale("log")
     # ax_loss_trees2.set_ylabel("Loss Gradient")
 
-    # set other sizes for plots that are too big for pgf
-    plt.rcParams["axes.labelsize"] = 14  # Set size for axis labels
-    plt.rcParams["xtick.labelsize"] = 14  # Set size for x-axis tick labels
-    plt.rcParams["ytick.labelsize"] = 14  # Set size for y-axis tick labels
-    plt.rcParams["legend.fontsize"] = 14  # Set size for legend
-    plt.rcParams["figure.figsize"] = [6.1, 6.1]
+    # set other sizes for plots that are too big for pgf (the ind_model vs exp plots)
+    # plt.rcParams["axes.labelsize"] = 14  # Set size for axis labels
+    # plt.rcParams["xtick.labelsize"] = 14  # Set size for x-axis tick labels
+    # plt.rcParams["ytick.labelsize"] = 14  # Set size for y-axis tick labels
+    # plt.rcParams["legend.fontsize"] = 14  # Set size for legend
+    # plt.rcParams["figure.figsize"] = [6.1, 6.1]
     # ANN losses
-    fig_loss_ANN = plt.figure()
+    fig_loss_ANN = plt.figure(figsize=(3, 3))
     ax_loss_ANN = fig_loss_ANN.subplots()
     ax_loss_ANN.set_xlabel("Epochs")
-    ax_loss_ANN.set_ylabel("Error, RMSE")
+    ax_loss_ANN.set_ylabel("Loss, RMSE [log($|i_{{\\mathrm{{NORM.}}}}|)$]")
+    ax_loss_ANN.yaxis.set_minor_locator(ticker.LogLocator(base=10.0, subs=np.arange(2, 10) * 0.1, numticks=10))
+
+    # Turn on the minor TICKS, which are required for the minor GRID
+    ax_loss_ANN.minorticks_on()
+    ax_loss_ANN.grid(which="minor", axis="y", linestyle=":", color="gray")
 
     fig_rf, ax_individual_model_vs_exp_rf = plt.subplots()  # figsize=(7, 7))  # 2, 2, figsize=(12, 12))
     # fig_rf.supxlabel("$|i|$ [A/cm$^2$]")
@@ -164,8 +177,8 @@ def plot_scatter_if_early_stopping(model: str, iterations: int, train_loss_last_
     df = pd.read_csv("summarized_data_figures_datafiles/csv_files/max_iterations_GBDTs.csv", sep="\t")
     max_iterations = df.loc[df["model"] == model, "max_iterations"].values[0]
     if iterations < max_iterations:
-        ax_loss_trees.scatter(iterations, train_loss_last_iter, label="Early stopping", color="k", marker="x")
-        ax_loss_trees.scatter(iterations, val_loss_last_iter, label="Early stopping", color="k", marker="x")
+        ax_loss_trees.scatter(iterations, train_loss_last_iter, color="k", marker="|")
+        ax_loss_trees.scatter(iterations, val_loss_last_iter, color="k", marker="|")
 
 
 def linestyles_and_markers_for_model_comparisons(model_str: str) -> list[str]:
@@ -174,7 +187,7 @@ def linestyles_and_markers_for_model_comparisons(model_str: str) -> list[str]:
     """
     models = ["cb", "rf", "xgb", "lgb", "ann"]
     linestyles = ["-", "-", "-", "-", "-"]
-    colors = ["r", "g", "b", "m", "brown"]
+    colors = ["tab:red", "tab:green", "tab:blue", "tab:purple", "tab:brown"]
     try:
         idx = models.index(model_str)
         return [linestyles[idx], colors[idx]]
@@ -311,6 +324,7 @@ def plot_experimental_testing_data(ph, loc1, loc2, df_features: pd.DataFrame) ->
             residuals,
         ]
     ) = store_polarization_curve_features(E, i, "exp")
+    np.savetxt(f"linreg_residuals/residuals_linreg_exp{ph}.txt", residuals, fmt="%f")
     df_features["Exp. data"] = [
         ocp,
         slope,
@@ -331,14 +345,48 @@ def plot_experimental_testing_data(ph, loc1, loc2, df_features: pd.DataFrame) ->
         ax_individual_model_vs_exp_xgb,  # [loc1, loc2],
         ax_individual_model_vs_exp_ann,  # [loc1, loc2],
     ]
+    x_pos = (np.max(y_test_ph) + np.min(y_test_ph)) / 2
+
+    ###
+    # plot text box with pH
+    y_pos = np.max(X_test_ph[:, 0]) - 0.04
+    ax_pred.text(
+        10**x_pos,
+        y_pos,
+        f"pH = {ph}",
+        ha="center",
+        va="bottom",
+        bbox=dict(facecolor="white", edgecolor="black", boxstyle="square"),
+    )
+    ###
+    # set grid
+    ax_pred.grid(True, linestyle="-", color="lightgray")
+    # set xlim manually from results...
+    if ph == 2.2:
+        ax_pred.set_xlim(1.7 * 10**-8, 6 * 10**-3)
+    elif ph == 6.6:
+        ax_pred.set_xlim(np.min(10**y_test_ph) * 0.85, 8 * 10**-4)
+    elif ph == 7.4:
+        ax_pred.set_xlim(6.5 * 10**-11, 5 * 10**-3)
+    elif ph == 11.6:
+        ax_pred.set_xlim(np.min(10**y_test_ph) * 0.85, 6 * 10**-3)
+
     for idx, fig in enumerate(figures_to_plot_exp_data_in):
-        fig.semilogx(
-            10**y_test_ph,
+        E, i = (
             X_test_ph[:, 0],
-            label=f"Exp. data, pH = {ph}" if idx >= 2 else f"Exp., pH = {ph}",
+            10**y_test_ph,
+        )
+        fig.semilogx(
+            i,
+            E,
+            # label=f"Exp. data, pH = {ph}" if idx >= 2 else f"Exp., pH = {ph}",
+            label="Empirical",
             color="k",
             linestyle="-",
         )
+        # set y lim, ylim is valid for all plots
+        fig.set_ylim(np.min(E) - 0.01, np.max(E) + 0.01)
+        # fig.set_xlim(np.min(i), np.max(i))
 
         if fig not in [ax_pred, ax_compare_anns]:
             plot_tafel_lines_E_corr_i_corr(
@@ -388,7 +436,7 @@ def random_forest_comparison(ph, loc1, loc2, df_features: pd.DataFrame) -> None:
             residuals,
         ]
     ) = store_polarization_curve_features(E, i, "RF")
-    np.savetxt("residuals_linreg.txt", residuals, fmt="%f")
+    np.savetxt(f"linreg_residuals/residuals_linreg_rf_{ph}.txt", residuals, fmt="%f")
     df_features["RF"] = [ocp, slope, rvalue**2, std_error_slope, lower_ci, upper_ci, intercept_stderr, E_corr, i_corr]
 
     linestyle, color = linestyles_and_markers_for_model_comparisons("rf")
@@ -448,8 +496,8 @@ def catboost_comparison(ph, store_mape: list, rmse_catboost: list, loc1, loc2, d
             residuals,
         ]
     ) = store_polarization_curve_features(E, i, "CB")
-
-    add_residuals_to_txt_file(residuals)
+    np.savetxt(f"linreg_residuals/residuals_linreg_cb_{ph}.txt", residuals, fmt="%f")
+    # add_residuals_to_txt_file(residuals)
     df_features["CB"] = [ocp, slope, rvalue**2, std_error_slope, lower_ci, upper_ci, intercept_stderr, E_corr, i_corr]
 
     figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_cb]  # [loc1, loc2]]
@@ -490,21 +538,17 @@ def sma_loss_gradients(val_loss: np.ndarray | pd.Series, window: Optional[int] =
 def plot_train_val_loss_catboost():
     df_train_loss = pd.read_csv("catboost_info/learn_error.tsv", sep="\t")
     ax_loss_trees.plot(
-        df_train_loss["iter"], df_train_loss["RMSE"], label="CatBoost training loss", color="black", linestyle="-"
+        df_train_loss["iter"], df_train_loss["RMSE"], label="CatBoost TL", color="tab:red", linestyle="-"
     )
     df_val_loss = pd.read_csv("catboost_info/test_error.tsv", sep="\t")
-    ax_loss_trees.plot(
-        df_val_loss["iter"], df_val_loss["RMSE"], label="Catboost validation loss", color="black", linestyle="--"
-    )
+    ax_loss_trees.plot(df_val_loss["iter"], df_val_loss["RMSE"], label="Catboost VL", color="tab:red", linestyle="--")
 
     # loss_gradients_val_loss = abs(np.diff(df_val_loss["RMSE"][::100]))
     loss_iter = df_val_loss["iter"][::100][1:]
     # ax_loss_trees2.scatter(loss_iter, loss_gradients_val_loss)
 
     sma = sma_loss_gradients(df_val_loss["RMSE"])
-    ax_loss_trees2.semilogy(
-        loss_iter[1:-1], sma, label="SMA CatBoost validation loss gradients", marker="s", color="black"
-    )
+    ax_loss_trees2.semilogy(loss_iter[1:-1], sma, label="SMA CatBoost", marker="s", markersize=3, color="tab:red")
 
     plot_scatter_if_early_stopping(
         "cb", df_train_loss["iter"].iloc[-1], df_train_loss["RMSE"].iloc[-1], df_val_loss["RMSE"].iloc[-1]
@@ -538,7 +582,8 @@ def xgboost_comparison(ph, store_mape, rmse_xgboost: list, loc1, loc2, df_featur
             residuals,
         ]
     ) = store_polarization_curve_features(E, i, "XGB")
-    add_residuals_to_txt_file(residuals)
+    np.savetxt(f"linreg_residuals/residuals_linreg_xgb_{ph}.txt", residuals, fmt="%f")
+    # add_residuals_to_txt_file(residuals)
     df_features["XGB"] = [
         ocp,
         slope,
@@ -583,14 +628,17 @@ def xgboost_comparison(ph, store_mape, rmse_xgboost: list, loc1, loc2, df_featur
 def plot_train_val_loss_xgboost():
     # plot rmse for each iter
     df = pd.read_csv("models_data/xgboost_info/train_val_loss.csv", sep="\t")
-    ax_loss_trees.plot(df["iter"], df["train_loss_rmse"], label="XGBoost training loss", color="#555555", linestyle="-")
-    ax_loss_trees.plot(
-        df["iter"], df["val_loss_rmse"], label="XGBoost validation loss", color="#555555", linestyle="--"
-    )
+    ax_loss_trees.plot(df["iter"], df["train_loss_rmse"], label="XGBoost TL", color="tab:blue", linestyle="-")
+    ax_loss_trees.plot(df["iter"], df["val_loss_rmse"], label="XGBoost VL", color="tab:blue", linestyle="-.")
 
     sma = sma_loss_gradients(df["val_loss_rmse"])
     ax_loss_trees2.semilogy(
-        df["iter"][::100][1:][1:-1], sma, label="SMA XGBoost validation loss gradients", marker="^", color="black"
+        df["iter"][::100][1:][1:-1],
+        sma,
+        label="SMA XGBoost",
+        marker="^",
+        color="tab:blue",
+        markersize=3,
     )
     plot_scatter_if_early_stopping(
         "xgb", df["iter"].iloc[-1], df["train_loss_rmse"].iloc[-1], df["val_loss_rmse"].iloc[-1]
@@ -623,7 +671,8 @@ def lgbm_comparison(ph, store_mape, rmse_lgb, loc1, loc2, df_features: pd.DataFr
             residuals,
         ]
     ) = store_polarization_curve_features(E, i, "LGBM")
-    add_residuals_to_txt_file(residuals)
+    np.savetxt(f"linreg_residuals/residuals_linreg_lgb_{ph}.txt", residuals, fmt="%f")
+    # add_residuals_to_txt_file(residuals)
     df_features["LGB"] = [
         ocp,
         slope,
@@ -670,16 +719,17 @@ def plot_train_val_loss_lgbm():
     # plot rmse for each iter
     # plot rmse for each iter
     df = pd.read_csv("models_data/lgbm_info/train_val_loss.csv", sep="\t")
-    ax_loss_trees.plot(
-        df["iter"], df["train_loss_rmse"], label="LightGBM training loss", color="#777777", linestyle=":"
-    )
-    ax_loss_trees.plot(
-        df["iter"], df["val_loss_rmse"], label="LightGBM validation loss", color="#777777", linestyle=":"
-    )
+    ax_loss_trees.plot(df["iter"], df["train_loss_rmse"], label="LightGBM TL", color="tab:green", linestyle="-")
+    ax_loss_trees.plot(df["iter"], df["val_loss_rmse"], label="LightGBM VL", color="tab:green", linestyle=":")
 
     sma = sma_loss_gradients(df["val_loss_rmse"])
     ax_loss_trees2.semilogy(
-        df["iter"][::100][1:][1:-1], sma, label="SMA LightGBM validation loss gradients", marker="o", color="black"
+        df["iter"][::100][1:][1:-1],
+        sma,
+        label="SMA LightGBM",
+        marker="o",
+        color="tab:green",
+        markersize=3,
     )
 
     plot_scatter_if_early_stopping(
@@ -727,7 +777,8 @@ def ANN_comparison(ph, store_mape, rmse_ann, loc1, loc2, df_features: pd.DataFra
                             residuals,
                         ]
                     ) = store_polarization_curve_features(E, i, "ANN")
-                    add_residuals_to_txt_file(residuals)
+                    np.savetxt(f"linreg_residuals/residuals_linreg_ann_{ph}.txt", residuals, fmt="%f")
+                    # add_residuals_to_txt_file(residuals)
                 except ValueError:
                     (
                         [
@@ -767,7 +818,7 @@ def ANN_comparison(ph, store_mape, rmse_ann, loc1, loc2, df_features: pd.DataFra
                         i,
                         E,
                         # label=f"ANN {which_model}" if idx < 2 else f"ANN, pH = {ph}",
-                        label=f"ANN, pH = {ph}",
+                        label=f"ANN",
                         linestyle=linestyle,
                         color=color,
                     )
@@ -799,135 +850,113 @@ def plot_train_val_loss_ann_best_model():
     df_loss = pd.read_csv("models_data/ANN_info/training_val_loss_final_model", sep="\t")
     epochs = [iter for iter in range(1, len(df_loss["val_rmse"]) + 1, 1)]
     # plot epochs vs rmse (root of mse which is the loss given in df) for best model
-    ax_loss_ANN.semilogy(epochs, df_loss["rmse"], "s-", label="ANN training loss best model", color="k")
-    ax_loss_ANN.semilogy(epochs, df_loss["val_rmse"], "s--", label="ANN validation loss best model", color="k")
+    ax_loss_ANN.semilogy(epochs, df_loss["rmse"], "-", label="ANN TL", color="k")
+    ax_loss_ANN.semilogy(epochs, df_loss["val_rmse"], "--", label="ANN VL", color="k")
 
 
-# def plot_histogram_mape_rmse_models(best_scores_mape_log: pd.DataFrame, best_scores_rmse_log: pd.DataFrame):
-#     fig, ax = plt.subplots(figsize=(5,5))
-#     ax2 = ax.twinx()  # Create a second y-axis
-
-#     bar_width = 0.035  # Reduced bar width to fit both MAPE and RMSE values
-#     labels = ["RF", "CB", "XGB", "LGB", "ANN"]
-#     colors = ["k", "#555555", "#777777", "#999999", "#CCCCCC"]  # grey scales
-#     hatches = [None, "/", None, "/", None]
-#     locs = [1, 2, 3, 4]
-
-#     # Loop over each row
-#     for i, (row_mape, row_rmse) in enumerate(zip(best_scores_mape_log.iterrows(), best_scores_rmse_log.iterrows())):
-#         values_mape = row_mape[1].drop("pH").values
-#         values_rmse = row_rmse[1].drop("pH").values
-#         sorting_indices = np.argsort(values_mape)  # type: ignore
-
-#         sorted_values_mape = [values_mape[i] for i in sorting_indices]
-#         sorted_values_rmse = [values_rmse[i] for i in sorting_indices]
-#         sorted_labels = [labels[i] for i in sorting_indices]
-
-#         for idx, (val_mape, val_rmse) in enumerate(zip(sorted_values_mape, sorted_values_rmse)):
-#             ax.bar(
-#                 locs[i] + idx * 2 * bar_width,
-#                 val_mape,
-#                 bar_width,
-#                 label=sorted_labels[idx] if i == 0 else None,  # only display label once
-#                 color=colors[idx],
-#                 hatch=hatches[idx],
-#             )
-#             ax2.bar(
-#                 locs[i] + idx * 2 * bar_width + bar_width,
-#                 val_rmse,
-#                 bar_width,
-#                 color=colors[idx],
-#                 hatch=hatches[idx],
-#                 alpha=0.5,  # Added alpha to differentiate between MAPE and RMSE values
-#             )
-
-#     ax.set_xlim(locs[0] / 2, locs[-1] + 1)
-
-#     # Add legend and axis labels
-#     ax.legend()
-#     ax.set_ylabel("Mean Absolute Percentage Error of log10(|i|) [%]")
-#     ax.set_ylim(0, 15)
-
-#     ax2.set_ylabel("Root Mean Squared Error of log10(|i|)")
-#     ax2.set_ylim(best_scores_rmse_log.stack().min() * 0.9, best_scores_rmse_log.stack().min() * 1.1)  # type: ignore
-
-#     ax.set_xticks(
-#         [(i + 2 * 2 * bar_width) for i in locs], labels=[f"pH = {ph}" for ph in best_scores_mape_log["pH"]], rotation=45
-#     )
-#     fig.tight_layout()
-#     fig.savefig("summarized_data_figures_datafiles/mape_rmse_log_%_histogram.pgf")
-
-from matplotlib.lines import Line2D
-
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
-
-
-def plot_mape_rmse_pointers(best_scores_mape_log: pd.DataFrame, best_scores_rmse_log: pd.DataFrame):
+def plot_histogram_mape_models(best_scores_mape_log: pd.DataFrame, best_scores_rmse_log: pd.DataFrame):
     fig, ax = plt.subplots()
-    ax2 = ax.twinx()  # Create a second y-axis
-    bar_width = 0.35
+    # ax2 = ax.twinx()
+    # ax2.set_ylabel("Root Mean Squared Error (RMSE) [log10($|i|$)] ")
+    bar_width = 0.07
     labels = ["RF", "CB", "XGB", "LGB", "ANN"]
-    locs = np.arange(len(best_scores_mape_log))
-    colors = {"RF": "green", "CB": "red", "XGB": "blue", "LGB": "pink", "ANN": "brown"}
-
-    for i, (mape_row, rmse_row) in enumerate(zip(best_scores_mape_log.iterrows(), best_scores_rmse_log.iterrows())):
-        mape_values = mape_row[1].drop("pH").values
-        rmse_values = rmse_row[1].drop("pH").values
-
-        # Plot highest MAPE bar
-        ax.bar(locs[i] - bar_width / 2, np.max(mape_values), bar_width, color="dimgray", alpha=0.5)
-        # Plot lines for individual MAPE values
-        for _, (val, label) in enumerate(zip(mape_values, labels)):
-            ax.hlines(
+    colors = ["tab:red", "tab:blue", "tab:brown", "tab:green", "tab:cyan"]  # grey scales
+    hatches = [None, "/", None, "/", None]
+    locs = [1, 2, 3, 4]
+    # Loop over each row
+    for i, row in best_scores_mape_log.iterrows():
+        values = row.drop("pH").values
+        sorting_indices = np.argsort(values)  # type: ignore
+        # all rows are sorted in ascending order, rearange all used lists
+        sorted_values = [values[i] for i in sorting_indices]
+        sorted_labels = [labels[i] for i in sorting_indices]
+        for idx, val in enumerate(sorted_values):
+            ax.bar(
+                locs[i] + idx * 2 * bar_width,
                 val,
-                locs[i] - bar_width / 2 - bar_width / 2,
-                locs[i] - bar_width / 2 + bar_width / 2,
-                color=colors[label],
+                bar_width,
+                label=sorted_labels[idx] if i == 0 else None,  # only display label once
+                color=colors[idx],
+                hatch=hatches[idx],
             )
 
-        # Plot highest RMSE bar
-        ax2.bar(locs[i] + bar_width / 2, np.max(rmse_values), bar_width, color="darkgray", alpha=0.5)
-        # Plot lines for individual RMSE values
-        for _, (val, label) in enumerate(zip(rmse_values, labels)):
-            ax2.hlines(
-                val,
-                locs[i] + bar_width / 2 - bar_width / 2,
-                locs[i] + bar_width / 2 + bar_width / 2,
-                color=colors[label],
-            )
+    ax.set_xlim(locs[0] / 2, locs[-1] + 1)
 
-    # Add horizontal lines for average MAPE and RMSE values
-    avg_mape = best_scores_mape_log.drop("pH", axis=1).mean().mean()
-    avg_rmse = best_scores_rmse_log.drop("pH", axis=1).mean().mean()
-    ax.axhline(avg_mape, linestyle="--", color="dimgray", linewidth=1)
-    ax2.axhline(avg_rmse, linestyle="--", color="darkgray", linewidth=1)
-    ylower, yupper = (
-        np.min(best_scores_rmse_log.drop("pH", axis=1).values) * 0.9,
-        np.max(best_scores_rmse_log.drop("pH", axis=1).values) * 1.1,
-    )
-
-    ax2.set_ylim(ylower, yupper)
-
-    ax.set_xticks(locs)
-    ax.set_xticklabels(
-        [f"MAPE      RMSE\n\npH = {ph}" for ph in best_scores_mape_log["pH"]], rotation=0, ha="center", fontsize=10
-    )
-
+    # Add legend and axis labels
+    ax.legend()
     ax.set_ylabel("Mean Absolute Percentage Error of log10($|i|$) [%]")
     ax.set_ylim(0, 15)
-
-    ax2.set_ylabel("Root Mean Squared Error of log10($|i|$)")
-
-    # Create legend
-    legend_elements = [Line2D([0], [0], color=colors[label], lw=2, label=label) for label in labels]
-    ax.legend(handles=legend_elements, loc="upper left")
-
+    ax.set_xticks(
+        [(i + 2 * 2 * bar_width) for i in locs], labels=[f"pH = {ph}" for ph in best_scores_mape_log["pH"]], rotation=45
+    )
     fig.tight_layout()
-    for ftype in ["pgf", "pdf"]:
-        fig.savefig(f"summarized_data_figures_datafiles/{ftype}_plots/mape_rmse_pointers.{ftype}")
+    fig.savefig("summarized_data_figures_datafiles/pgf_plots/mape_log_%_histogram.pgf")
+    fig.savefig("summarized_data_figures_datafiles/pdf_plots/mape_log_%_histogram.pdf")
+
+
+# def plot_mape_rmse_pointers(best_scores_mape_log: pd.DataFrame, best_scores_rmse_log: pd.DataFrame):
+#     fig, ax = plt.subplots()
+#     ax2 = ax.twinx()  # Create a second y-axis
+#     bar_width = 0.35
+#     labels = ["RF", "CB", "XGB", "LGB", "ANN"]
+#     locs = np.arange(len(best_scores_mape_log))
+#     colors = {"RF": "green", "CB": "red", "XGB": "blue", "LGB": "pink", "ANN": "brown"}
+
+#     for i, (mape_row, rmse_row) in enumerate(zip(best_scores_mape_log.iterrows(), best_scores_rmse_log.iterrows())):
+#         mape_values = mape_row[1].drop("pH").values
+#         rmse_values = rmse_row[1].drop("pH").values
+
+#         # Plot highest MAPE bar
+#         ax.bar(locs[i] - bar_width / 2, np.max(mape_values), bar_width, color="dimgray", alpha=0.5)
+#         # Plot lines for individual MAPE values
+#         for _, (val, label) in enumerate(zip(mape_values, labels)):
+#             ax.hlines(
+#                 val,
+#                 locs[i] - bar_width / 2 - bar_width / 2,
+#                 locs[i] - bar_width / 2 + bar_width / 2,
+#                 color=colors[label],
+#             )
+
+#         # Plot highest RMSE bar
+#         ax2.bar(locs[i] + bar_width / 2, np.max(rmse_values), bar_width, color="darkgray", alpha=0.5)
+#         # Plot lines for individual RMSE values
+#         for _, (val, label) in enumerate(zip(rmse_values, labels)):
+#             ax2.hlines(
+#                 val,
+#                 locs[i] + bar_width / 2 - bar_width / 2,
+#                 locs[i] + bar_width / 2 + bar_width / 2,
+#                 color=colors[label],
+#             )
+
+#     # Add horizontal lines for average MAPE and RMSE values
+#     avg_mape = best_scores_mape_log.drop("pH", axis=1).mean().mean()
+#     avg_rmse = best_scores_rmse_log.drop("pH", axis=1).mean().mean()
+#     ax.axhline(avg_mape, linestyle="--", color="dimgray", linewidth=1)
+#     ax2.axhline(avg_rmse, linestyle="--", color="darkgray", linewidth=1)
+#     ylower, yupper = (
+#         np.min(best_scores_rmse_log.drop("pH", axis=1).values) * 0.9,
+#         np.max(best_scores_rmse_log.drop("pH", axis=1).values) * 1.1,
+#     )
+
+#     ax2.set_ylim(ylower, yupper)
+
+#     ax.set_xticks(locs)
+#     ax.set_xticklabels(
+#         [f"MAPE      RMSE\n\npH = {ph}" for ph in best_scores_mape_log["pH"]], rotation=0, ha="center", fontsize=10
+#     )
+
+#     ax.set_ylabel("Mean Absolute Percentage Error of log10($|i|$) [%]")
+#     ax.set_ylim(0, 15)
+
+#     ax2.set_ylabel("Root Mean Squared Error of log10($|i|$)")
+
+#     # Create legend
+#     legend_elements = [Line2D([0], [0], color=colors[label], lw=2, label=label) for label in labels]
+#     ax.legend(handles=legend_elements, loc="upper left")
+
+#     fig.tight_layout()
+#     for ftype in ["pgf", "pdf"]:
+#         fig.savefig(f"summarized_data_figures_datafiles/{ftype}_plots/mape_rmse_pointers.{ftype}")
 
 
 def plot_losses():
@@ -943,7 +972,7 @@ def plot_losses():
     # Add the merged legend to the first subplot to obtain merged legends
     ax_loss_trees.legend(handles, labels)
     fig_loss_trees.tight_layout()
-    fig_loss_ANN.legend()
+    ax_loss_ANN.legend(loc="upper right")
     fig_loss_ANN.tight_layout()
     for ftype in ["pgf", "pdf"]:
         fig_loss_trees.savefig(f"summarized_data_figures_datafiles/{ftype}_plots/learning_curves_GBDTS.{ftype}")
@@ -1033,8 +1062,8 @@ if __name__ == "__main__":
         # save figs
         try:
             for _ax in [ax_pred, ax_compare_anns]:
-                _ax.set_xlabel("$|i|$ [A/cm$^2$]")
-                _ax.set_ylabel("E [V]")
+                _ax.set_xlabel("Absolute value of current density ($|i|$) [A/cm$^2$]")
+                _ax.set_ylabel("Potential ($E$) vs SCE [V]")
                 _ax.legend(loc="upper left")
 
             for ftype in ["pgf", "pdf"]:
@@ -1063,7 +1092,11 @@ if __name__ == "__main__":
         drop=True
     ), best_scores_rmse_log.sort_values(by="pH").reset_index(drop=True)
 
-    plot_mape_rmse_pointers(best_scores_mape_log, best_scores_rmse_log)
+    # for idx, df in enumerate([best_scores_mape_log, best_scores_rmse_log]):
+    #     mean_row = df.iloc[:, 1:].mean()
+    #     print(mean_row)
+
+    plot_histogram_mape_models(best_scores_mape_log, best_scores_rmse_log)  # , best_scores_rmse_log)
     best_scores_mape_log.to_csv(
         "summarized_data_figures_datafiles/csv_files/mape_of_pred_log%.csv", sep="\t", index=False
     )

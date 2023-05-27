@@ -6,6 +6,8 @@ import matplotlib
 import numpy as np
 from scipy import stats
 import pandas as pd
+from scipy.stats import norm
+from src.train_models import load_ANN_runtime
 
 # plt.rcParams["font.family"] = "serif"
 # plt.rcParams["font.serif"] = ["Times New Roman"] + plt.rcParams["font.serif"]
@@ -96,7 +98,7 @@ def tafel_plot():
 
     slope_an, intercept_an, r_an, p_an, se_an = stats.linregress(np.log10(ian), E, alternative="two-sided")
     slope_cat, intercept_cat, r_cat, p_cat, se_cat = stats.linregress(np.log10(abs(icat)), E, alternative="two-sided")
-
+    print(p_cat)
     plt.semilogx(
         ian * i0, intercept_an + slope_an * np.log10(ian), label="Anodic tafel slope", linestyle="dashed", color="k"
     )
@@ -244,29 +246,6 @@ def pourbaix_diagram():
         plt.savefig(f"sketches_for_report/pourbaix.{ftype}")
 
 
-# def plot_feature_imp_as_func_of_iter():
-#     df = pd.read_csv("models_data/random_forest_output/results_from_tuning/feature_importances.csv", sep="\t")
-#     df_1 = df[df["max_features"] == 1.0]
-#     df_03 = df[df["max_features"] == 0.3]
-#     print(df_1)
-#     fig, ax1 = plt.subplots()
-
-#     ax1.set_xlabel("Number of estimators/trees (n\\_estimators)")
-#     ax1.set_ylabel("Potential / pH, max\\_features = 0.3, , marker = circle", color="gray")
-#     ax1.scatter(df_03["n_estimators"], df_03["potential (E)"] / df_03["pH"], color="gray", marker="o")
-#     ax1.tick_params(axis="y", labelcolor="grey")
-
-#     ax2 = ax1.twinx()
-
-#     ax2.set_ylabel("Potential / pH, max\\_features = 1.0, marker = square", color="black")
-#     ax2.scatter(df_1["n_estimators"], df_1["potential (E)"] / df_1["pH"], color="black", marker="s")
-#     ax2.tick_params(axis="y", labelcolor="k")
-
-#     fig.tight_layout()
-#     fig.savefig("summarized_data_figures_datafiles/pdf_plots/rf_feature_imp_plot.pdf")
-#     fig.savefig("summarized_data_figures_datafiles/pgf_plots/rf_feature_imp_plot.pgf")
-
-
 def plot_feature_imp_as_func_of_iter():
     df = pd.read_csv("models_data/random_forest_output/results_from_tuning/feature_importances.csv", sep="\t")
     df_1 = df[df["max_features"] == 1.0]
@@ -316,11 +295,103 @@ def lgbm_tuning_last_iterations_before_termination_rmse():
     fig.savefig("summarized_data_figures_datafiles/pgf_plots/lgbm_last_iter_tuning_loss.pgf")
 
 
+def plot_training_times_per_DT():
+    plt.figure(figsize=(3, 3))
+    # plt.xlabel("ML algorithm")
+    plt.ylabel("Training time per tree [s/tree]")
+    df = pd.read_csv("summarized_data_figures_datafiles/csv_files/training_times_per_tree_DTs.csv", sep="\t")
+
+    pos = [0, 1, 2, 3]
+    plt.bar(df["Model"], df["Time"], width=0.25, color="gray")
+    plt.xticks(
+        pos, labels=[f" {k.upper()}: {round(v,2)} s" for k, v in zip(df["Model"], df["Time"])], rotation=45, ha="center"
+    )
+
+    plt.tight_layout()
+    plt.savefig("summarized_data_figures_datafiles/pgf_plots/models_training_time_per_tree_DTs.pgf")
+    plt.savefig("summarized_data_figures_datafiles/pdf_plots/models_training_time_per_tree_DTs.pdf")
+
+
+def convert_seconds_ANN(seconds):
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    return f"ANN: {hours}h, {minutes}m"
+
+
+def plot_training_times_tot_all_models():
+    fig, ax1 = plt.subplots(figsize=(3, 3))
+
+    # ax1.set_xlabel("ML algorithm")
+    ax1.set_ylabel("Training time [s]", color="tab:blue")
+    ax2 = ax1.twinx()
+    ax2.set_ylabel("Training time [hrs]", color="tab:red")
+
+    df = pd.read_csv("summarized_data_figures_datafiles/csv_files/training_times_all_models.csv", sep="\t")
+
+    df1 = df[df["Model"] != "ANN"]
+    df2 = df[df["Model"] == "ANN"]
+
+    ax1.bar(df1["Model"], df1["Time"], width=0.25, color="tab:blue", label="DTs")
+    ax2.bar(df2["Model"], df2["Time"] / 3600, width=0.25, color="tab:red", label="ANN")
+
+    ax1.set_ylim(0, max(df1["Time"]) + 5)
+    ax2.set_ylim(0, df2["Time"].values[0] / 3600 + 0.1)
+    label_ANN = convert_seconds_ANN(df2["Time"].values[0])
+
+    labels = [f"{k.upper()}: {round(v, 2)} s" for k, v in zip(df1["Model"], df1["Time"])] + [label_ANN]
+    ax1.set_xticks(range(len(labels)))  # ensure that the number of ticks matches the number of labels
+    ax1.set_xticklabels(labels, rotation=45, ha="center")
+
+    plt.tight_layout()
+    plt.savefig("summarized_data_figures_datafiles/pgf_plots/models_training_time_all_models.pgf")
+    plt.savefig("summarized_data_figures_datafiles/pdf_plots/models_training_time_all_models.pdf")
+
+
+def plot_residuals_linreg_tafel():
+    residuals_txt_files = os.listdir("linreg_residuals")
+    length_residuals = sum([len(np.loadtxt("linreg_residuals/" + file)) for file in residuals_txt_files])
+
+    standardized_residuals = np.zeros(length_residuals)
+    for file in residuals_txt_files:
+        res = np.loadtxt("linreg_residuals/" + file)
+        mean_residuals = np.mean(res)
+
+        std_residuals = np.std(res)
+
+        # standardize the residuals
+        std_res = (res - mean_residuals) / std_residuals
+        # find the first occurence of 0 in standardized_residuals
+        idx_where_0 = np.argwhere(standardized_residuals == 0)[0][0]
+
+        standardized_residuals[idx_where_0 : (idx_where_0 + len(std_res))] = std_res
+
+    fig_normality_test, ax_normality_test = plt.subplots(figsize=(3, 3))
+    hist, bins = np.histogram(standardized_residuals, bins="auto")
+    ax_normality_test.bar(bins[:-1], hist, align="edge", width=np.diff(bins), color="dimgray")
+    ax_normality_test.set_xlabel("Residuals Linear Regression Tafel line")
+    ax_normality_test.set_ylabel(f"Samples, N$_{{\\mathrm{{tot}}}}$ = {len(standardized_residuals)}")
+    ax_normality_test.set_xlim(-3, 3)
+
+    # plot normal dist curve on 2nd y axis
+    ax2 = ax_normality_test.twinx()
+    x = np.linspace(-3, 3, 100)
+    p = norm.pdf(x, 0, 1)  # mean=0, std=1
+    ax2.plot(x, p, color="k")
+    ax2.set_ylabel("Probability density")
+
+    fig_normality_test.tight_layout()
+    fig_normality_test.savefig("summarized_data_figures_datafiles/appendix/linreg_residuals_normality_test.pgf")
+    fig_normality_test.savefig("summarized_data_figures_datafiles/appendix/linreg_residuals_normality_test.pdf")
+
+
 if __name__ == "__main__":
     # plot_E_pit_ph10_2()
     # overfit_underfit_good_fit()
+    plot_residuals_linreg_tafel()
     # tafel_plot()
     # diffusion()
     # pourbaix_diagram()
     # plot_feature_imp_as_func_of_iter()
-    #lgbm_tuning_last_iterations_before_termination_rmse()
+    # lgbm_tuning_last_iterations_before_termination_rmse()
+    # plot_training_times_per_DT()
+    # plot_training_times_tot_all_models()

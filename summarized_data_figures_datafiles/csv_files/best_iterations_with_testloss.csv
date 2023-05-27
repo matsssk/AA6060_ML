@@ -1,0 +1,5 @@
+# Disse er ført manuelt!
+Model best_iter val_rmse
+cb 5225 0.068635
+xgb 2164 0.03052
+lgb 4195 0.0678004
