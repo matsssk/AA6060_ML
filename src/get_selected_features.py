@@ -69,16 +69,20 @@ def lower_upper_confidence_interval_slope(
     confidence_level: Optional[float] = 0.99,
 ) -> list[float]:
     pred = slope * i_applied_log_abs + intercept
-    z = norm.ppf((1 + confidence_level) / 2)  # ~1.96
+    z = norm.ppf((1 + confidence_level) / 2)
     # Calculate the confidence interval for the slope and intercept
     slope_ci = z * slope_std_error
     lower_slope = slope - z * slope_std_error
     upper_slope = slope + z * slope_std_error
 
     intercept_ci = z * intercept_std_error
-    lower_ci, upper_ci = pred - slope_ci - intercept_ci, pred + slope_ci + intercept_ci
+    lower_intercept = intercept - z * intercept_std_error
+    upper_intercept = intercept + z * intercept_std_error
 
-    return [lower_ci, upper_ci, lower_slope, upper_slope]
+    lower_ci = pred - slope_ci - intercept_ci
+    upper_ci = pred + slope_ci + intercept_ci
+
+    return [lower_ci, upper_ci, lower_slope, upper_slope, lower_intercept, upper_intercept]
 
 
 def plot_confidence_interval(
@@ -98,7 +102,7 @@ def plot_confidence_interval(
     Args:
         confidence level should be given as frac of 1
     """
-    lower_ci, upper_ci, _, _ = lower_upper_confidence_interval_slope(
+    lower_ci, upper_ci, _, _, _, _ = lower_upper_confidence_interval_slope(
         i_applied_log_abs, slope, slope_std_error, intercept, intercept_std_error
     )
 
@@ -114,3 +118,31 @@ def plot_confidence_interval(
 
 def get_ocps_machine_learning_models(E, i):
     return E[np.argmin(abs(i))]
+
+
+import os
+
+# def _confidence_interval_i_corr():
+#     # read csv file to get data
+#     csv_files = os.listdir("summarized_data_figures_datafiles/csv_files")
+#     csv_files_df_features = [feature_file for feature_file in csv_files if feature_file.startswith("df_features")]
+
+#     for file in csv_files_df_features:
+#         # E = slope * i0 + intercept   , where i0 is log(|i|)
+#         # -> i0 = (E - intercept) / slope
+#         # -> i_corr = (E_corr - intercept) / slope
+#         pass
+
+
+def lower_upper_i_corr(intercept_lower, intercept_upper, slope_lower, slope_upper, E_corr) -> list[float]:
+    """Calculated the 99% confidence interval of i_corr
+    return i_corr on normal form"""
+
+    i_corr_lower_log = (E_corr - intercept_lower) / slope_lower
+    i_corr_upper_log = (E_corr - intercept_upper) / slope_upper
+    return [10**i_corr_lower_log, 10**i_corr_upper_log]
+
+
+if __name__ == "__main__":
+    # _confidence_interval_i_corr()
+    pass

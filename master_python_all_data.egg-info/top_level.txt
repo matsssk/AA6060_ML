@@ -1,5 +1,6 @@
 catboost_info
 filtered_raw_data_plots
+linreg_residuals
 models_data
 models_saved
 ocp_plots

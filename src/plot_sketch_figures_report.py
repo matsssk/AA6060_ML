@@ -319,7 +319,7 @@ def convert_seconds_ANN(seconds):
 
 
 def plot_training_times_tot_all_models():
-    fig, ax1 = plt.subplots(figsize=(3, 3))
+    fig, ax1 = plt.subplots(figsize=(4, 3.5))
 
     # ax1.set_xlabel("ML algorithm")
     ax1.set_ylabel("Training time [s]", color="tab:blue")
@@ -352,8 +352,10 @@ def plot_residuals_linreg_tafel():
     length_residuals = sum([len(np.loadtxt("linreg_residuals/" + file)) for file in residuals_txt_files])
 
     standardized_residuals = np.zeros(length_residuals)
+    residuals = np.zeros_like(standardized_residuals)
     for file in residuals_txt_files:
         res = np.loadtxt("linreg_residuals/" + file)
+
         mean_residuals = np.mean(res)
 
         std_residuals = np.std(res)
@@ -364,11 +366,12 @@ def plot_residuals_linreg_tafel():
         idx_where_0 = np.argwhere(standardized_residuals == 0)[0][0]
 
         standardized_residuals[idx_where_0 : (idx_where_0 + len(std_res))] = std_res
+        residuals[idx_where_0 : (idx_where_0 + len(res))] = res
 
     fig_normality_test, ax_normality_test = plt.subplots(figsize=(3, 3))
     hist, bins = np.histogram(standardized_residuals, bins="auto")
     ax_normality_test.bar(bins[:-1], hist, align="edge", width=np.diff(bins), color="dimgray")
-    ax_normality_test.set_xlabel("Residuals Linear Regression Tafel line")
+    ax_normality_test.set_xlabel("Standardized residuals of linear \n regression of Tafel line")
     ax_normality_test.set_ylabel(f"Samples, N$_{{\\mathrm{{tot}}}}$ = {len(standardized_residuals)}")
     ax_normality_test.set_xlim(-3, 3)
 
@@ -379,15 +382,71 @@ def plot_residuals_linreg_tafel():
     ax2.plot(x, p, color="k")
     ax2.set_ylabel("Probability density")
 
+    #### plot NOT standardized residuals
+    fig_res, ax_res = plt.subplots(figsize=(3, 3))
+    hist_res_res = np.histogram(residuals, bins="auto")
+    ax_res.bar(bins[:-1], hist, align="edge", width=np.diff(bins), color="dimgray")
+    ax_res.set_xlabel("Residuals of linear \n regression of Tafel line")
+    ax_res.set_ylabel(f"Samples, N$_{{\\mathrm{{tot}}}}$ = {len(residuals)}")
+    ax_res.set_xlim(-3, 3)
+
+    # save standardized
     fig_normality_test.tight_layout()
-    fig_normality_test.savefig("summarized_data_figures_datafiles/appendix/linreg_residuals_normality_test.pgf")
-    fig_normality_test.savefig("summarized_data_figures_datafiles/appendix/linreg_residuals_normality_test.pdf")
+    fig_normality_test.savefig("summarized_data_figures_datafiles/appendix/standardized_residuals_linreg_tafel.pgf")
+    fig_normality_test.savefig("summarized_data_figures_datafiles/appendix/standardized_residuals_linreg_tafel.pdf")
+
+    # save NOT standardized
+    fig_res.tight_layout()
+    fig_res.savefig("summarized_data_figures_datafiles/appendix/linreg_residuals_normality_test.pgf")
+    fig_res.savefig("summarized_data_figures_datafiles/appendix/linreg_residuals_normality_test.pdf")
+
+
+def plot_histogram_feature_importances_DTs():
+    df = pd.read_csv("summarized_data_figures_datafiles/csv_files/feature_importances.csv", sep="\t")
+
+    # Model colors
+    # colors = {"rf": "tab:green", "cb": "tab:red", "xgb": "tab:blue", "lgbm": "tab:purple"}
+    colors_pot = {"rf": "dimgray", "cb": "dimgray", "xgb": "dimgray", "lgbm": "dimgray"}
+    colors_ph = {"rf": "k", "cb": "k", "xgb": "k", "lgbm": "k"}
+    # Setup plot
+    barWidth = 0.1
+    r1 = np.arange(len(df["Potential"]))
+    r2 = [x + barWidth for x in r1]
+
+    fig, ax = plt.subplots(figsize=(3.7, 3.7))
+    ax.bar(
+        r1,
+        df["Potential"],
+        color=[colors_pot[model] for model in df["Model"]],
+        width=barWidth,
+        label="Potential",
+    )
+
+    ax.bar(r2, df["pH"], color=[colors_ph[model] for model in df["Model"]], width=barWidth, label="pH")
+
+    ax.set_xticks([r + barWidth / 2 for r in range(len(df["Potential"]))], [model.upper() for model in df["Model"]])
+
+    ax.set_ylim([0, 1.0])
+    ax.set_ylabel("Importance")
+
+    # plot averages
+    potential_mean = df["Potential"].mean()
+    ax.hlines(
+        potential_mean, xmin=-1, xmax=4, label=f"Potential mean = {potential_mean:.2f}", linestyle="--", color="dimgray"
+    )
+    ph_mean = df["pH"].mean()
+    ax.hlines(ph_mean, xmin=-1, xmax=4, label=f"pH mean = {ph_mean:.2f}", linestyle=":", color="k")
+    ax.set_xlim(-0.5, 3.5)
+    ax.legend()
+    fig.savefig("summarized_data_figures_datafiles/pgf_plots/histogram_feat_imp_DTs.pgf")
+    fig.savefig("summarized_data_figures_datafiles/pdf_plots/histogram_feat_imp_DTs.pdf")
 
 
 if __name__ == "__main__":
+    plot_histogram_feature_importances_DTs()
     # plot_E_pit_ph10_2()
     # overfit_underfit_good_fit()
-    plot_residuals_linreg_tafel()
+    # plot_residuals_linreg_tafel()
     # tafel_plot()
     # diffusion()
     # pourbaix_diagram()

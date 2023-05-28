@@ -8,6 +8,7 @@ from scipy.stats import tstd
 from io import StringIO
 from src.load_data import list_of_filenames
 from src.plot_raw_data import get_grid_for_axs
+from scipy.stats import norm
 from sklearn.preprocessing import MinMaxScaler
 
 pdflatex_path = "/usr/bin/pdflatex"
@@ -48,7 +49,7 @@ def sort_files_based_on_ph(filename: str) -> float:
     return float(filename.split("h")[1].split(",")[0] + "." + filename.split(",")[1].split(".")[0])
 
 
-def one_third_of_data(X):
+def one_third_of_data(X: np.ndarray):
     return X[(int(len(X) / 3 * 2)) :]
 
 
@@ -64,9 +65,9 @@ def standard_deviation(X: np.ndarray) -> float:
     return tstd(X, limits=None)
 
 
-def normalize_data(ocp_vals: np.ndarray):
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    return scaler.fit_transform(ocp_vals.reshape(-1, 1))
+# def normalize_data(ocp_vals: np.ndarray):
+#     scaler = MinMaxScaler(feature_range=(0, 1))
+#     return scaler.fit_transform(ocp_vals.reshape(-1, 1))
 
 
 # def sma_ocps(ocps: np.ndarray):
@@ -97,7 +98,7 @@ def plot_ocp_files():
 
     # the coordinates of the different subplots
     positions = [[0, 0], [0, 1], [1, 0], [1, 1]] * int(len(files) / 4 + 1)
-    std_list, mean_ocps_for_phs, phs, all_ocp_data_normalized = [], [], [], []
+    std_list, mean_ocps_for_phs, phs, residuals = [], [], [], []
 
     # SMA figure
     # fig_smas, ax_smas = plt.subplots()
@@ -115,10 +116,12 @@ def plot_ocp_files():
         x_values = one_third_of_data(time)[::30][: len(deltaocp_30s)]  # Ensure same length as sma_values
         # print(len(sma_values))
         # ax_smas.plot(x_values, sma_values)
-        mean_ocps_for_phs.append(np.mean(one_third_of_ocps))
+        mean = np.mean(one_third_of_ocps)
+        mean_ocps_for_phs.append(mean)
         std_list.append(standard_deviation(one_third_of_ocps))
-        for val in normalize_data(one_third_of_ocps):
-            all_ocp_data_normalized.append(val)
+        for residual in one_third_of_ocps - mean:
+            residuals.append(residual)
+
         phs.append(float(file.split("h")[1].split(",")[0] + "." + file.split(",")[1].split(".")[0]))
 
         loc = positions[idx][0], positions[idx][1]
@@ -162,15 +165,42 @@ def plot_ocp_files():
 
     # Calculate and plot the normality test
     fig_normality_test, ax_normality_test = plt.subplots(figsize=(3, 3))
-    hist, bins = np.histogram(all_ocp_data_normalized, bins="auto")
+
+    hist, bins = np.histogram(residuals, bins="auto")
     ax_normality_test.bar(bins[:-1], hist, align="edge", width=np.diff(bins), color="dimgray")
-    ax_normality_test.set_ylabel("Samples")
-    ax_normality_test.set_xlabel("Normalized value")
+    ax_normality_test.set_ylabel(f"Samples, N$_{{\\mathrm{{tot}}}}$ = {len(residuals)}")
+    ax_normality_test.set_xlabel("OCP residuals from the mean")
+
+    # create new figure for standardization
+    fig_std, ax_std = plt.subplots(figsize=(3, 3))
+    residuals_array = np.array(residuals)
+    # the figure implies residual normality -> standardize data
+    mean_residuals = np.mean(residuals_array)
+    std_residuals = np.std(residuals_array)
+    # standardize the residuals
+    std_res = (residuals_array - mean_residuals) / std_residuals
+    hist, bins = np.histogram(std_res, bins="auto")
+    ax_std.bar(bins[:-1], hist, align="edge", width=np.diff(bins), color="dimgray")
+    ax_std.set_xlabel("Standardized OCP residuals")
+    ax_std.set_ylabel(f"Samples, N$_{{\\mathrm{{tot}}}}$ = {len(std_res)}")
+    ax_std.set_xlim(-3, 3)
+
+    # plot normal dist curve on 2nd y axis
+    ax2 = ax_std.twinx()
+    x = np.linspace(-3, 3, 100)
+    p = norm.pdf(x, 0, 1)  # mean=0, std=1
+    ax2.plot(x, p, color="k")
+    ax2.set_ylabel("Probability density")
+
     fig_normality_test.tight_layout()
+    fig_std.tight_layout()
 
     for ftype in ["pgf", "pdf"]:
-        fig_normality_test.savefig(f"summarized_data_figures_datafiles/{ftype}_plots/normality_test_ocp.{ftype}")
-        fig_deltaocp.savefig(f"summarized_data_figures_datafiles/{ftype}_plots/average_deltaocp_30s.{ftype}")
+        fig_normality_test.savefig(f"summarized_data_figures_datafiles/appendix/normality_test_ocp.{ftype}")
+
+        fig_deltaocp.savefig(f"summarized_data_figures_datafiles/appendix/average_deltaocp_30s.{ftype}")
+
+        fig_std.savefig(f"summarized_data_figures_datafiles/appendix/ocp_residuals_standardized_normal_dist.{ftype}")
 
 
 if __name__ == "__main__":

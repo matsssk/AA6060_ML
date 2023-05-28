@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import os
 import matplotlib
 import matplotlib.pyplot as plt
+from src.get_selected_features import lower_upper_i_corr
 
 # change matplotlib to store pgf files. this to make matplotlib more compatible
 # with latex
@@ -279,7 +280,9 @@ def store_polarization_curve_features(E: np.ndarray, i: np.ndarray, model: str) 
     E_applied = np.insert(E_applied, 0, ocp)
     E_corr, i_corr = corrosion_potential_and_current_density(slope, i_applied_log_abs[0], intercept)
 
-    _, _, lower_slope, upper_slope = lower_upper_confidence_interval_slope(i_applied_log_abs, slope, std_error_slope, intercept, intercept_stderr)  # type: ignore
+    _, _, lower_slope, upper_slope, lower_intercept, upper_intercept = lower_upper_confidence_interval_slope(i_applied_log_abs, slope, std_error_slope, intercept, intercept_stderr)  # type: ignore
+
+    lower_icorr, upper_icorr = lower_upper_i_corr(lower_intercept, upper_intercept, lower_slope, upper_slope, E_corr)
     return [
         E_applied,
         i_applied_log_abs,
@@ -291,6 +294,8 @@ def store_polarization_curve_features(E: np.ndarray, i: np.ndarray, model: str) 
         intercept_stderr,
         E_corr,
         i_corr,
+        lower_icorr,
+        upper_icorr,
         lower_slope,
         upper_slope,
         residuals,
@@ -319,23 +324,18 @@ def plot_experimental_testing_data(ph, loc1, loc2, df_features: pd.DataFrame) ->
             intercept_stderr,
             E_corr,
             i_corr,
-            lower_ci,
-            upper_ci,
+            lower_icorr,
+            upper_icorr,
+            lower_slope,
+            upper_slope,
             residuals,
         ]
     ) = store_polarization_curve_features(E, i, "exp")
     np.savetxt(f"linreg_residuals/residuals_linreg_exp{ph}.txt", residuals, fmt="%f")
-    df_features["Exp. data"] = [
-        ocp,
-        slope,
-        rvalue**2,
-        std_error_slope,
-        lower_ci,
-        upper_ci,
-        intercept_stderr,
-        E_corr,
-        i_corr,
-    ]
+    slopes = [round(slope * 1000, 1) for slope in [lower_slope, upper_slope, slope]]
+    icorrs = [round(icorr_ * 10**6, 2) for icorr_ in [lower_icorr, upper_icorr, i_corr]]
+
+    df_features["Exp. data"] = [E_corr, slopes, icorrs]
     figures_to_plot_exp_data_in = [
         ax_pred,
         ax_compare_anns,
@@ -431,13 +431,18 @@ def random_forest_comparison(ph, loc1, loc2, df_features: pd.DataFrame) -> None:
             intercept_stderr,
             E_corr,
             i_corr,
-            lower_ci,
-            upper_ci,
+            lower_icorr,
+            upper_icorr,
+            lower_slope,
+            upper_slope,
             residuals,
         ]
     ) = store_polarization_curve_features(E, i, "RF")
     np.savetxt(f"linreg_residuals/residuals_linreg_rf_{ph}.txt", residuals, fmt="%f")
-    df_features["RF"] = [ocp, slope, rvalue**2, std_error_slope, lower_ci, upper_ci, intercept_stderr, E_corr, i_corr]
+    slopes = [round(slope * 1000, 1) for slope in [lower_slope, upper_slope, slope]]
+    icorrs = [round(icorr_ * 10**6, 2) for icorr_ in [lower_icorr, upper_icorr, i_corr]]
+
+    df_features["RF"] = [E_corr, slopes, icorrs]
 
     linestyle, color = linestyles_and_markers_for_model_comparisons("rf")
     figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_rf]  # [loc1, loc2]]
@@ -491,14 +496,19 @@ def catboost_comparison(ph, store_mape: list, rmse_catboost: list, loc1, loc2, d
             intercept_stderr,
             E_corr,
             i_corr,
-            lower_ci,
-            upper_ci,
+            lower_icorr,
+            upper_icorr,
+            lower_slope,
+            upper_slope,
             residuals,
         ]
     ) = store_polarization_curve_features(E, i, "CB")
     np.savetxt(f"linreg_residuals/residuals_linreg_cb_{ph}.txt", residuals, fmt="%f")
     # add_residuals_to_txt_file(residuals)
-    df_features["CB"] = [ocp, slope, rvalue**2, std_error_slope, lower_ci, upper_ci, intercept_stderr, E_corr, i_corr]
+    slopes = [round(slope * 1000, 1) for slope in [lower_slope, upper_slope, slope]]
+    icorrs = [round(icorr_ * 10**6, 2) for icorr_ in [lower_icorr, upper_icorr, i_corr]]
+
+    df_features["CB"] = [E_corr, slopes, icorrs]
 
     figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_cb]  # [loc1, loc2]]
     for ax in figures_to_plot_pred_in:
@@ -577,24 +587,19 @@ def xgboost_comparison(ph, store_mape, rmse_xgboost: list, loc1, loc2, df_featur
             intercept_stderr,
             E_corr,
             i_corr,
-            lower_ci,
-            upper_ci,
+            lower_icorr,
+            upper_icorr,
+            lower_slope,
+            upper_slope,
             residuals,
         ]
     ) = store_polarization_curve_features(E, i, "XGB")
     np.savetxt(f"linreg_residuals/residuals_linreg_xgb_{ph}.txt", residuals, fmt="%f")
     # add_residuals_to_txt_file(residuals)
-    df_features["XGB"] = [
-        ocp,
-        slope,
-        rvalue**2,
-        std_error_slope,
-        lower_ci,
-        upper_ci,
-        intercept_stderr,
-        E_corr,
-        i_corr,
-    ]
+    slopes = [round(slope * 1000, 1) for slope in [lower_slope, upper_slope, slope]]
+    icorrs = [round(icorr_ * 10**6, 2) for icorr_ in [lower_icorr, upper_icorr, i_corr]]
+
+    df_features["XGB"] = [E_corr, slopes, icorrs]
 
     linestyle, color = linestyles_and_markers_for_model_comparisons("xgb")
     figures_to_plot_pred_in = [ax_pred, ax_individual_model_vs_exp_xgb]  # [loc1, loc2]]
@@ -666,24 +671,19 @@ def lgbm_comparison(ph, store_mape, rmse_lgb, loc1, loc2, df_features: pd.DataFr
             intercept_stderr,
             E_corr,
             i_corr,
-            lower_ci,
-            upper_ci,
+            lower_icorr,
+            upper_icorr,
+            lower_slope,
+            upper_slope,
             residuals,
         ]
     ) = store_polarization_curve_features(E, i, "LGBM")
     np.savetxt(f"linreg_residuals/residuals_linreg_lgb_{ph}.txt", residuals, fmt="%f")
     # add_residuals_to_txt_file(residuals)
-    df_features["LGB"] = [
-        ocp,
-        slope,
-        rvalue**2,
-        std_error_slope,
-        lower_ci,
-        upper_ci,
-        intercept_stderr,
-        E_corr,
-        i_corr,
-    ]
+    slopes = [round(slope * 1000, 1) for slope in [lower_slope, upper_slope, slope]]
+    icorrs = [round(icorr_ * 10**6, 2) for icorr_ in [lower_icorr, upper_icorr, i_corr]]
+
+    df_features["LGB"] = [E_corr, slopes, icorrs]
 
     linestyle, color = linestyles_and_markers_for_model_comparisons("lgb")
 
@@ -772,8 +772,10 @@ def ANN_comparison(ph, store_mape, rmse_ann, loc1, loc2, df_features: pd.DataFra
                             intercept_stderr,
                             E_corr,
                             i_corr,
-                            lower_ci,
-                            upper_ci,
+                            lower_icorr,
+                            upper_icorr,
+                            lower_slope,
+                            upper_slope,
                             residuals,
                         ]
                     ) = store_polarization_curve_features(E, i, "ANN")
@@ -792,23 +794,18 @@ def ANN_comparison(ph, store_mape, rmse_ann, loc1, loc2, df_features: pd.DataFra
                             intercept_stderr,
                             E_corr,
                             i_corr,
-                            lower_ci,
-                            upper_ci,
+                            lower_icorr,
+                            upper_icorr,
+                            lower_slope,
+                            upper_slope,
                             residual,
                         ]
                     ) = store_polarization_curve_features(E, 10**y_test_ph, "ANN")
 
-                df_features["ANN"] = [
-                    ocp,
-                    slope,
-                    rvalue**2,
-                    std_error_slope,
-                    lower_ci,
-                    upper_ci,
-                    intercept_stderr,
-                    E_corr,
-                    i_corr,
-                ]
+                slopes = [round(slope * 1000, 1) for slope in [lower_slope, upper_slope, slope]]
+                icorrs = [round(icorr_ * 10**6, 2) for icorr_ in [lower_icorr, upper_icorr, i_corr]]
+
+                df_features["ANN"] = [E_corr, slopes, icorrs]
 
                 linestyle, color = linestyles_and_markers_for_model_comparisons("ann")
 
@@ -1000,17 +997,11 @@ if __name__ == "__main__":
         df_features = pd.DataFrame()
         df_features.insert(
             0,
-            "",
+            "Param",
             value=[
-                "OCP [V]",
-                "Tafel slope $[$mv/dec$]$",
-                "R\\textsuperscript{2} value slope",
-                "Std. error slope (10$^3$)",
-                "Lower limit 99\\% confidence interval",
-                "Upper limit 99\\% confidence interval",
-                "Std. error intercept (10$^3$)",
-                "E\\textsubscript{corr} [V]",
-                "i\\textsubscript{corr} \\text{[$\mu$A cm\\textsuperscript{-2}]}",
+                "E corr [mV]",
+                "Tafel 99\% CI, pred $[$mv/dec$]$",
+                "i corr 99\% CI, pred [$\micro A/cm^2$]",
             ],
         )
 
@@ -1022,15 +1013,26 @@ if __name__ == "__main__":
         ANN_comparison(ph, mape_ann, rmse_ann, loc1, loc2, df_features)
 
         # create dataframe to store important parameters from the curves. Save as tex file too
-        df_features.iloc[-1, 1:] *= 10**6  # convert to micro A/cm^2 for i_corr
-        df_features.iloc[[1, 3, 4, 5, 6], 1:] *= 1000
-        df_features["Mean error ML"] = df_features.iloc[:, 1:].mean(axis=1)
-        df_features["Mean error ML - Exp. data"] = df_features["Mean error ML"] - df_features["Exp. data"]
-        df_features["MAPE"] = abs(df_features["Mean error ML - Exp. data"] / df_features["Exp. data"]) * 100
-        # Select all columns except for the first column
-        cols_to_round = df_features.columns[1:]
-        # Round the selected columns to 3 decimal places
-        df_features[cols_to_round] = df_features[cols_to_round].applymap(lambda x: f"{x:.3g}")
+        # df_features.iloc[-1, 1:] *= 10**6  # convert to micro A/cm^2 for i_corr
+
+        df_features.iloc[0, 1:] = [round(val * 1000, 1) for val in df_features.iloc[0, 1:]]  # mV
+        mean_Ecorr = df_features.iloc[0, 1:].mean()
+        ML_preds = list(df_features.iloc[1:, 2:].apply(lambda row: [x[-1] for x in row], axis=1))
+
+        mean_slope = sum(ML_preds[0]) / 5
+        mean_icorr = sum(ML_preds[1]) / 5
+
+        mean_ML = [round(mean_Ecorr, 1), round(mean_slope, 1), round(mean_icorr, 2)]
+        df_features["Mean ML"] = mean_ML
+        mape_Ecorr = (df_features["Mean ML"][0] - df_features["Exp. data"][0]) / df_features["Exp. data"][0] * 100
+        mape_slope = (
+            (df_features["Mean ML"][1] - df_features["Exp. data"][1][-1]) / df_features["Exp. data"][1][-1] * 100
+        )
+        mape_icorr = (
+            (df_features["Mean ML"][2] - df_features["Exp. data"][2][-1]) / df_features["Exp. data"][2][-1] * 100
+        )
+        df_features["MAPE"] = [round(mape_Ecorr, 1), round(mape_slope, 1), round(mape_icorr, 1)]
+
         df_features.to_csv(f"summarized_data_figures_datafiles/csv_files/df_features{ph}.csv", sep="\t", index=False)
 
         """Save appendix figures"""
