@@ -44,7 +44,6 @@ def search_spaces() -> list[list | float]:
     neurons_space = [150, 200, 300, 400, 600, 900, 1200]
     num_layers_space = [i for i in range(5, 10)]
     # l2s_space = [1e-5, 1e-4, 1e-3]
-    # optimizers_space = ["adam", "sgd", "adagrad"]
     # optimizers_space = [
     #     tf.keras.optimizers.Adam(learning_rate=1e-3),
     #     tf.keras.optimizers.Adam(learning_rate=1e-2),

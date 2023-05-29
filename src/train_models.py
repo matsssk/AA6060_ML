@@ -143,7 +143,7 @@ def catboost_model() -> None:
     X_train, X_val, y_train, y_val = split_into_training_and_validation(X, y)
 
     # extract key-value pairs, use default values besides the ones in RS
-    cb = CatBoostRegressor(n_estimators=n_iterations, loss_function="RMSE", learning_rate=0.35)
+    cb = CatBoostRegressor(n_estimators=n_iterations, learning_rate=0.35)  # loss_function="RMSE",
     t0 = time.perf_counter()
     cb.fit(X_train, y_train, eval_set=(X_val, y_val), verbose=100, early_stopping_rounds=50)
 
