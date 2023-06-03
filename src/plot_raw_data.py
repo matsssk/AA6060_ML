@@ -76,7 +76,7 @@ def plot_and_return_dataframe_with_filtered_data(
     df_all_filtered_data = pd.DataFrame()
     files = list_of_filenames("raw_data")
     files_without_gamry_errors = list_of_filenames("raw_data_without_gamry_noise")
-
+    # print(files_without_gamry_errors)
     # dataframe to store selected features
     selected_features_df = pd.DataFrame()
     # loop over all files and plot necessary plots for report, while storing data to dataframe
@@ -94,6 +94,12 @@ def plot_and_return_dataframe_with_filtered_data(
         current_density_filtered, potential_filtered = remove_first_cath_branch(
             current_density_no_gamry_noise, potential_no_gamry_noise
         )
+        # if abs(len(potential_raw) - len(potential_filtered)) < 1000:
+        #     print(pH)
+        # if pH == 8.4:
+        #     print(len(potential_filtered))
+        #     print(len(potential_raw))
+
         ocp_t0, ocp_t_half, delta_ocp = get_ocps(potential_raw, potential_filtered, current_density_filtered)
         # plot pH vs OCP
 

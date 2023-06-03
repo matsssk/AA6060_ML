@@ -67,11 +67,11 @@ def plot_neurons_vs_rmse():
             sorted_df["neurons"],
             sorted_df["val_rmse"],
             marker=marker,
-            markersize=8,
+            markersize=4,
             linestyle="-",
             linewidth=1,
             color="gray",
-            label=f"HP: {combination[2]}, {combination[3]}, {combination[4]}",
+            label=f"{combination[2]} HL, {combination[3].upper()}, {combination[4]} BS",
         )
 
         ax.scatter(
@@ -127,11 +127,11 @@ def plot_HL_vs_rmse():
             sorted_df["num_hidden_layers"].astype(int),
             sorted_df["val_rmse"],
             marker=marker,
-            markersize=8,
+            markersize=4,
             linestyle="-",
             linewidth=1,
             color="gray",
-            label=f"HP: {combination[1]}, {combination[3]}, {combination[4]}",
+            label=f"{combination[1]} N, {combination[3].upper()}, {combination[4]} BS",
         )
 
         ax.scatter(
@@ -183,11 +183,11 @@ def plot_lossfunc_vs_rmse():
             sorted_df["loss_function"],
             sorted_df["val_rmse"],
             marker=marker,
-            markersize=8,
+            markersize=4,
             linestyle="-",
             linewidth=1,
             color="gray",
-            label=f"HP: {combination[1]}, {combination[2]}, {combination[4]}",
+            label=f"{combination[1]} N, {combination[2]} HL, {combination[4]} BS",
         )
 
         ax.scatter(
@@ -238,11 +238,11 @@ def plot_batch_size_vs_rmse():
             sorted_df["batch_size"],
             sorted_df["val_rmse"],
             marker=marker,
-            markersize=8,
+            markersize=4,
             linestyle="-",
             linewidth=1,
             color="gray",
-            label=f"HP:  {combination[1]},{combination[2]}, {combination[3]}",
+            label=f"{combination[1]} N,{combination[2]} HL, {combination[3].upper()}",
         )
 
         ax.scatter(

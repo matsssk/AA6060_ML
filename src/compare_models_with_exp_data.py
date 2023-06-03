@@ -75,10 +75,12 @@ if __name__ == "__main__":
     ax_loss_trees = fig_loss_trees.subplots()
     # ax_loss_trees.grid(True, linestyle="-", color="gray")
     ax_loss_trees.set_xlabel("Iterations")
-    ax_loss_trees.set_ylabel("Loss, RMSE [log($|i|$)]")
+    ax_loss_trees.set_ylabel("Loss, RMSE [log\\textsubscript{10}($|i|$)]")
     ax_loss_trees.set_yscale("log")
     ax_loss_trees2 = ax_loss_trees.twinx()  # plot loss gradients
-    ax_loss_trees2.set_ylabel("3 window SMA of $\Delta$RMSE$_{{\\mathrm{{val}}}}$($\Delta$$N$ = 100) [log($|i|$)]")
+    ax_loss_trees2.set_ylabel(
+        "3 window SMA of $\Delta$RMSE$_{{\\mathrm{{val}}}}$($\Delta$$N$ = 100) [log\\textsubscript{10}($|i|$)]"
+    )
     ax_loss_trees2.set_yscale("log")
     ax_loss_trees.yaxis.set_minor_locator(ticker.LogLocator(base=10.0, subs=np.arange(2, 10) * 0.1, numticks=10))
 
@@ -114,7 +116,7 @@ if __name__ == "__main__":
     fig_loss_ANN = plt.figure(figsize=(3, 3))
     ax_loss_ANN = fig_loss_ANN.subplots()
     ax_loss_ANN.set_xlabel("Epochs")
-    ax_loss_ANN.set_ylabel("Loss, RMSE [log($|i_{{\\mathrm{{NORM.}}}}|)$]")
+    ax_loss_ANN.set_ylabel("Loss, RMSE [log\\textsubscript{10}($|i_{{\\mathrm{{NORM.}}}}|)$]")
     ax_loss_ANN.yaxis.set_minor_locator(ticker.LogLocator(base=10.0, subs=np.arange(2, 10) * 0.1, numticks=10))
 
     # Turn on the minor TICKS, which are required for the minor GRID

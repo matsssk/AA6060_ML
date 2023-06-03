@@ -296,7 +296,7 @@ def lgbm_tuning_last_iterations_before_termination_rmse():
 
 
 def plot_training_times_per_DT():
-    plt.figure(figsize=(3, 3))
+    plt.figure(figsize=(2.7, 2.7))
     # plt.xlabel("ML algorithm")
     plt.ylabel("Training time per tree [s/tree]")
     df = pd.read_csv("summarized_data_figures_datafiles/csv_files/training_times_per_tree_DTs.csv", sep="\t")
@@ -304,7 +304,7 @@ def plot_training_times_per_DT():
     pos = [0, 1, 2, 3]
     plt.bar(df["Model"], df["Time"], width=0.25, color="gray")
     plt.xticks(
-        pos, labels=[f" {k.upper()}: {round(v,2)} s" for k, v in zip(df["Model"], df["Time"])], rotation=45, ha="center"
+        pos, labels=[f" {k.upper()}: {round(v,3)} s" for k, v in zip(df["Model"], df["Time"])], rotation=45, ha="center"
     )
 
     plt.tight_layout()
@@ -319,7 +319,7 @@ def convert_seconds_ANN(seconds):
 
 
 def plot_training_times_tot_all_models():
-    fig, ax1 = plt.subplots(figsize=(4, 3.5))
+    fig, ax1 = plt.subplots(figsize=(2.7, 2.7))
 
     # ax1.set_xlabel("ML algorithm")
     ax1.set_ylabel("Training time [s]", color="tab:blue")
@@ -371,9 +371,9 @@ def plot_residuals_linreg_tafel():
     fig_normality_test, ax_normality_test = plt.subplots(figsize=(3, 3))
     hist, bins = np.histogram(standardized_residuals, bins="auto")
     ax_normality_test.bar(bins[:-1], hist, align="edge", width=np.diff(bins), color="dimgray")
-    ax_normality_test.set_xlabel("Standardized residuals of linear \n regression of Tafel line")
+    ax_normality_test.set_xlabel("Standardized residuals of linear \n regression of Tafel line (Z-score)")
     ax_normality_test.set_ylabel(f"Samples, N$_{{\\mathrm{{tot}}}}$ = {len(standardized_residuals)}")
-    ax_normality_test.set_xlim(-3, 3)
+    ax_normality_test.set_xlim(min(standardized_residuals), max(standardized_residuals))
 
     # plot normal dist curve on 2nd y axis
     ax2 = ax_normality_test.twinx()
@@ -381,16 +381,28 @@ def plot_residuals_linreg_tafel():
     p = norm.pdf(x, 0, 1)  # mean=0, std=1
     ax2.plot(x, p, color="k")
     ax2.set_ylabel("Probability density")
+    # plot 99\% quantiles
+    mu = 0
+    sigma = 1
+    # q = norm.ppf(0.99, mu, sigma)
+    q = 2.575829
+    # Get the y-value at the 99% quantile
+    y_q = norm.pdf(q, mu, sigma)
+    ax2.plot([q, q], [0, y_q], color="r", linestyle=":", label="99% quantile")
+    ax2.plot([-q, -q], [0, y_q], color="r", linestyle=":", label="99% quantile")
+    ax2.set_ylim(0, 0.41)
 
     #### plot NOT standardized residuals
     fig_res, ax_res = plt.subplots(figsize=(3, 3))
-    hist_res_res = np.histogram(residuals, bins="auto")
-    ax_res.bar(bins[:-1], hist, align="edge", width=np.diff(bins), color="dimgray")
+    hist_res_res, bins_res = np.histogram(residuals, bins="auto")
+    ax_res.bar(bins_res[:-1], hist_res_res, align="edge", width=np.diff(bins_res), color="dimgray")
     ax_res.set_xlabel("Residuals of linear \n regression of Tafel line")
     ax_res.set_ylabel(f"Samples, N$_{{\\mathrm{{tot}}}}$ = {len(residuals)}")
-    ax_res.set_xlim(-3, 3)
+    ax_res.set_xlim(min(residuals), max(residuals))
 
     # save standardized
+    # text box quantile
+    ax_normality_test.text(-6.5, 350, "{} = 0.005".format(r"$\alpha$"), color="r")
     fig_normality_test.tight_layout()
     fig_normality_test.savefig("summarized_data_figures_datafiles/appendix/standardized_residuals_linreg_tafel.pgf")
     fig_normality_test.savefig("summarized_data_figures_datafiles/appendix/standardized_residuals_linreg_tafel.pdf")
@@ -442,8 +454,80 @@ def plot_histogram_feature_importances_DTs():
     fig.savefig("summarized_data_figures_datafiles/pdf_plots/histogram_feat_imp_DTs.pdf")
 
 
+df_E_pit_E_corr_ = pd.read_csv("csv_files_E_corr_E_pit/ocp_t0_vs_ph.csv", sep="\t")
+
+
+def plot_Ecorr_as_function_of_ph():
+    df = pd.read_csv("selected_features.csv", sep="\t")
+    phs = df["pH"]
+    Ecorrs = df["OCP_t_half"]
+    deltaE = df["delta_OCP"]
+
+    fig_Ecorr, ax_Ecorr = plt.subplots(figsize=(2.5, 2.5))
+    ax_Ecorr.set_xlabel("pH")
+    ax_Ecorr.set_ylabel("OCP\\textsubscript{t\\textsubscript{h}} vs SCE [V]")
+    phs = list(np.arange(2.0, 12.2, 0.2))
+    ax_Ecorr.set_xticks(np.arange(2, 13, 2))
+    ax_Ecorr.scatter(phs, Ecorrs, s=4, color="k")
+
+    fig_delta_E, ax_delta_E = plt.subplots(figsize=(2.5, 2.5))
+    ax_delta_E.set_xlabel("pH")
+    ax_delta_E.set_ylabel(
+        "$\\Delta E$, OCP\\textsubscript{t\\textsubscript{0}} - OCP\\textsubscript{t\\textsubscript{h}} [V]"
+    )
+    ax_delta_E.set_xticks(np.arange(2, 13, 2))
+    ax_delta_E.scatter(phs, deltaE, s=4, color="k")
+
+    mask = np.array(phs) < 6.1
+    phs_2_6 = np.array(phs)[mask]
+    ocps_ph_2_6 = np.array(Ecorrs)[mask]
+    avg_2_6 = np.mean(ocps_ph_2_6)
+
+    avg_residual_ph_2_6 = np.mean(abs((ocps_ph_2_6 - avg_2_6)))
+    ax_Ecorr.hlines(avg_2_6, xmin=2, xmax=6, linestyle="--", color="dimgray")
+    ax_Ecorr.text(
+        2, -1.2, "Avg. OCP\\textsubscript{t\\textsubscript{h}}" + f"\n $\in [2.0, 6.0]$ \n = {round(avg_2_6,3)} V"
+    )
+
+    ax_Ecorr.annotate("", xy=(3, -0.74), xytext=(3, -0.94), arrowprops=dict(facecolor="dimgray", shrink=0.002))
+
+    df_E_pit_E_corr_["OCP_th"] = Ecorrs
+    df_E_pit_E_corr_["delta"] = deltaE
+
+    fig_Ecorr.tight_layout()
+
+    fig_Ecorr.savefig("summarized_data_figures_datafiles/appendix/Ecorr_vs_ph.pgf")
+    fig_Ecorr.savefig("summarized_data_figures_datafiles/appendix/E_corr_vs_ph.pdf")
+
+    fig_delta_E.tight_layout()
+    fig_delta_E.savefig("summarized_data_figures_datafiles/appendix/deltaE_vs_ph.pgf")
+    fig_delta_E.savefig("summarized_data_figures_datafiles/appendix/deltaE_vs_ph.pdf")
+
+
+def plot_E_pit_manually_written():
+    df = pd.read_excel("summarized_data_figures_datafiles/csv_files/E_pit_visible.xlsx")
+    ph, E_pit = df["pH"], df["E_pit"]
+    df_E_pit_E_corr_["pH_Epit"] = ph
+    df_E_pit_E_corr_["Epit"] = E_pit
+
+    plt.figure(figsize=(2.5, 2.5))
+    plt.xlabel("pH")
+    plt.ylabel("$E$\\textsubscript{pit} vs SCE [V]")
+    plt.scatter(ph, E_pit, color="k", s=6)
+    plt.axhline(E_pit.mean(), color="dimgray", linestyle="--")
+    plt.text(6, -0.69, "Avg. $E$\\textsubscript{pit}" + f"\n = {round(E_pit.mean(),2)} V")
+    plt.xticks(np.arange(2, 11, 2))
+    plt.annotate(
+        "", xy=(6.5, E_pit.mean() - 0.002), xytext=(6.5, -0.68), arrowprops=dict(facecolor="dimgray", shrink=0.002)
+    )
+    plt.tight_layout()
+
+    plt.savefig("summarized_data_figures_datafiles/appendix/Epit_vs_ph.pgf")
+    plt.savefig("summarized_data_figures_datafiles/appendix/Epit_vs_ph.pdf")
+
+
 if __name__ == "__main__":
-    plot_histogram_feature_importances_DTs()
+    # plot_histogram_feature_importances_DTs()
     # plot_E_pit_ph10_2()
     # overfit_underfit_good_fit()
     # plot_residuals_linreg_tafel()
@@ -454,3 +538,6 @@ if __name__ == "__main__":
     # lgbm_tuning_last_iterations_before_termination_rmse()
     # plot_training_times_per_DT()
     # plot_training_times_tot_all_models()
+    plot_Ecorr_as_function_of_ph()
+    plot_E_pit_manually_written()
+    df_E_pit_E_corr_.to_csv("summarized_data_figures_datafiles/E_corr_E_pit_data.csv", sep="\t", index=False)

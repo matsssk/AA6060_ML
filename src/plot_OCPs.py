@@ -106,11 +106,14 @@ def plot_ocp_files():
     # ax_smas.set_xlabel("Time")
 
     sma_list = []  # List to store the SMA arrays for each file
-
+    ocps = []
+    all_phs = list(np.arange(2.0, 12.2, 0.2))  # same order as files
     for idx, file in enumerate(files):
         file_path = os.path.join(folder_with_ocps(), file)
         time, potential = load_ocp_data(file_path)
         one_third_of_ocps = one_third_of_data(potential)
+        # if phs_active[idx] < 4.5 or phs_active[idx] > 9.1:
+        ocps.append(potential[-1])
 
         deltaocp_30s = deltaocps(one_third_of_ocps)
         x_values = one_third_of_data(time)[::30][: len(deltaocp_30s)]  # Ensure same length as sma_values
@@ -152,8 +155,8 @@ def plot_ocp_files():
     avg_delta_ocp30s = np.mean(sma_list, axis=0)
 
     # Plot the array of average SMA values
-    fig_deltaocp, ax_deltaocp = plt.subplots(figsize=(3, 3))
-    ax_deltaocp.plot(x_values, avg_delta_ocp30s * 1000, color="dimgray", linestyle="-", marker="o")
+    fig_deltaocp, ax_deltaocp = plt.subplots(figsize=(2.5, 2.5))
+    ax_deltaocp.plot(x_values, avg_delta_ocp30s * 1000, color="k", linestyle="-", marker="o", markersize=3)
 
     ax_deltaocp.axhline(np.mean(avg_delta_ocp30s * 1000), label="Mean", linestyle="--", color="dimgray")
     ax_deltaocp.set_xlabel("Time [s]")
@@ -170,6 +173,7 @@ def plot_ocp_files():
     ax_normality_test.bar(bins[:-1], hist, align="edge", width=np.diff(bins), color="dimgray")
     ax_normality_test.set_ylabel(f"Samples, N$_{{\\mathrm{{tot}}}}$ = {len(residuals)}")
     ax_normality_test.set_xlabel("OCP residuals from the mean")
+    ax_normality_test.set_xlim(min(residuals), max(residuals))
 
     # create new figure for standardization
     fig_std, ax_std = plt.subplots(figsize=(3, 3))
@@ -181,9 +185,9 @@ def plot_ocp_files():
     std_res = (residuals_array - mean_residuals) / std_residuals
     hist, bins = np.histogram(std_res, bins="auto")
     ax_std.bar(bins[:-1], hist, align="edge", width=np.diff(bins), color="dimgray")
-    ax_std.set_xlabel("Standardized OCP residuals")
+    ax_std.set_xlabel("Standardized OCP residuals (Z-score)")
     ax_std.set_ylabel(f"Samples, N$_{{\\mathrm{{tot}}}}$ = {len(std_res)}")
-    ax_std.set_xlim(-3, 3)
+    ax_std.set_xlim(min(std_res), max(std_res))
 
     # plot normal dist curve on 2nd y axis
     ax2 = ax_std.twinx()
@@ -191,9 +195,50 @@ def plot_ocp_files():
     p = norm.pdf(x, 0, 1)  # mean=0, std=1
     ax2.plot(x, p, color="k")
     ax2.set_ylabel("Probability density")
+    ax2.set_ylim(0, 0.41)
+    # plot 99% quantiles
+    # plot 99\% quantiles
+    mu = 0
+    sigma = 1
+    # q = norm.ppf(0.99, mu, sigma)
+    q = 2.575829
+    # Get the y-value at the 99% quantile
+    y_q = norm.pdf(q, mu, sigma)
+    ax2.plot([q, q], [0, y_q], color="r", linestyle=":", label="99% quantile")
+    ax2.plot([-q, -q], [0, y_q], color="r", linestyle=":", label="99% quantile")
 
     fig_normality_test.tight_layout()
+    # plot quantile text
+    ax_std.text(-7, 270, "{} = 0.005".format(r"$\alpha$"), color="r")
     fig_std.tight_layout()
+
+    # plot ocps vs pH
+    pHs_active = list(np.arange(2.0, 4.6, 0.2)) + list(np.arange(9.2, 12.2, 0.2))
+    fig_ocp, ax_ocp = plt.subplots(figsize=(2.5, 2.5))
+    ax_ocp.set_xticks(np.arange(2, 13, 2))
+    # ax_ocp.grid(color="dimgray", linestyle=":")
+    ax_ocp.set_xlabel("pH")
+    ax_ocp.set_ylabel("OCP\\textsubscript{t\\textsubscript{0}} vs SCE [V]")
+    ax_ocp.scatter(all_phs, ocps, s=4, color="k")
+    pd.DataFrame({"pH": all_phs, "OCP_t0": ocps}).to_csv(
+        "csv_files_E_corr_E_pit/ocp_t0_vs_ph.csv", sep="\t", index=False
+    )
+
+    # plot average OCP between ph 2 and 6.
+
+    mask = np.array(all_phs) < 6.1
+    phs_2_6 = np.array(all_phs)[mask]
+    ocps_ph_2_6 = np.array(ocps)[mask]
+    avg_2_6 = np.mean(ocps_ph_2_6)
+
+    avg_residual_ph_2_6 = np.mean(abs((ocps_ph_2_6 - avg_2_6)))
+    ax_ocp.hlines(avg_2_6, xmin=2, xmax=6, linestyle="--", color="dimgray")
+    ax_ocp.text(
+        2, -1.2, "Avg. OCP\\textsubscript{t\\textsubscript{0}}" + f"\n $\in [2.0, 6.0]$ \n = {round(avg_2_6,3)} V"
+    )
+
+    ax_ocp.annotate("", xy=(3, -0.74), xytext=(3, -0.94), arrowprops=dict(facecolor="dimgray", shrink=0.002))
+    fig_ocp.tight_layout()
 
     for ftype in ["pgf", "pdf"]:
         fig_normality_test.savefig(f"summarized_data_figures_datafiles/appendix/normality_test_ocp.{ftype}")
@@ -201,6 +246,8 @@ def plot_ocp_files():
         fig_deltaocp.savefig(f"summarized_data_figures_datafiles/appendix/average_deltaocp_30s.{ftype}")
 
         fig_std.savefig(f"summarized_data_figures_datafiles/appendix/ocp_residuals_standardized_normal_dist.{ftype}")
+
+        fig_ocp.savefig(f"summarized_data_figures_datafiles/appendix/ocp_vs_ph.{ftype}")
 
 
 if __name__ == "__main__":

@@ -1443,7 +1443,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=0.288889in,y=2.199846in,,bottom,rotate=90.000000]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Loss, RMSE [log(\(\displaystyle |i|\))]}%
+\pgftext[x=0.288889in,y=2.199846in,,bottom,rotate=90.000000]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Loss, RMSE [log\textsubscript{10}(\(\displaystyle |i|\))]}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfpathrectangle{\pgfqpoint{0.729669in}{0.549691in}}{\pgfqpoint{3.540662in}{3.300309in}}%
@@ -3816,7 +3816,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=4.711111in,y=2.199846in,,top,rotate=90.000000]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont 3 window SMA of \(\displaystyle \Delta\)RMSE\(\displaystyle _{{\mathrm{{val}}}}\)(\(\displaystyle \Delta\)\(\displaystyle N\) = 100) [log(\(\displaystyle |i|\))]}%
+\pgftext[x=4.711111in,y=2.199846in,,top,rotate=90.000000]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont 3 window SMA of \(\displaystyle \Delta\)RMSE\(\displaystyle _{{\mathrm{{val}}}}\)(\(\displaystyle \Delta\)\(\displaystyle N\) = 100) [log\textsubscript{10}(\(\displaystyle |i|\))]}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfpathrectangle{\pgfqpoint{0.729669in}{0.549691in}}{\pgfqpoint{3.540662in}{3.300309in}}%
