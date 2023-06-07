@@ -221,7 +221,7 @@ def pourbaix_diagram():
     # HER
     plt.plot(x, -0.0591 * x, linestyle="dashed", color="grey")
 
-    # ORR
+    # ORR.
     plt.plot(x, 1.23 - 0.0591 * x, linestyle="dashed", color="grey")
 
     # inserting text in plot
