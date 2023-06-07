@@ -666,13 +666,13 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=2.120428in,y=1.772839in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Al\(\displaystyle _2\)O\(\displaystyle _3\)}%
+\pgftext[x=2.048362in,y=1.772839in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont \(\displaystyle \alpha\)-Al\(\displaystyle _2\)O\(\displaystyle _3\)}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=2.048362in,y=1.589367in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont (Passive)}%
+\pgftext[x=2.024341in,y=1.589367in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont (Passive)}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%

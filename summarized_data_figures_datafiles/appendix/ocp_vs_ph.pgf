@@ -552,7 +552,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=0.288889in,y=1.449846in,,bottom,rotate=90.000000]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont OCP\textsubscript{t\textsubscript{0}} vs SCE [V]}%
+\pgftext[x=0.288889in,y=1.449846in,,bottom,rotate=90.000000]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont \(\displaystyle E\)\textsubscript{corr\textsubscript{t0}} vs SCE [V]}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfpathrectangle{\pgfqpoint{0.727161in}{0.549691in}}{\pgfqpoint{1.622839in}{1.800309in}}%
@@ -615,7 +615,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=0.800927in, y=1.560684in, left, base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Avg. OCP\textsubscript{t\textsubscript{0}}}%
+\pgftext[x=0.800927in, y=1.560684in, left, base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Avg. \(\displaystyle E\)\textsubscript{corr\textsubscript{t0}}}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%

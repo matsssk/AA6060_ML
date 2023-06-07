@@ -71,7 +71,7 @@ if __name__ == "__main__":
     ax_compare_anns = fig_compare_anns.subplots()
 
     # training loss GBDTs
-    fig_loss_trees = plt.figure(figsize=(5, 4))
+    fig_loss_trees = plt.figure(figsize=(5.5, 4.5))
     ax_loss_trees = fig_loss_trees.subplots()
     # ax_loss_trees.grid(True, linestyle="-", color="gray")
     ax_loss_trees.set_xlabel("Iterations")
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     # plt.rcParams["legend.fontsize"] = 14  # Set size for legend
     # plt.rcParams["figure.figsize"] = [6.1, 6.1]
     # ANN losses
-    fig_loss_ANN = plt.figure(figsize=(3, 3))
+    fig_loss_ANN = plt.figure(figsize=(4.8, 3.5))
     ax_loss_ANN = fig_loss_ANN.subplots()
     ax_loss_ANN.set_xlabel("Epochs")
     ax_loss_ANN.set_ylabel("Loss, RMSE [log\\textsubscript{10}($|i_{{\\mathrm{{NORM.}}}}|)$]")
@@ -969,8 +969,68 @@ def plot_losses():
     handles = handles1 + handles2
     labels = labels1 + labels2
     # Add the merged legend to the first subplot to obtain merged legends
+    # plot loss at earlystopping
+
+    # XGB
+    ax_loss_trees.text(
+        1300,
+        3.52 * 1.08 * 10**-2,
+        "VL: 0.0305",
+        color="tab:blue",
+        bbox=dict(facecolor="white", edgecolor="black", boxstyle="square"),
+    )
+    ax_loss_trees.text(
+        2400,
+        2 * 1.08 * 10**-2,
+        "TL: 0.0207",
+        color="tab:blue",
+        bbox=dict(facecolor="white", edgecolor="black", boxstyle="square"),
+    )
+    arrow_coord = (2215, 0.02068892388427899)
+    arrow_coord2 = (2215, 0.03051874439922624)
+    ax_loss_trees.annotate("", arrow_coord2, (1400, 3.5 * 10**-2), arrowprops=dict(arrowstyle="->", color="black"))
+    ax_loss_trees.annotate("", arrow_coord, (2400, 2 * 10**-2), arrowprops=dict(arrowstyle="->", color="black"))
+
+    # CB
+    ax_loss_trees.text(
+        4400,
+        1.08 * 10**-1,
+        "VL: 0.0686 \n TL: 0.0670",
+        color="tab:red",
+        bbox=dict(facecolor="white", edgecolor="black", boxstyle="square"),
+    )
+    arrow_coord = (5275, 0.06699099778)
+    ax_loss_trees.annotate("", arrow_coord, (4400, 10**-1), arrowprops=dict(arrowstyle="->", color="black"))
+
+    # LGB
+    ax_loss_trees.text(
+        3200,
+        1.08 * 10**-1,
+        "VL: 0.0678 \n TL: 0.0667",
+        color="tab:green",
+        bbox=dict(facecolor="white", edgecolor="black", boxstyle="square"),
+    )
+    arrow_coord = (4245, 0.06673534279380301)
+    ax_loss_trees.annotate("", arrow_coord, (3200, 10**-1), arrowprops=dict(arrowstyle="->", color="black"))
+
     ax_loss_trees.legend(handles, labels)
     fig_loss_trees.tight_layout()
+    # train, val ANN: 0.01427864097058773, 0.012367751449346542
+    # ax_loss_ANN.set_xlim(0, 20)
+    ax_loss_ANN.set_xticks([i for i in range(0, 23)[::2]])
+    ax_loss_ANN.xaxis.set_minor_locator(ticker.NullLocator())
+    ax_loss_ANN.text(
+        17,
+        1.638 * 10**-2,
+        "TL: 0.0143\nVL: 0.0124",
+        color="k",
+        bbox=dict(facecolor="white", edgecolor="black", boxstyle="square"),
+    )
+    arrow_coord_val = (16, 0.012367751449346542)
+    arrow_coord_train = (16, 0.01427864097058773)
+    ax_loss_ANN.annotate("", arrow_coord_val, (17, 1.6 * 10**-2), arrowprops=dict(arrowstyle="->", color="black"))
+    ax_loss_ANN.annotate("", arrow_coord_train, (17, 1.6 * 10**-2), arrowprops=dict(arrowstyle="->", color="black"))
+
     ax_loss_ANN.legend(loc="upper right")
     fig_loss_ANN.tight_layout()
     for ftype in ["pgf", "pdf"]:

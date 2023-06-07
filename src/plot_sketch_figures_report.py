@@ -232,8 +232,8 @@ def pourbaix_diagram():
     plt.text(6, -2.5, "Al")
     plt.text(5.5, -2.8, "(Immune)")
 
-    plt.text(5.8, -1, "Al$_2$O$_3$")
-    plt.text(5.5, -1.3, "(Passive)")
+    plt.text(5.5, -1, "$\\alpha$-Al$_2$O$_3$")
+    plt.text(5.4, -1.3, "(Passive)")
     plt.text(10, 0.2, "AlO$_2^-$")
     plt.text(9.7, -0.1, "(Active)")
     plt.text(2, 0, "HER")
@@ -465,18 +465,24 @@ def plot_Ecorr_as_function_of_ph():
 
     fig_Ecorr, ax_Ecorr = plt.subplots(figsize=(2.5, 2.5))
     ax_Ecorr.set_xlabel("pH")
-    ax_Ecorr.set_ylabel("OCP\\textsubscript{t\\textsubscript{h}} vs SCE [V]")
+    ax_Ecorr.set_ylabel("$E$\\textsubscript{corr\\textsubscript{th}} vs SCE [V]")
     phs = list(np.arange(2.0, 12.2, 0.2))
     ax_Ecorr.set_xticks(np.arange(2, 13, 2))
     ax_Ecorr.scatter(phs, Ecorrs, s=4, color="k")
 
-    fig_delta_E, ax_delta_E = plt.subplots(figsize=(2.5, 2.5))
+    fig_delta_E, ax_delta_E = plt.subplots(figsize=(3, 2.5))
     ax_delta_E.set_xlabel("pH")
     ax_delta_E.set_ylabel(
-        "$\\Delta E$, OCP\\textsubscript{t\\textsubscript{0}} - OCP\\textsubscript{t\\textsubscript{h}} [V]"
+        "$\\Delta E$, $E$\\textsubscript{corr\\textsubscript{t0}} - $E$\\textsubscript{corr\\textsubscript{th}} [V]"
     )
     ax_delta_E.set_xticks(np.arange(2, 13, 2))
     ax_delta_E.scatter(phs, deltaE, s=4, color="k")
+    ax_delta_E_percentage = ax_delta_E.twinx()
+    ax_delta_E_percentage.scatter(phs, deltaE / df["OCP_t0"] * 100, color="tab:red", s=4, marker="x")
+    ax_delta_E_percentage.set_ylabel(
+        "$E$\\textsubscript{corr\\textsubscript{t0}} / $E$\\textsubscript{corr\\textsubscript{th}} $\cdot$ 100 [%] ",
+        color="tab:red",
+    )
 
     mask = np.array(phs) < 6.1
     phs_2_6 = np.array(phs)[mask]
@@ -486,7 +492,7 @@ def plot_Ecorr_as_function_of_ph():
     avg_residual_ph_2_6 = np.mean(abs((ocps_ph_2_6 - avg_2_6)))
     ax_Ecorr.hlines(avg_2_6, xmin=2, xmax=6, linestyle="--", color="dimgray")
     ax_Ecorr.text(
-        2, -1.2, "Avg. OCP\\textsubscript{t\\textsubscript{h}}" + f"\n $\in [2.0, 6.0]$ \n = {round(avg_2_6,3)} V"
+        2, -1.2, "Avg. $E$\\textsubscript{corr\\textsubscript{th}}" + f"\n $\in [2.0, 6.0]$ \n = {round(avg_2_6,3)} V"
     )
 
     ax_Ecorr.annotate("", xy=(3, -0.74), xytext=(3, -0.94), arrowprops=dict(facecolor="dimgray", shrink=0.002))
@@ -526,6 +532,33 @@ def plot_E_pit_manually_written():
     plt.savefig("summarized_data_figures_datafiles/appendix/Epit_vs_ph.pdf")
 
 
+from src.load_data import list_of_filenames, load_raw_data
+from src.filter_raw_data import remove_first_cath_branch
+
+
+def plot_E_pit_sketch():
+    file_path = "raw_data_without_gamry_noise/ph2,8.DTA"
+    E, i = load_raw_data(file_path)
+    i, E = remove_first_cath_branch(i, E)
+    fig, ax = plt.subplots(figsize=(4, 3.5))
+    ax.set_xlabel("Absolute value of current density $|i|$ [A/cm$^2$]")
+    ax.set_ylabel("Potential $E$ vs SCE [V]")
+    ax.semilogx(abs(i), E, color="k")
+    ax.text(8 * 10**-7, -0.55, "$E$\\textsubscript{pit}", color="k")
+    ax.annotate(
+        "",
+        xy=(6 * 10**-6, -0.625),
+        xytext=(2 * 10**-6, -0.57),
+        arrowprops=dict(facecolor="dimgray", shrink=0.15, width=0.5, headwidth=5, headlength=7),
+    )
+    ax.set_ylim(np.min(E) + 0.05, np.max(E) - 0.05)
+    ax.set_xlim(10**-8, 10**-3)
+    fig.tight_layout()
+
+    fig.savefig("sketches_for_report/E_pit.pgf")
+    fig.savefig("sketches_for_report/E_pit.pdf")
+
+
 if __name__ == "__main__":
     # plot_histogram_feature_importances_DTs()
     # plot_E_pit_ph10_2()
@@ -533,11 +566,12 @@ if __name__ == "__main__":
     # plot_residuals_linreg_tafel()
     # tafel_plot()
     # diffusion()
-    # pourbaix_diagram()
+    pourbaix_diagram()
     # plot_feature_imp_as_func_of_iter()
     # lgbm_tuning_last_iterations_before_termination_rmse()
     # plot_training_times_per_DT()
     # plot_training_times_tot_all_models()
-    plot_Ecorr_as_function_of_ph()
-    plot_E_pit_manually_written()
-    df_E_pit_E_corr_.to_csv("summarized_data_figures_datafiles/E_corr_E_pit_data.csv", sep="\t", index=False)
+    # plot_Ecorr_as_function_of_ph()
+    # plot_E_pit_manually_written()
+    # df_E_pit_E_corr_.to_csv("summarized_data_figures_datafiles/E_corr_E_pit_data.csv", sep="\t", index=False)
+    # plot_E_pit_sketch()

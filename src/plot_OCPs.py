@@ -218,7 +218,7 @@ def plot_ocp_files():
     ax_ocp.set_xticks(np.arange(2, 13, 2))
     # ax_ocp.grid(color="dimgray", linestyle=":")
     ax_ocp.set_xlabel("pH")
-    ax_ocp.set_ylabel("OCP\\textsubscript{t\\textsubscript{0}} vs SCE [V]")
+    ax_ocp.set_ylabel("$E$\\textsubscript{corr\\textsubscript{t0}} vs SCE [V]")
     ax_ocp.scatter(all_phs, ocps, s=4, color="k")
     pd.DataFrame({"pH": all_phs, "OCP_t0": ocps}).to_csv(
         "csv_files_E_corr_E_pit/ocp_t0_vs_ph.csv", sep="\t", index=False
@@ -234,7 +234,7 @@ def plot_ocp_files():
     avg_residual_ph_2_6 = np.mean(abs((ocps_ph_2_6 - avg_2_6)))
     ax_ocp.hlines(avg_2_6, xmin=2, xmax=6, linestyle="--", color="dimgray")
     ax_ocp.text(
-        2, -1.2, "Avg. OCP\\textsubscript{t\\textsubscript{0}}" + f"\n $\in [2.0, 6.0]$ \n = {round(avg_2_6,3)} V"
+        2, -1.2, "Avg. $E$\\textsubscript{corr\\textsubscript{t0}}" + f"\n $\in [2.0, 6.0]$ \n = {round(avg_2_6,3)} V"
     )
 
     ax_ocp.annotate("", xy=(3, -0.74), xytext=(3, -0.94), arrowprops=dict(facecolor="dimgray", shrink=0.002))
