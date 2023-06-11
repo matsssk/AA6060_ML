@@ -59,7 +59,6 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 # plt.rcParams["xtick.labelsize"] = 22  # Font size for x-axis tick labels
 # plt.rcParams["ytick.labelsize"] = 22  # Font size for y-axis tick labels
 # plt.rcParams["legend.fontsize"] = 22  # Font size for legend
-
 if __name__ == "__main__":
     # test ML algorithms on unseen data
     fig_pred = plt.figure(figsize=(6, 4))
@@ -75,7 +74,7 @@ if __name__ == "__main__":
     ax_loss_trees = fig_loss_trees.subplots()
     # ax_loss_trees.grid(True, linestyle="-", color="gray")
     ax_loss_trees.set_xlabel("Iterations")
-    ax_loss_trees.set_ylabel("Loss, RMSE [log\\textsubscript{10}($|i|$)]")
+    ax_loss_trees.set_ylabel("Error, RMSE [log\\textsubscript{10}($|i|$)]")
     ax_loss_trees.set_yscale("log")
     ax_loss_trees2 = ax_loss_trees.twinx()  # plot loss gradients
     ax_loss_trees2.set_ylabel(
@@ -113,45 +112,49 @@ if __name__ == "__main__":
     # plt.rcParams["legend.fontsize"] = 14  # Set size for legend
     # plt.rcParams["figure.figsize"] = [6.1, 6.1]
     # ANN losses
-    fig_loss_ANN = plt.figure(figsize=(4.8, 3.5))
+    fig_loss_ANN = plt.figure(figsize=(4.5, 3.5))
     ax_loss_ANN = fig_loss_ANN.subplots()
     ax_loss_ANN.set_xlabel("Epochs")
-    ax_loss_ANN.set_ylabel("Loss, RMSE [log\\textsubscript{10}($|i_{{\\mathrm{{NORM.}}}}|)$]")
+    ax_loss_ANN.set_ylabel("Error, RMSE [log\\textsubscript{10}($|i_{{\\mathrm{{NORM.}}}}|)$]")
     ax_loss_ANN.yaxis.set_minor_locator(ticker.LogLocator(base=10.0, subs=np.arange(2, 10) * 0.1, numticks=10))
 
     # Turn on the minor TICKS, which are required for the minor GRID
     ax_loss_ANN.minorticks_on()
     ax_loss_ANN.grid(which="minor", axis="y", linestyle=":", color="gray")
 
-    fig_rf, ax_individual_model_vs_exp_rf = plt.subplots()  # figsize=(7, 7))  # 2, 2, figsize=(12, 12))
-    # fig_rf.supxlabel("$|i|$ [A/cm$^2$]")
-    # fig_rf.supylabel("E [V]")
-    ax_individual_model_vs_exp_rf.set_xlabel("Absolute value of current density ($|i|$) [A/cm$^2$]")
-    ax_individual_model_vs_exp_rf.set_ylabel("Potential ($E$) vs SCE [V]")
+    fig_rf, ax_individual_model_vs_exp_rf = plt.subplots(figsize=(5.5, 6.2))
 
-    fig_cb, ax_individual_model_vs_exp_cb = plt.subplots()  # , figsize=(15, 15))
+    ax_individual_model_vs_exp_rf.set_xlabel("Absolute value of current density $|i|$ [A/cm$^2$]", fontsize=16)
+    ax_individual_model_vs_exp_rf.set_ylabel("Potential $E$ vs SCE [V]", fontsize=16)
+
+    # If you have a title, you can set its font size like this:
+    # ax_individual_model_vs_exp_rf.set_title("Title", fontsize=16)
+
+    # To set the font size of the tick labels:
+
+    fig_cb, ax_individual_model_vs_exp_cb = plt.subplots(figsize=(5.5, 6.2))  # , figsize=(15, 15))
     # fig_cb.supxlabel("$|i|$ [A/cm$^2$]")
     # fig_cb.supylabel("E [V]")
-    ax_individual_model_vs_exp_cb.set_xlabel("Absolute value of current density ($|i|$) [A/cm$^2$]")
-    ax_individual_model_vs_exp_cb.set_ylabel("Potential ($E$) vs SCE [V]")
+    ax_individual_model_vs_exp_cb.set_xlabel("Absolute value of current density $|i|$ [A/cm$^2$]", fontsize=16)
+    ax_individual_model_vs_exp_cb.set_ylabel("Potential $E$ vs SCE [V]", fontsize=16)
 
-    fig_lgb, ax_individual_model_vs_exp_lgb = plt.subplots()  # , figsize=(15, 15))
+    fig_lgb, ax_individual_model_vs_exp_lgb = plt.subplots(figsize=(5.5, 6.2))  # , figsize=(15, 15))
     # fig_lgb.supxlabel("$|i|$ [A/cm$^2$]")
-    # fig_lgb.supylabel("Potential ($E$) vs SCE [V]")
-    ax_individual_model_vs_exp_lgb.set_xlabel("Absolute value of current density ($|i|$) [A/cm$^2$]")
-    ax_individual_model_vs_exp_lgb.set_ylabel("Potential ($E$) vs SCE [V]")
+    # fig_lgb.supylabel("Potential $E$ vs SCE [V]")
+    ax_individual_model_vs_exp_lgb.set_xlabel("Absolute value of current density $|i|$ [A/cm$^2$]", fontsize=16)
+    ax_individual_model_vs_exp_lgb.set_ylabel("Potential $E$ vs SCE [V]", fontsize=16)
 
-    fig_ann, ax_individual_model_vs_exp_ann = plt.subplots()  # , figsize=(15, 15))
+    fig_ann, ax_individual_model_vs_exp_ann = plt.subplots(figsize=(5.5, 6.2))  # , figsize=(15, 15))
     # fig_ann.supxlabel("$|i|$ [A/cm$^2$]")
-    # fig_ann.supylabel("Potential ($E$) vs SCE [V]")
-    ax_individual_model_vs_exp_ann.set_xlabel("Absolute value of current density ($|i|$) [A/cm$^2$]")
-    ax_individual_model_vs_exp_ann.set_ylabel("Potential ($E$) vs SCE [V]")
+    # fig_ann.supylabel("Potential $E$ vs SCE [V]")
+    ax_individual_model_vs_exp_ann.set_xlabel("Absolute value of current density $|i|$ [A/cm$^2$]", fontsize=16)
+    ax_individual_model_vs_exp_ann.set_ylabel("Potential $E$ vs SCE [V]", fontsize=16)
 
-    fig_xgb, ax_individual_model_vs_exp_xgb = plt.subplots()  # , figsize=(15, 15))
+    fig_xgb, ax_individual_model_vs_exp_xgb = plt.subplots(figsize=(5.5, 6.2))  # , figsize=(15, 15))
     # fig_xgb.supxlabel("$|i|$ [A/cm$^2$]")
-    # fig_xgb.supylabel("Potential ($E$) vs SCE [V]")
-    ax_individual_model_vs_exp_xgb.set_xlabel("Absolute value of current density ($|i|$) [A/cm$^2$]")
-    ax_individual_model_vs_exp_xgb.set_ylabel("Potential ($E$) vs SCE [V]")
+    # fig_xgb.supylabel("Potential $E$ vs SCE [V]")
+    ax_individual_model_vs_exp_xgb.set_xlabel("Absolute value of current density $|i|$ [A/cm$^2$]", fontsize=16)
+    ax_individual_model_vs_exp_xgb.set_ylabel("Potential $E$ vs SCE [V]", fontsize=16)
 
 
 def return_test_data() -> tuple[NDArray[Shape["N_ROWS, 2"], Float], NDArray[Shape["1, N_ROWS"], Float]]:
@@ -276,7 +279,7 @@ def store_polarization_curve_features(E: np.ndarray, i: np.ndarray, model: str) 
         std_error_slope,
         intercept_stderr,
         residuals,
-    ) = linreg_tafel_line_ORR_or_HER(ocp, E, i)
+    ) = linreg_tafel_line_ORR_or_HER(ocp, E, i, ph)
     # first value in the tafel line should be where E = ocp, solve for current
     i_applied_log_abs = np.insert(i_applied_log_abs, 0, (ocp - intercept) / slope)
     E_applied = np.insert(E_applied, 0, ocp)
@@ -335,7 +338,7 @@ def plot_experimental_testing_data(ph, loc1, loc2, df_features: pd.DataFrame) ->
     ) = store_polarization_curve_features(E, i, "exp")
     np.savetxt(f"linreg_residuals/residuals_linreg_exp{ph}.txt", residuals, fmt="%f")
     slopes = [round(slope * 1000, 1) for slope in [lower_slope, upper_slope, slope]]
-    icorrs = [round(icorr_ * 10**6, 2) for icorr_ in [lower_icorr, upper_icorr, i_corr]]
+    icorrs = [round(icorr_ * 10**6, 4) for icorr_ in [lower_icorr, upper_icorr, i_corr]]
 
     df_features["Exp. data"] = [E_corr, slopes, icorrs]
     figures_to_plot_exp_data_in = [
@@ -382,7 +385,7 @@ def plot_experimental_testing_data(ph, loc1, loc2, df_features: pd.DataFrame) ->
             i,
             E,
             # label=f"Exp. data, pH = {ph}" if idx >= 2 else f"Exp., pH = {ph}",
-            label="Empirical",
+            label="Emp.",
             color="k",
             linestyle="-",
         )
@@ -402,7 +405,7 @@ def plot_experimental_testing_data(ph, loc1, loc2, df_features: pd.DataFrame) ->
                 E_corr,
                 i_corr,
                 "k",
-                "Exp. data",
+                "Emp.",
                 std_error_slope,
                 intercept_stderr,
             )
@@ -442,7 +445,7 @@ def random_forest_comparison(ph, loc1, loc2, df_features: pd.DataFrame) -> None:
     ) = store_polarization_curve_features(E, i, "RF")
     np.savetxt(f"linreg_residuals/residuals_linreg_rf_{ph}.txt", residuals, fmt="%f")
     slopes = [round(slope * 1000, 1) for slope in [lower_slope, upper_slope, slope]]
-    icorrs = [round(icorr_ * 10**6, 2) for icorr_ in [lower_icorr, upper_icorr, i_corr]]
+    icorrs = [round(icorr_ * 10**6, 4) for icorr_ in [lower_icorr, upper_icorr, i_corr]]
 
     df_features["RF"] = [E_corr, slopes, icorrs]
 
@@ -452,7 +455,7 @@ def random_forest_comparison(ph, loc1, loc2, df_features: pd.DataFrame) -> None:
         ax.semilogx(
             current_density_pred,
             X_test_ph[:, 0],
-            label="Random Forest" if ax == ax_pred else f"RF, pH = {ph}",
+            label="RF" if ax == ax_pred else "RF",
             linestyle=linestyle,
             color=color,
         )
@@ -508,7 +511,7 @@ def catboost_comparison(ph, store_mape: list, rmse_catboost: list, loc1, loc2, d
     np.savetxt(f"linreg_residuals/residuals_linreg_cb_{ph}.txt", residuals, fmt="%f")
     # add_residuals_to_txt_file(residuals)
     slopes = [round(slope * 1000, 1) for slope in [lower_slope, upper_slope, slope]]
-    icorrs = [round(icorr_ * 10**6, 2) for icorr_ in [lower_icorr, upper_icorr, i_corr]]
+    icorrs = [round(icorr_ * 10**6, 4) for icorr_ in [lower_icorr, upper_icorr, i_corr]]
 
     df_features["CB"] = [E_corr, slopes, icorrs]
 
@@ -517,7 +520,7 @@ def catboost_comparison(ph, store_mape: list, rmse_catboost: list, loc1, loc2, d
         ax.semilogx(
             i,
             E,
-            label="CatBoost" if ax == ax_pred else f"CB, pH = {ph}",
+            label="CatBoost" if ax == ax_pred else "CatBoost",
             linestyle=linestyle,
             color=color,
         )
@@ -534,7 +537,7 @@ def catboost_comparison(ph, store_mape: list, rmse_catboost: list, loc1, loc2, d
                 E_corr,
                 i_corr,
                 color,
-                "CB",
+                "CatBoost",
                 std_error_slope,
                 intercept_stderr,
             )
@@ -550,10 +553,10 @@ def sma_loss_gradients(val_loss: np.ndarray | pd.Series, window: Optional[int] =
 def plot_train_val_loss_catboost():
     df_train_loss = pd.read_csv("catboost_info/learn_error.tsv", sep="\t")
     ax_loss_trees.plot(
-        df_train_loss["iter"], df_train_loss["RMSE"], label="CatBoost TL", color="tab:red", linestyle="-"
+        df_train_loss["iter"], df_train_loss["RMSE"], label="CatBoost TE", color="tab:red", linestyle="-"
     )
     df_val_loss = pd.read_csv("catboost_info/test_error.tsv", sep="\t")
-    ax_loss_trees.plot(df_val_loss["iter"], df_val_loss["RMSE"], label="Catboost VL", color="tab:red", linestyle="--")
+    ax_loss_trees.plot(df_val_loss["iter"], df_val_loss["RMSE"], label="Catboost VE", color="tab:red", linestyle="--")
 
     # loss_gradients_val_loss = abs(np.diff(df_val_loss["RMSE"][::100]))
     loss_iter = df_val_loss["iter"][::100][1:]
@@ -599,7 +602,7 @@ def xgboost_comparison(ph, store_mape, rmse_xgboost: list, loc1, loc2, df_featur
     np.savetxt(f"linreg_residuals/residuals_linreg_xgb_{ph}.txt", residuals, fmt="%f")
     # add_residuals_to_txt_file(residuals)
     slopes = [round(slope * 1000, 1) for slope in [lower_slope, upper_slope, slope]]
-    icorrs = [round(icorr_ * 10**6, 2) for icorr_ in [lower_icorr, upper_icorr, i_corr]]
+    icorrs = [round(icorr_ * 10**6, 4) for icorr_ in [lower_icorr, upper_icorr, i_corr]]
 
     df_features["XGB"] = [E_corr, slopes, icorrs]
 
@@ -609,7 +612,7 @@ def xgboost_comparison(ph, store_mape, rmse_xgboost: list, loc1, loc2, df_featur
         ax.semilogx(
             i,
             E,
-            label="XGBoost" if ax == ax_pred else f"XGB, pH = {ph}",
+            label="XGBoost" if ax == ax_pred else "XGBoost",
             linestyle=linestyle,
             color=color,
         )
@@ -626,7 +629,7 @@ def xgboost_comparison(ph, store_mape, rmse_xgboost: list, loc1, loc2, df_featur
                 E_corr,
                 i_corr,
                 color,
-                "XGB",
+                "XGBoost",
                 std_error_slope,
                 intercept_stderr,
             )
@@ -635,8 +638,8 @@ def xgboost_comparison(ph, store_mape, rmse_xgboost: list, loc1, loc2, df_featur
 def plot_train_val_loss_xgboost():
     # plot rmse for each iter
     df = pd.read_csv("models_data/xgboost_info/train_val_loss.csv", sep="\t")
-    ax_loss_trees.plot(df["iter"], df["train_loss_rmse"], label="XGBoost TL", color="tab:blue", linestyle="-")
-    ax_loss_trees.plot(df["iter"], df["val_loss_rmse"], label="XGBoost VL", color="tab:blue", linestyle="-.")
+    ax_loss_trees.plot(df["iter"], df["train_loss_rmse"], label="XGBoost TE", color="tab:blue", linestyle="-")
+    ax_loss_trees.plot(df["iter"], df["val_loss_rmse"], label="XGBoost VE", color="tab:blue", linestyle="-.")
 
     sma = sma_loss_gradients(df["val_loss_rmse"])
     ax_loss_trees2.semilogy(
@@ -683,7 +686,7 @@ def lgbm_comparison(ph, store_mape, rmse_lgb, loc1, loc2, df_features: pd.DataFr
     np.savetxt(f"linreg_residuals/residuals_linreg_lgb_{ph}.txt", residuals, fmt="%f")
     # add_residuals_to_txt_file(residuals)
     slopes = [round(slope * 1000, 1) for slope in [lower_slope, upper_slope, slope]]
-    icorrs = [round(icorr_ * 10**6, 2) for icorr_ in [lower_icorr, upper_icorr, i_corr]]
+    icorrs = [round(icorr_ * 10**6, 4) for icorr_ in [lower_icorr, upper_icorr, i_corr]]
 
     df_features["LGB"] = [E_corr, slopes, icorrs]
 
@@ -694,7 +697,7 @@ def lgbm_comparison(ph, store_mape, rmse_lgb, loc1, loc2, df_features: pd.DataFr
         ax.semilogx(
             i,
             E,
-            label="LightGBM" if ax == ax_pred else f"LGB, pH = {ph}",
+            label="LightGBM" if ax == ax_pred else "LightGBM",
             linestyle=linestyle,
             color=color,
         )
@@ -711,7 +714,7 @@ def lgbm_comparison(ph, store_mape, rmse_lgb, loc1, loc2, df_features: pd.DataFr
                 E_corr,
                 i_corr,
                 color,
-                "LGB",
+                "LightGBM",
                 std_error_slope,
                 intercept_stderr,
             )
@@ -721,8 +724,8 @@ def plot_train_val_loss_lgbm():
     # plot rmse for each iter
     # plot rmse for each iter
     df = pd.read_csv("models_data/lgbm_info/train_val_loss.csv", sep="\t")
-    ax_loss_trees.plot(df["iter"], df["train_loss_rmse"], label="LightGBM TL", color="tab:green", linestyle="-")
-    ax_loss_trees.plot(df["iter"], df["val_loss_rmse"], label="LightGBM VL", color="tab:green", linestyle=":")
+    ax_loss_trees.plot(df["iter"], df["train_loss_rmse"], label="LightGBM TE", color="tab:green", linestyle="-")
+    ax_loss_trees.plot(df["iter"], df["val_loss_rmse"], label="LightGBM VE", color="tab:green", linestyle=":")
 
     sma = sma_loss_gradients(df["val_loss_rmse"])
     ax_loss_trees2.semilogy(
@@ -805,7 +808,7 @@ def ANN_comparison(ph, store_mape, rmse_ann, loc1, loc2, df_features: pd.DataFra
                     ) = store_polarization_curve_features(E, 10**y_test_ph, "ANN")
 
                 slopes = [round(slope * 1000, 1) for slope in [lower_slope, upper_slope, slope]]
-                icorrs = [round(icorr_ * 10**6, 2) for icorr_ in [lower_icorr, upper_icorr, i_corr]]
+                icorrs = [round(icorr_ * 10**6, 4) for icorr_ in [lower_icorr, upper_icorr, i_corr]]
 
                 df_features["ANN"] = [E_corr, slopes, icorrs]
 
@@ -849,8 +852,8 @@ def plot_train_val_loss_ann_best_model():
     df_loss = pd.read_csv("models_data/ANN_info/training_val_loss_final_model", sep="\t")
     epochs = [iter for iter in range(1, len(df_loss["val_rmse"]) + 1, 1)]
     # plot epochs vs rmse (root of mse which is the loss given in df) for best model
-    ax_loss_ANN.semilogy(epochs, df_loss["rmse"], "-", label="ANN TL", color="k")
-    ax_loss_ANN.semilogy(epochs, df_loss["val_rmse"], "--", label="ANN VL", color="k")
+    ax_loss_ANN.semilogy(epochs, df_loss["rmse"], "-", label="ANN TE", color="k")
+    ax_loss_ANN.semilogy(epochs, df_loss["val_rmse"], "--", label="ANN VE", color="k")
 
 
 def plot_histogram_mape_models(best_scores_mape_log: pd.DataFrame, best_scores_rmse_log: pd.DataFrame):
@@ -975,14 +978,14 @@ def plot_losses():
     ax_loss_trees.text(
         1300,
         3.52 * 1.08 * 10**-2,
-        "VL: 0.0305",
+        "VE: 0.0305",
         color="tab:blue",
         bbox=dict(facecolor="white", edgecolor="black", boxstyle="square"),
     )
     ax_loss_trees.text(
         2400,
         2 * 1.08 * 10**-2,
-        "TL: 0.0207",
+        "TE: 0.0207",
         color="tab:blue",
         bbox=dict(facecolor="white", edgecolor="black", boxstyle="square"),
     )
@@ -995,7 +998,7 @@ def plot_losses():
     ax_loss_trees.text(
         4400,
         1.08 * 10**-1,
-        "VL: 0.0686 \n TL: 0.0670",
+        "VE: 0.0686 \n TE: 0.0670",
         color="tab:red",
         bbox=dict(facecolor="white", edgecolor="black", boxstyle="square"),
     )
@@ -1006,7 +1009,7 @@ def plot_losses():
     ax_loss_trees.text(
         3200,
         1.08 * 10**-1,
-        "VL: 0.0678 \n TL: 0.0667",
+        "VE: 0.0678 \n TE: 0.0667",
         color="tab:green",
         bbox=dict(facecolor="white", edgecolor="black", boxstyle="square"),
     )
@@ -1022,7 +1025,7 @@ def plot_losses():
     ax_loss_ANN.text(
         17,
         1.638 * 10**-2,
-        "TL: 0.0143\nVL: 0.0124",
+        "TE: 0.0143\nVE: 0.0124",
         color="k",
         bbox=dict(facecolor="white", edgecolor="black", boxstyle="square"),
     )
@@ -1084,7 +1087,7 @@ if __name__ == "__main__":
         mean_slope = sum(ML_preds[0]) / 5
         mean_icorr = sum(ML_preds[1]) / 5
 
-        mean_ML = [round(mean_Ecorr, 1), round(mean_slope, 1), round(mean_icorr, 2)]
+        mean_ML = [round(mean_Ecorr, 4), round(mean_slope, 4), round(mean_icorr, 4)]
         df_features["Mean ML"] = mean_ML
         mape_Ecorr = (df_features["Mean ML"][0] - df_features["Exp. data"][0]) / df_features["Exp. data"][0] * 100
         mape_slope = (
@@ -1093,7 +1096,7 @@ if __name__ == "__main__":
         mape_icorr = (
             (df_features["Mean ML"][2] - df_features["Exp. data"][2][-1]) / df_features["Exp. data"][2][-1] * 100
         )
-        df_features["MAPE"] = [round(mape_Ecorr, 1), round(mape_slope, 1), round(mape_icorr, 1)]
+        df_features["MAPE"] = [round(mape_Ecorr, 4), round(mape_slope, 3), round(mape_icorr, 4)]
 
         df_features.to_csv(f"summarized_data_figures_datafiles/csv_files/df_features{ph}.csv", sep="\t", index=False)
 
@@ -1112,22 +1115,29 @@ if __name__ == "__main__":
         # E, i = X_test_ph[:, 0], 10**y_test_ph
         # for ax, fig, model in zip(ax_list_appendix_plots, figs, models):
         #     # ax[loc1, loc2].legend(loc="upper left")
+        #     # if ph in [7.4, 6.6]:
+        #     # force ticks and labels
+        #     ax.set_xticks([10**i for i in range(-10, 0, 1)])
+        #     ax.xaxis.set_minor_locator(ticker.LogLocator(base=10.0, subs=np.arange(1.0, 10.0), numticks=10))
+
         #     ax.set_ylim(np.min(X_test_ph[:, 0]), np.max(X_test_ph[:, 0]))
         #     ax.set_xlim(np.min(abs(i)), np.max(abs(i)))
-        #     ax.grid(True, linestyle="-", color="lightgray")
-        #     ax.legend()
+        #     ax.grid(True, linestyle="-", color="lightgray", which="both")
+        #     ax.tick_params(axis="x", which="minor", labelsize=16)
+        #     ax.tick_params(axis="both", which="major", labelsize=16)
+        #     ax.legend(fontsize=16)
         #     fig.tight_layout()
         #     fig.savefig(f"summarized_data_figures_datafiles/appendix/{model}_{ph}.pdf")
-        #     # fig_rf.savefig(f"summarized_data_figures_datafiles/appendix/rf{ph}.pgf")
+        #     # fig.savefig(f"summarized_data_figures_datafiles/appendix/{model}_{ph}.pgf")
         #     ax.clear()
-        #     ax.set_xlabel("Absolute value of current density ($|i|$) [A/cm$^2$]")
-        #     ax.set_ylabel("Potential ($E$) vs SCE [V]")
+        #     ax.set_xlabel("Absolute value of current density $|i|$ [A/cm$^2$]")
+        #     ax.set_ylabel("Potential $E$ vs SCE [V]")
 
         # save figs
         try:
             for _ax in [ax_pred, ax_compare_anns]:
-                _ax.set_xlabel("Absolute value of current density ($|i|$) [A/cm$^2$]")
-                _ax.set_ylabel("Potential ($E$) vs SCE [V]")
+                _ax.set_xlabel("Absolute value of current density $|i|$ [A/cm$^2$]")
+                _ax.set_ylabel("Potential $E$ vs SCE [V]")
                 _ax.legend(loc="upper left")
 
             for ftype in ["pgf", "pdf"]:
@@ -1170,7 +1180,7 @@ if __name__ == "__main__":
     # # Appendix scientific paper
 
     # for fig, model in zip([fig_rf, fig_cb, fig_lgb, fig_ann, fig_xgb], ["rf", "cb", "lgb", "ann", "xgb"]):
-    # for fig, model in zip([fig_rf], ["rf"]):
+    #     # for fig, model in zip([fig_rf], ["rf"]):
     #     fig.tight_layout()
     #     for ftype in ["pdf"]:  # ["pgf", "pdf"]:
     #         fig.savefig(f"summarized_data_figures_datafiles/appendix/{model}.{ftype}")

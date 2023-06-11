@@ -24,7 +24,7 @@ def check_ORR_dominance(ocp_t_half: float) -> bool:
 
 
 def linreg_tafel_line_ORR_or_HER(
-    ocp_t_half: float, E_filtered: np.ndarray, i_filtered: np.ndarray
+    ocp_t_half: float, E_filtered: np.ndarray, i_filtered: np.ndarray, ph
 ) -> list[np.ndarray | float]:
     """
     Apply linear regression on ORR or HER dominant region at the cathodic branch
@@ -33,30 +33,49 @@ def linreg_tafel_line_ORR_or_HER(
 
     For high pH, HER is dominant at low potentials, seen by less steep curve
     """
-
-    # check if we have ORR or HER
+    if ph == 6.6:
+        if check_ORR_dominance(ocp_t_half):
+            mask = (E_filtered < (ocp_t_half - 0.15)) & (E_filtered > -1.1)
+        else:
+            mask = E_filtered < (ocp_t_half - 0.15)
+        E_applied, i_applied = np.flip(E_filtered[mask]), np.flip(i_filtered[mask])
+        # apply linear regression on this region
+        # remember that we want a linear region only for logarithmic x axis
+        i_applied_log_abs = np.log10(abs(i_applied))
+        result = stats.linregress(i_applied_log_abs, E_applied)
+        slope, intercept, rvalue, pvalue, std_error_slope, intercept_stderr = (
+            result.slope,
+            result.intercept,
+            result.rvalue,
+            result.pvalue,
+            result.stderr,
+            result.intercept_stderr,
+        )
+        residual = E_applied - (intercept + slope * i_applied_log_abs)
+        # check if we have ORR or HER
     # create a boolean mask to filter potential and current to the desired region
     # where kinetics are defined by the tafel equation
     # take not that for lower potentials on ORR, we have diffusion limitations
-
-    if check_ORR_dominance(ocp_t_half):
-        mask = (E_filtered < (ocp_t_half - 0.15)) & (E_filtered > -1.05)
     else:
-        mask = E_filtered < (ocp_t_half - 0.15)
-    E_applied, i_applied = np.flip(E_filtered[mask]), np.flip(i_filtered[mask])
-    # apply linear regression on this region
-    # remember that we want a linear region only for logarithmic x axis
-    i_applied_log_abs = np.log10(abs(i_applied))
-    result = stats.linregress(i_applied_log_abs, E_applied)
-    slope, intercept, rvalue, pvalue, std_error_slope, intercept_stderr = (
-        result.slope,
-        result.intercept,
-        result.rvalue,
-        result.pvalue,
-        result.stderr,
-        result.intercept_stderr,
-    )
-    residual = E_applied - (intercept + slope * i_applied_log_abs)
+        if check_ORR_dominance(ocp_t_half):
+            mask = (E_filtered < (ocp_t_half - 0.15)) & (E_filtered > -1.05)
+        else:
+            mask = E_filtered < (ocp_t_half - 0.15)
+        E_applied, i_applied = np.flip(E_filtered[mask]), np.flip(i_filtered[mask])
+        # apply linear regression on this region
+        # remember that we want a linear region only for logarithmic x axis
+        i_applied_log_abs = np.log10(abs(i_applied))
+        result = stats.linregress(i_applied_log_abs, E_applied)
+        slope, intercept, rvalue, pvalue, std_error_slope, intercept_stderr = (
+            result.slope,
+            result.intercept,
+            result.rvalue,
+            result.pvalue,
+            result.stderr,
+            result.intercept_stderr,
+        )
+        residual = E_applied - (intercept + slope * i_applied_log_abs)
+
     return [E_applied, i_applied_log_abs, slope, intercept, rvalue, std_error_slope, intercept_stderr, residual]
 
 

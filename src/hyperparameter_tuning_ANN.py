@@ -50,7 +50,7 @@ def search_spaces() -> list[list | float]:
     #     tf.keras.optimizers.Adam(learning_rate=1e-1),
     # ]
     learning_rate_space = [1e-3]
-    # loss_funcs_space = ["mse", "mae", "msle"]
+    # loss_funcs_space = ["mse", "mae"]
     loss_funcs_space = ["mse", "mae"]
     activation_func_space = ["relu"]
     # activation_func_space = ["relu"]

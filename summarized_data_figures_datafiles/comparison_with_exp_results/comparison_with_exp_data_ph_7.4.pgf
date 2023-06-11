@@ -1567,7 +1567,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=3.075000in,y=0.163766in,,top]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Absolute value of current density (\(\displaystyle |i|\)) [A/cm\(\displaystyle ^2\)]}%
+\pgftext[x=3.075000in,y=0.163766in,,top]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Absolute value of current density \(\displaystyle |i|\) [A/cm\(\displaystyle ^2\)]}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfpathrectangle{\pgfqpoint{0.750000in}{0.440000in}}{\pgfqpoint{4.650000in}{3.080000in}}%
@@ -1839,7 +1839,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=0.311727in,y=1.980000in,,bottom,rotate=90.000000]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Potential (\(\displaystyle E\)) vs SCE [V]}%
+\pgftext[x=0.311727in,y=1.980000in,,bottom,rotate=90.000000]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Potential \(\displaystyle E\) vs SCE [V]}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfpathrectangle{\pgfqpoint{0.750000in}{0.440000in}}{\pgfqpoint{4.650000in}{3.080000in}}%
@@ -10718,10 +10718,10 @@
 \pgfsetstrokeopacity{0.800000}%
 \pgfsetdash{}{0pt}%
 \pgfpathmoveto{\pgfqpoint{0.847222in}{2.246852in}}%
-\pgfpathlineto{\pgfqpoint{2.222610in}{2.246852in}}%
-\pgfpathquadraticcurveto{\pgfqpoint{2.250388in}{2.246852in}}{\pgfqpoint{2.250388in}{2.274630in}}%
-\pgfpathlineto{\pgfqpoint{2.250388in}{3.422778in}}%
-\pgfpathquadraticcurveto{\pgfqpoint{2.250388in}{3.450556in}}{\pgfqpoint{2.222610in}{3.450556in}}%
+\pgfpathlineto{\pgfqpoint{1.948497in}{2.246852in}}%
+\pgfpathquadraticcurveto{\pgfqpoint{1.976275in}{2.246852in}}{\pgfqpoint{1.976275in}{2.274630in}}%
+\pgfpathlineto{\pgfqpoint{1.976275in}{3.422778in}}%
+\pgfpathquadraticcurveto{\pgfqpoint{1.976275in}{3.450556in}}{\pgfqpoint{1.948497in}{3.450556in}}%
 \pgfpathlineto{\pgfqpoint{0.847222in}{3.450556in}}%
 \pgfpathquadraticcurveto{\pgfqpoint{0.819444in}{3.450556in}}{\pgfqpoint{0.819444in}{3.422778in}}%
 \pgfpathlineto{\pgfqpoint{0.819444in}{2.274630in}}%
@@ -10746,7 +10746,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.263889in,y=3.297778in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Empirical}%
+\pgftext[x=1.263889in,y=3.297778in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Emp.}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetrectcap%
@@ -10764,7 +10764,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.263889in,y=3.104105in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Random Forest}%
+\pgftext[x=1.263889in,y=3.104105in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont RF}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetrectcap%
