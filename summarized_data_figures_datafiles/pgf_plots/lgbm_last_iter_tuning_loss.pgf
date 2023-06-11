@@ -1311,10 +1311,10 @@
 \pgfsetstrokeopacity{0.800000}%
 \pgfsetdash{}{0pt}%
 \pgfpathmoveto{\pgfqpoint{0.994137in}{2.351543in}}%
-\pgfpathlineto{\pgfqpoint{2.327473in}{2.351543in}}%
-\pgfpathquadraticcurveto{\pgfqpoint{2.355250in}{2.351543in}}{\pgfqpoint{2.355250in}{2.379321in}}%
-\pgfpathlineto{\pgfqpoint{2.355250in}{2.752778in}}%
-\pgfpathquadraticcurveto{\pgfqpoint{2.355250in}{2.780556in}}{\pgfqpoint{2.327473in}{2.780556in}}%
+\pgfpathlineto{\pgfqpoint{2.404247in}{2.351543in}}%
+\pgfpathquadraticcurveto{\pgfqpoint{2.432025in}{2.351543in}}{\pgfqpoint{2.432025in}{2.379321in}}%
+\pgfpathlineto{\pgfqpoint{2.432025in}{2.752778in}}%
+\pgfpathquadraticcurveto{\pgfqpoint{2.432025in}{2.780556in}}{\pgfqpoint{2.404247in}{2.780556in}}%
 \pgfpathlineto{\pgfqpoint{0.994137in}{2.780556in}}%
 \pgfpathquadraticcurveto{\pgfqpoint{0.966359in}{2.780556in}}{\pgfqpoint{0.966359in}{2.752778in}}%
 \pgfpathlineto{\pgfqpoint{0.966359in}{2.379321in}}%
@@ -1339,7 +1339,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.410804in,y=2.627778in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Training loss}%
+\pgftext[x=1.410804in,y=2.627778in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Training error}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetbuttcap%
@@ -1357,7 +1357,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.410804in,y=2.434105in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Validation loss}%
+\pgftext[x=1.410804in,y=2.434105in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Validation error}%
 \end{pgfscope}%
 \end{pgfpicture}%
 \makeatother%

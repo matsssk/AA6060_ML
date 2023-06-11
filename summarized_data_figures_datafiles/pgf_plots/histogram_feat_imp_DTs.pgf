@@ -559,16 +559,16 @@
 \pgfsetstrokecolor{currentstroke}%
 \pgfsetstrokeopacity{0.800000}%
 \pgfsetdash{}{0pt}%
-\pgfpathmoveto{\pgfqpoint{1.420661in}{2.370198in}}%
+\pgfpathmoveto{\pgfqpoint{1.263832in}{2.370198in}}%
 \pgfpathlineto{\pgfqpoint{3.232778in}{2.370198in}}%
 \pgfpathquadraticcurveto{\pgfqpoint{3.260556in}{2.370198in}}{\pgfqpoint{3.260556in}{2.397976in}}%
 \pgfpathlineto{\pgfqpoint{3.260556in}{3.158778in}}%
 \pgfpathquadraticcurveto{\pgfqpoint{3.260556in}{3.186556in}}{\pgfqpoint{3.232778in}{3.186556in}}%
-\pgfpathlineto{\pgfqpoint{1.420661in}{3.186556in}}%
-\pgfpathquadraticcurveto{\pgfqpoint{1.392883in}{3.186556in}}{\pgfqpoint{1.392883in}{3.158778in}}%
-\pgfpathlineto{\pgfqpoint{1.392883in}{2.397976in}}%
-\pgfpathquadraticcurveto{\pgfqpoint{1.392883in}{2.370198in}}{\pgfqpoint{1.420661in}{2.370198in}}%
-\pgfpathlineto{\pgfqpoint{1.420661in}{2.370198in}}%
+\pgfpathlineto{\pgfqpoint{1.263832in}{3.186556in}}%
+\pgfpathquadraticcurveto{\pgfqpoint{1.236055in}{3.186556in}}{\pgfqpoint{1.236055in}{3.158778in}}%
+\pgfpathlineto{\pgfqpoint{1.236055in}{2.397976in}}%
+\pgfpathquadraticcurveto{\pgfqpoint{1.236055in}{2.370198in}}{\pgfqpoint{1.263832in}{2.370198in}}%
+\pgfpathlineto{\pgfqpoint{1.263832in}{2.370198in}}%
 \pgfpathclose%
 \pgfusepath{stroke,fill}%
 \end{pgfscope}%
@@ -579,15 +579,15 @@
 \definecolor{currentstroke}{rgb}{0.411765,0.411765,0.411765}%
 \pgfsetstrokecolor{currentstroke}%
 \pgfsetdash{{5.550000pt}{2.400000pt}}{0.000000pt}%
-\pgfpathmoveto{\pgfqpoint{1.448438in}{3.082389in}}%
-\pgfpathlineto{\pgfqpoint{1.726216in}{3.082389in}}%
+\pgfpathmoveto{\pgfqpoint{1.291610in}{3.082389in}}%
+\pgfpathlineto{\pgfqpoint{1.569388in}{3.082389in}}%
 \pgfusepath{stroke}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.837327in,y=3.033778in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Potential mean = 0.64}%
+\pgftext[x=1.680499in,y=3.033778in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Potential \(\displaystyle E\) mean = 0.64}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetbuttcap%
@@ -596,15 +596,15 @@
 \definecolor{currentstroke}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{currentstroke}%
 \pgfsetdash{{1.500000pt}{2.475000pt}}{0.000000pt}%
-\pgfpathmoveto{\pgfqpoint{1.448438in}{2.888716in}}%
-\pgfpathlineto{\pgfqpoint{1.726216in}{2.888716in}}%
+\pgfpathmoveto{\pgfqpoint{1.291610in}{2.888716in}}%
+\pgfpathlineto{\pgfqpoint{1.569388in}{2.888716in}}%
 \pgfusepath{stroke}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.837327in,y=2.840105in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont pH mean = 0.36}%
+\pgftext[x=1.680499in,y=2.840105in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont pH mean = 0.36}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetbuttcap%
@@ -616,11 +616,11 @@
 \pgfsetstrokecolor{currentstroke}%
 \pgfsetstrokeopacity{0.000000}%
 \pgfsetdash{}{0pt}%
-\pgfpathmoveto{\pgfqpoint{1.448438in}{2.646432in}}%
-\pgfpathlineto{\pgfqpoint{1.726216in}{2.646432in}}%
-\pgfpathlineto{\pgfqpoint{1.726216in}{2.743654in}}%
-\pgfpathlineto{\pgfqpoint{1.448438in}{2.743654in}}%
-\pgfpathlineto{\pgfqpoint{1.448438in}{2.646432in}}%
+\pgfpathmoveto{\pgfqpoint{1.291610in}{2.646432in}}%
+\pgfpathlineto{\pgfqpoint{1.569388in}{2.646432in}}%
+\pgfpathlineto{\pgfqpoint{1.569388in}{2.743654in}}%
+\pgfpathlineto{\pgfqpoint{1.291610in}{2.743654in}}%
+\pgfpathlineto{\pgfqpoint{1.291610in}{2.646432in}}%
 \pgfpathclose%
 \pgfusepath{fill}%
 \end{pgfscope}%
@@ -628,7 +628,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.837327in,y=2.646432in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Potential}%
+\pgftext[x=1.680499in,y=2.646432in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont Potential \(\displaystyle E\)}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetbuttcap%
@@ -640,11 +640,11 @@
 \pgfsetstrokecolor{currentstroke}%
 \pgfsetstrokeopacity{0.000000}%
 \pgfsetdash{}{0pt}%
-\pgfpathmoveto{\pgfqpoint{1.448438in}{2.452759in}}%
-\pgfpathlineto{\pgfqpoint{1.726216in}{2.452759in}}%
-\pgfpathlineto{\pgfqpoint{1.726216in}{2.549982in}}%
-\pgfpathlineto{\pgfqpoint{1.448438in}{2.549982in}}%
-\pgfpathlineto{\pgfqpoint{1.448438in}{2.452759in}}%
+\pgfpathmoveto{\pgfqpoint{1.291610in}{2.452759in}}%
+\pgfpathlineto{\pgfqpoint{1.569388in}{2.452759in}}%
+\pgfpathlineto{\pgfqpoint{1.569388in}{2.549982in}}%
+\pgfpathlineto{\pgfqpoint{1.291610in}{2.549982in}}%
+\pgfpathlineto{\pgfqpoint{1.291610in}{2.452759in}}%
 \pgfpathclose%
 \pgfusepath{fill}%
 \end{pgfscope}%
@@ -652,7 +652,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.837327in,y=2.452759in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont pH}%
+\pgftext[x=1.680499in,y=2.452759in,left,base]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont pH}%
 \end{pgfscope}%
 \end{pgfpicture}%
 \makeatother%

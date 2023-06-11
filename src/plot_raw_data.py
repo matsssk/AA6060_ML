@@ -114,7 +114,7 @@ def plot_and_return_dataframe_with_filtered_data(
                 std_err_slope,
                 intercept_stderr,
                 _,
-            ) = linreg_tafel_line_ORR_or_HER(ocp_t_half, potential_filtered, current_density_filtered)
+            ) = linreg_tafel_line_ORR_or_HER(ocp_t_half, potential_filtered, current_density_filtered, pH)
             # slope is delta E / delta abs(i), we need delta E / delta log10(r"$\lvert i \rvert$")
         except Exception as e:
             raise e

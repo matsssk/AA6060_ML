@@ -287,8 +287,8 @@ def lgbm_tuning_last_iterations_before_termination_rmse():
     val = df["val_rmse"]
     ax1.set_xlabel("Iterations")
     ax1.set_ylabel("RMSE [log($i$)]")
-    ax1.plot(iter, train, label="Training loss", color="k")
-    ax1.plot(iter, val, label="Validation loss", color="gray", linestyle="--")
+    ax1.plot(iter, train, label="Training error", color="k")
+    ax1.plot(iter, val, label="Validation error", color="gray", linestyle="--")
     ax1.legend()
     fig.tight_layout()
     fig.savefig("summarized_data_figures_datafiles/pdf_plots/lgbm_last_iter_tuning_loss.pdf")
@@ -431,7 +431,7 @@ def plot_histogram_feature_importances_DTs():
         df["Potential"],
         color=[colors_pot[model] for model in df["Model"]],
         width=barWidth,
-        label="Potential",
+        label="Potential $E$",
     )
 
     ax.bar(r2, df["pH"], color=[colors_ph[model] for model in df["Model"]], width=barWidth, label="pH")
@@ -444,7 +444,12 @@ def plot_histogram_feature_importances_DTs():
     # plot averages
     potential_mean = df["Potential"].mean()
     ax.hlines(
-        potential_mean, xmin=-1, xmax=4, label=f"Potential mean = {potential_mean:.2f}", linestyle="--", color="dimgray"
+        potential_mean,
+        xmin=-1,
+        xmax=4,
+        label=f"Potential $E$ mean = {potential_mean:.2f}",
+        linestyle="--",
+        color="dimgray",
     )
     ph_mean = df["pH"].mean()
     ax.hlines(ph_mean, xmin=-1, xmax=4, label=f"pH mean = {ph_mean:.2f}", linestyle=":", color="k")
@@ -566,7 +571,8 @@ if __name__ == "__main__":
     # plot_residuals_linreg_tafel()
     # tafel_plot()
     # diffusion()
-    pourbaix_diagram()
+    # pourbaix_diagram()
+    lgbm_tuning_last_iterations_before_termination_rmse()
     # plot_feature_imp_as_func_of_iter()
     # lgbm_tuning_last_iterations_before_termination_rmse()
     # plot_training_times_per_DT()
